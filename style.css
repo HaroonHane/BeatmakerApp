@@ -1,0 +1,270 @@
+@font-face {
+    font-family: PRR;
+    src: url(./font-family/ProtestRevolution-Regular.ttf);
+}
+
+* {
+    margin: -0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: PRR;
+}
+
+.sequencer {
+    margin: auto;
+    width: 60%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* background-color: aqua; */
+}
+
+.title-mute {
+    display: flex;
+}
+
+.pad {
+    width: 1rem;
+    padding: 1.4rem;
+    margin: 0.4rem;
+    cursor: pointer;
+}
+
+.kick-beat,
+.snare-beat,
+.hihat-beat {
+    display: flex;
+    margin: 1rem 0rem;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.kick-pad {
+    background-color: rgb(151, 223, 223);
+}
+
+.kick-pad.active {
+    background-color: rgb(43, 177, 177);
+}
+
+.hihat-pad {
+    background-color: rgb(204, 146, 201);
+}
+
+.hihat-pad.active {
+    background-color: rgb(201, 25, 192);
+}
+
+.snare-pad {
+    background-color: rgb(150, 128, 99);
+}
+
+.snare-pad.active {
+    background-color: rgb(156, 96, 18);
+}
+
+.kick-pads,
+.hihat-pads,
+.snare-pads {
+    display: flex;
+
+}
+
+h1 {
+    display: flex;
+    font-weight: 400;
+    /* background-color: #8b0a0a; */
+}
+
+h1::first-letter {
+    font-size: 3rem;
+    font-weight: 500;
+
+}
+
+h4 {
+    border-radius: 50%;
+    border: 1px solid gray;
+    padding: 0.5rem 0.6rem;
+    margin: 0.2rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: fit-content;
+}
+
+i,
+svg {
+    pointer-events: none;
+}
+
+select {
+    height: fit-content;
+    padding: 0.2rem;
+    font-size: 1rem;
+    font-family: PRR;
+    font-weight: 200;
+}
+
+.play {
+    cursor: pointer;
+    padding: 0rem .8rem;
+    font-size: 3rem;
+    background-color: #8b0a0a;
+    border: none;
+    color: white;
+    border-radius: 1rem;
+    margin-top: 2rem;
+    font-weight: 700;
+}
+
+.play.active {
+    background-color: #8b0a0a;
+}
+
+
+.tempo {
+    margin: 1rem 0rem;
+    text-align: center;
+    width: 70%;
+    padding: 1rem;
+
+    >h3 {
+        margin: 1rem 0rem;
+        font-weight: 200;
+    }
+}
+
+.tempo-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    border-radius: 10px;
+    padding: 0.2rem 0rem;
+    background: linear-gradient(rgb(83, 81, 81), rgb(59, 57, 57));
+    cursor: pointer;
+    position: relative;
+}
+
+.tempo-slider::-webkit-slider-thumb {
+    padding: 0.6rem;
+    -webkit-appearance: none;
+    background: #ffff;
+    width: 1rem;
+    border-radius: 100% 100% 0% 0%;
+}
+
+@keyframes triger {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.2);
+    }
+}
+
+
+
+/* Media Quries */
+@media (min-width: 300px) and (max-width: 599px) {
+    .sequencer {
+        /* background-color: green; */
+        width: 100%;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h4 {
+        padding: 0.2rem 0.5rem;
+
+    }
+
+    h4>i {
+        font-size: .5rem;
+    }
+
+    .pad {
+        width: 1rem;
+        padding: 1rem 1rem;
+        margin: 0.2rem 0.25rem;
+    }
+
+    .kick-beat {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: start;
+    }
+
+    .snare-beat {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: start;
+        margin: 0.3rem 0rem;
+    }
+
+    .hihat-beat {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: start;
+    }
+
+    .tempo {
+        width: 90%;
+        margin: 0;
+        padding: 0;
+        font-size: .6rem;
+
+        >h3 {
+            margin: 0;
+            margin-bottom: .4rem;
+        }
+    }
+
+    .tempo-slider::-webkit-slider-thumb {
+        width: 0.2rem;
+        padding: 0.4rem;
+        border-radius: 100%;
+    }
+
+    select {
+        font-size: .5rem;
+    }
+
+    .play {
+        margin-top: .5rem;
+        font-size: 1rem;
+        width: fit-content;
+    }
+}
+
+@media (min-width:600px) and (max-width:800px) {
+    .sequencer {
+        width: 100%;
+        min-height: 100vh;
+        /* background-color: #8b0a0a; */
+    }
+
+    .kick-beat,
+    .snare-beat,
+    .hihat-beat {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30%;
+    }
+
+    .tempo-slider {
+        width: 100%;
+        margin: auto;
+    }
+}

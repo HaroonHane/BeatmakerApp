@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beatmaker</title>
+    <link
+      rel="shortcut icon"
+      href="./utility-images/favicon.png"
+      type="image/x-icon"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="sequencer">
+      <h1>Beatmaker App</h1>
+      <div class="kick-beat">
+        <div class="kick-controls">
+          <div class="title-mute">
+            <h1>Kick</h1>
+            <h4 id="kick-mute">
+              <i class="fa-solid fa-volume-xmark"></i>
+            </h4>
+          </div>
+          <select name="beat-audio-versions" id="kick-beat-audio">
+            <option value="./sounds/kick-classic.wav">kick-Classic</option>
+            <option value="./sounds/kick-808.wav">kick-808</option>
+            <option value="./sounds/kick-heavy.wav">kick-Heavy</option>
+            <option value="./sounds/kick-softy.wav">kick-Softy</option>
+          </select>
+        </div>
+        <div class="kick-pads">
+          <div class="pad kick-pad b0"></div>
+          <div class="pad kick-pad b1"></div>
+          <div class="pad kick-pad b2"></div>
+          <div class="pad kick-pad b3"></div>
+          <div class="pad kick-pad b4"></div>
+          <div class="pad kick-pad b5"></div>
+          <div class="pad kick-pad b6"></div>
+          <div class="pad kick-pad b7"></div>
+        </div>
+      </div>
+      <div class="snare-beat">
+        <div class="snare-controls">
+          <div class="title-mute">
+            <h1>Snare</h1>
+            <h4 id="snare-mute">
+              <i class="fa-solid fa-volume-xmark"></i>
+            </h4>
+          </div>
+          <select name="beat-audio-versions" id="snare-beat-audio">
+            <option value="./sounds/snare-acoustic01.wav">
+              Snare-acoustic
+            </option>
+            <option value="./sounds/snare-808.wav">Snare-808</option>
+            <option value="./sounds/snare-vinyl02.wav">Snare-Vinyl</option>
+          </select>
+        </div>
+        <div class="snare-pads">
+          <div class="pad snare-pad b0"></div>
+          <div class="pad snare-pad b1"></div>
+          <div class="pad snare-pad b2"></div>
+          <div class="pad snare-pad b3"></div>
+          <div class="pad snare-pad b4"></div>
+          <div class="pad snare-pad b5"></div>
+          <div class="pad snare-pad b6"></div>
+          <div class="pad snare-pad b7"></div>
+        </div>
+      </div>
+      <div class="hihat-beat">
+        <div class="hihat-controls">
+          <div class="title-mute">
+            <h1>Hihat</h1>
+            <h4 id="hihat-mute">
+              <i class="fa-solid fa-volume-xmark"></i>
+            </h4>
+          </div>
+          <select name="hihatbeat-audio-versions" id="hihat-beat-audio">
+            <option value="./sounds/hihat-808.wav">Hihat-808</option>
+            <option value="./sounds/hihat-acoustic01.wav">
+              Hihat-Acoustic
+            </option>
+          </select>
+        </div>
+        <div class="hihat-pads">
+          <div class="pad hihat-pad b0"></div>
+          <div class="pad hihat-pad b1"></div>
+          <div class="pad hihat-pad b2"></div>
+          <div class="pad hihat-pad b3"></div>
+          <div class="pad hihat-pad b4"></div>
+          <div class="pad hihat-pad b5"></div>
+          <div class="pad hihat-pad b6"></div>
+          <div class="pad hihat-pad b7"></div>
+        </div>
+      </div>
+      <div class="tempo">
+        <h3>Tempo : <span id="tempo-nr">150</span></h3>
+        <input
+          class="tempo-slider"
+          type="range"
+          min="20"
+          max="300"
+          value="150"
+        />
+      </div>
+
+      <button class="play">
+        <i class="fa-solid fa-play"></i>
+        <!-- Play -->
+      </button>
+      <audio class="kick-pad-audio" src="./sounds/kick-classic.wav"></audio>
+      <audio
+        class="snare-pad-audio"
+        src="./sounds/snare-acoustic01.wav"
+      ></audio>
+      <audio class="hihat-pad-audio" src="./sounds/hihat-808.wav"></audio>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
