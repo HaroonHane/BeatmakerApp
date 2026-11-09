@@ -614,14 +614,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // 4. Update UI readouts
       this.updateBeatCounterUI()
 
-      // 5. Tactile audio feedback & smooth auto-scroll to the new beat
+      // 5. Tactile audio feedback & smooth auto-scroll to the new beat (only if content overflows)
       this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
       if (this.sequencerViewport) {
         setTimeout(() => {
-          this.sequencerViewport.scrollTo({
-            left: this.sequencerViewport.scrollWidth,
-            behavior: 'smooth'
-          })
+          if (this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10) {
+            this.sequencerViewport.scrollTo({
+              left: this.sequencerViewport.scrollWidth,
+              behavior: 'smooth'
+            })
+          }
         }, 50)
       }
     }
@@ -1331,22 +1333,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeStepDots = document.querySelectorAll(`.step-dot[data-step="${currentStep}"]`)
       activeStepDots.forEach(dot => dot.classList.add('active'))
 
-      // Auto-follow playhead in scrollable viewport if past visible threshold
+      // Auto-follow playhead in scrollable viewport ONLY if sequence overflows viewport width
       if (this.sequencerViewport && this.isPlaying) {
-        if (currentStep === 0) {
-          this.sequencerViewport.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          const stepColHead = document.querySelector(`.step-col-head[data-step="${currentStep}"]`)
-          if (stepColHead) {
-            const stepLeft = stepColHead.offsetLeft
-            const spacerWidth = 440
-            const scrollLeft = this.sequencerViewport.scrollLeft
-            const viewportWidth = this.sequencerViewport.clientWidth
-            if (stepLeft > scrollLeft + viewportWidth - 80) {
-              this.sequencerViewport.scrollTo({
-                left: stepLeft - spacerWidth - 40,
-                behavior: 'smooth'
-              })
+        const isOverflowing = this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10
+        if (isOverflowing) {
+          if (currentStep === 0) {
+            if (this.sequencerViewport.scrollLeft > 0) {
+              this.sequencerViewport.scrollTo({ left: 0, behavior: 'smooth' })
+            }
+          } else {
+            const stepColHead = document.querySelector(`.step-col-head[data-step="${currentStep}"]`)
+            if (stepColHead) {
+              const stepRect = stepColHead.getBoundingClientRect()
+              const vpRect = this.sequencerViewport.getBoundingClientRect()
+              const stickyStripWidth = 285
+
+              // Only scroll right if the step is leaving the visible right viewport edge
+              if (stepRect.right > vpRect.right - 25) {
+                const delta = stepRect.right - vpRect.right + 60
+                this.sequencerViewport.scrollBy({ left: delta, behavior: 'smooth' })
+              }
+              // If step is tucked behind the sticky channel strip on the left
+              else if (stepRect.left < vpRect.left + stickyStripWidth) {
+                const delta = stepRect.left - (vpRect.left + stickyStripWidth + 20)
+                this.sequencerViewport.scrollBy({ left: delta, behavior: 'smooth' })
+              }
             }
           }
         }
