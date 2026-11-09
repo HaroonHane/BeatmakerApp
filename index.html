@@ -23,6 +23,7 @@
     <div class="sequencer">
       <h1>Beatmaker App</h1>
       <div class="kick-beat">
+        <div class="track-number">1</div>
         <div class="kick-controls">
           <div class="title-mute">
             <h1>Kick</h1>
@@ -36,6 +37,11 @@
             <option value="./sounds/kick-heavy.wav">kick-Heavy</option>
             <option value="./sounds/kick-softy.wav">kick-Softy</option>
           </select>
+          <div class="volume-control">
+            <i class="fa-solid fa-volume-low"></i>
+            <input type="range" class="volume-slider" id="kick-volume" min="0" max="100" value="100">
+            <span class="volume-value">100%</span>
+          </div>
         </div>
         <div class="kick-pads">
           <div class="pad kick-pad b0"></div>
@@ -49,6 +55,7 @@
         </div>
       </div>
       <div class="snare-beat">
+        <div class="track-number">2</div>
         <div class="snare-controls">
           <div class="title-mute">
             <h1>Snare</h1>
@@ -63,6 +70,11 @@
             <option value="./sounds/snare-808.wav">Snare-808</option>
             <option value="./sounds/snare-vinyl02.wav">Snare-Vinyl</option>
           </select>
+          <div class="volume-control">
+            <i class="fa-solid fa-volume-low"></i>
+            <input type="range" class="volume-slider" id="snare-volume" min="0" max="100" value="100">
+            <span class="volume-value">100%</span>
+          </div>
         </div>
         <div class="snare-pads">
           <div class="pad snare-pad b0"></div>
@@ -76,6 +88,7 @@
         </div>
       </div>
       <div class="hihat-beat">
+        <div class="track-number">3</div>
         <div class="hihat-controls">
           <div class="title-mute">
             <h1>Hihat</h1>
@@ -89,6 +102,11 @@
               Hihat-Acoustic
             </option>
           </select>
+          <div class="volume-control">
+            <i class="fa-solid fa-volume-low"></i>
+            <input type="range" class="volume-slider" id="hihat-volume" min="0" max="100" value="100">
+            <span class="volume-value">100%</span>
+          </div>
         </div>
         <div class="hihat-pads">
           <div class="pad hihat-pad b0"></div>
@@ -102,7 +120,7 @@
         </div>
       </div>
       <div class="tempo">
-        <h3>Tempo : <span id="tempo-nr">150</span></h3>
+        <h3>Tempo : <span id="tempo-nr">150</span> BPM</h3>
         <input
           class="tempo-slider"
           type="range"
@@ -112,10 +130,30 @@
         />
       </div>
 
-      <button class="play">
-        <i class="fa-solid fa-play"></i>
-        <!-- Play -->
-      </button>
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <div class="step-bar">
+          <div class="step-dot" data-step="0"></div>
+          <div class="step-dot" data-step="1"></div>
+          <div class="step-dot" data-step="2"></div>
+          <div class="step-dot" data-step="3"></div>
+          <div class="step-dot" data-step="4"></div>
+          <div class="step-dot" data-step="5"></div>
+          <div class="step-dot" data-step="6"></div>
+          <div class="step-dot" data-step="7"></div>
+        </div>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="control-buttons">
+        <button class="clear-btn">
+          <i class="fa-solid fa-trash"></i>
+          <span>Clear</span>
+        </button>
+        <button class="play">
+          <i class="fa-solid fa-play"></i>
+        </button>
+      </div>
       <audio class="kick-pad-audio" src="./sounds/kick-classic.wav"></audio>
       <audio
         class="snare-pad-audio"
@@ -123,6 +161,22 @@
       ></audio>
       <audio class="hihat-pad-audio" src="./sounds/hihat-808.wav"></audio>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="clear-modal">
+      <div class="modal-content">
+        <div class="modal-icon">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h2>Clear All Beats?</h2>
+        <p>This will remove all active pads from your sequence. This action cannot be undone.</p>
+        <div class="modal-buttons">
+          <button class="modal-cancel">Cancel</button>
+          <button class="modal-confirm">Clear All</button>
+        </div>
+      </div>
+    </div>
+
     <script src="app.js"></script>
   </body>
 </html>
