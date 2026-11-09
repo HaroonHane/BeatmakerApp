@@ -123,11 +123,11 @@
             <div class="hotkey-sep"></div>
             <div class="hotkey-item"><kbd>C</kbd><span>Clear</span></div>
             <div class="hotkey-sep"></div>
-            <div class="hotkey-item"><kbd>1-3</kbd><span>Audition</span></div>
+            <div class="hotkey-item"><kbd>Ctrl+S</kbd><span>Save</span></div>
             <div class="hotkey-sep"></div>
-            <div class="hotkey-item"><kbd>⚙</kbd><span>Pad Config</span></div>
+            <div class="hotkey-item"><kbd>Ctrl+E</kbd><span>Export</span></div>
             <div class="hotkey-sep"></div>
-            <div class="hotkey-item"><kbd>+</kbd><span>Add Layer</span></div>
+            <div class="hotkey-item"><kbd>Ctrl+L</kbd><span>Library</span></div>
             <div class="hotkey-sep"></div>
             <div class="hotkey-item"><kbd>B</kbd><span>Add Beat</span></div>
           </div>
@@ -203,6 +203,87 @@
             <span>CLEAR</span>
           </button>
         </div>
+      </div>
+
+      <!-- Project, Sequence Library & Audio Export Station -->
+      <div class="project-station">
+        <div class="station-label">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>SEQUENCE &amp; EXPORT</span>
+        </div>
+        <div class="project-controls-wrap">
+          <button class="deck-btn save-btn" id="save-seq-btn" title="Save Sequence to Library (Ctrl+S)" aria-label="Save Sequence">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>SAVE</span>
+          </button>
+          <button class="deck-btn export-btn" id="export-audio-btn" title="Export Audio (WAV / MP3) (Ctrl+E)" aria-label="Export Audio">
+            <i class="fa-solid fa-download"></i>
+            <span>EXPORT</span>
+          </button>
+          <button class="deck-btn library-btn" id="open-library-btn" title="Open Sequence Library (Ctrl+L)" aria-label="Open Sequence Library">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>LIBRARY</span>
+            <span class="lib-badge" id="lib-count-badge">3</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Beat Timeline / Trackpad (DAW-Style Visualizer & Scrub Control) -->
+    <section class="beat-timeline-card" aria-label="Interactive Beat Timeline &amp; Trackpad">
+      <div class="timeline-header-bar">
+        <div class="timeline-title-wrap">
+          <div class="timeline-icon-wrap">
+            <i class="fa-solid fa-timeline"></i>
+          </div>
+          <div class="timeline-titles">
+            <h3 class="timeline-heading">BEAT TIMELINE</h3>
+            <span class="timeline-sub">Interactive DAW Trackpad &amp; Overview</span>
+          </div>
+        </div>
+
+        <!-- Live Timing & Sequence Metrics -->
+        <div class="timeline-metrics">
+          <div class="tl-metric-chip" title="Current Playhead Time / Sequence Duration">
+            <i class="fa-regular fa-clock"></i>
+            <span class="tl-metric-label">TIME:</span>
+            <span class="tl-metric-val" id="tl-time-val">00:00.00 / 00:03.20</span>
+          </div>
+          <div class="tl-metric-chip" title="Active Playhead Position">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <span class="tl-metric-label">POSITION:</span>
+            <span class="tl-metric-val" id="tl-pos-val">BEAT 01 • STEP 01</span>
+          </div>
+          <div class="tl-metric-chip" title="Total Sequence Loop Length">
+            <i class="fa-solid fa-repeat"></i>
+            <span class="tl-metric-label">LENGTH:</span>
+            <span class="tl-metric-val" id="tl-loop-val">2 BEATS (8 STEPS)</span>
+          </div>
+          <div class="tl-hint-chip" title="Click or drag anywhere to scrub or jump playback">
+            <i class="fa-solid fa-arrows-left-right"></i>
+            <span>Click/Drag to Seek</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Trackpad Surface -->
+      <div class="trackpad-surface-wrap" id="trackpad-surface-wrap">
+        <!-- Top Time Ruler (Seconds & Beat Bars) -->
+        <div class="trackpad-ruler" id="trackpad-ruler"></div>
+
+        <!-- Multi-Track Lanes Overview Matrix -->
+        <div class="trackpad-lanes-matrix" id="trackpad-lanes-matrix"></div>
+
+        <!-- Glowing Scrub Playhead Cursor -->
+        <div class="trackpad-playhead" id="trackpad-playhead">
+          <div class="playhead-scrubber-handle" title="Drag to Scrub Playhead">
+            <div class="scrubber-knob"></div>
+          </div>
+          <div class="playhead-beam"></div>
+        </div>
+
+        <!-- Hover Tooltip -->
+        <div class="trackpad-hover-tooltip" id="trackpad-hover-tooltip">Step 1 (0.00s)</div>
       </div>
     </section>
 
@@ -917,7 +998,6 @@
     </div>
   </div>
 
-
   <!-- Sound Assets & Categorized Variations Inspector Modal -->
   <div class="modal-overlay" id="sound-assets-modal" role="dialog" aria-modal="true"
     aria-labelledby="assets-modal-title">
@@ -1029,6 +1109,199 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Save Sequence Modal -->
+  <div class="modal-overlay" id="save-sequence-modal" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+    <div class="modal-content glass-card save-modal-card">
+      <div class="ux-modal-header">
+        <div class="modal-title-with-icon">
+          <div class="modal-header-icon save-icon-tint">
+            <i class="fa-solid fa-floppy-disk"></i>
+          </div>
+          <h2 id="save-modal-title">Save Sequence to Library</h2>
+        </div>
+        <button class="modal-close-btn" id="close-save-modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="modal-desc">Save the complete sequence configuration, active pads, layers, sound variations, volume faders, and BPM into your local library.</p>
+
+      <div class="save-input-group">
+        <label for="save-seq-name-input" class="save-label">Sequence Name</label>
+        <div class="save-input-wrap">
+          <i class="fa-solid fa-pen-nib"></i>
+          <input type="text" id="save-seq-name-input" placeholder="e.g. Neon Sunset Trap 808" maxlength="40" />
+        </div>
+      </div>
+
+      <!-- Quick Stats Preview -->
+      <div class="seq-preview-stats">
+        <div class="stat-pill"><i class="fa-solid fa-gauge-high"></i> <span id="save-stat-bpm">150 BPM</span></div>
+        <div class="stat-pill"><i class="fa-solid fa-music"></i> <span id="save-stat-beats">2 Beats (8 Steps)</span></div>
+        <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> <span id="save-stat-layers">3 Tracks</span></div>
+        <div class="stat-pill"><i class="fa-solid fa-fire"></i> <span id="save-stat-pads">8 Active Pads</span></div>
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-cancel" id="cancel-save-modal">Cancel</button>
+        <button class="modal-confirm" id="confirm-save-modal">
+          <i class="fa-solid fa-bookmark"></i> Save Sequence
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Export & Download Modal -->
+  <div class="modal-overlay" id="export-audio-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+    <div class="modal-content glass-card export-modal-card">
+      <div class="ux-modal-header">
+        <div class="modal-title-with-icon">
+          <div class="modal-header-icon export-icon-tint">
+            <i class="fa-solid fa-file-audio"></i>
+          </div>
+          <h2 id="export-modal-title">Export Audio Sequence</h2>
+        </div>
+        <button class="modal-close-btn" id="close-export-modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="modal-desc">Render your complete sequence with all active layers, sound variations, volume levels, and timing preserved.</p>
+
+      <!-- File Name Field -->
+      <div class="save-input-group">
+        <label for="export-filename-input" class="save-label">Export File Name</label>
+        <div class="save-input-wrap">
+          <i class="fa-solid fa-music"></i>
+          <input type="text" id="export-filename-input" value="pulse808-groove" maxlength="40" />
+        </div>
+      </div>
+
+      <!-- Format Selection -->
+      <div class="export-options-group">
+        <label class="save-label">Audio Format</label>
+        <div class="format-cards-row">
+          <label class="format-card active" data-format="wav">
+            <input type="radio" name="export-format" value="wav" checked />
+            <div class="format-card-content">
+              <div class="format-tag">LOSSLESS</div>
+              <span class="format-name">WAV Studio Master</span>
+              <span class="format-desc">44.1kHz • 16-Bit PCM Stereo</span>
+            </div>
+          </label>
+          <label class="format-card" data-format="mp3">
+            <input type="radio" name="export-format" value="mp3" />
+            <div class="format-card-content">
+              <div class="format-tag">HIGH QUALITY</div>
+              <span class="format-name">MP3 Audio</span>
+              <span class="format-desc">320kbps Universal Format</span>
+            </div>
+          </label>
+          <label class="format-card" data-format="webm">
+            <input type="radio" name="export-format" value="webm" />
+            <div class="format-card-content">
+              <div class="format-tag">BROADCAST</div>
+              <span class="format-name">WebM Audio</span>
+              <span class="format-desc">Opus Stream Recording</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Loop Count Selection -->
+      <div class="export-options-group">
+        <label class="save-label">Loop Repetitions</label>
+        <div class="loop-reps-row">
+          <button type="button" class="loop-rep-pill active" data-loops="1">1x Loop (<span id="export-rep-dur-1">3.2s</span>)</button>
+          <button type="button" class="loop-rep-pill" data-loops="2">2x Loops (<span id="export-rep-dur-2">6.4s</span>)</button>
+          <button type="button" class="loop-rep-pill" data-loops="4">4x Loops (<span id="export-rep-dur-4">12.8s</span>)</button>
+          <button type="button" class="loop-rep-pill" data-loops="8">8x Loops (<span id="export-rep-dur-8">25.6s</span>)</button>
+        </div>
+      </div>
+
+      <!-- Peak Normalization Toggle -->
+      <div class="export-toggle-row">
+        <label class="toggle-switch-label" for="export-normalize-toggle">
+          <input type="checkbox" id="export-normalize-toggle" checked />
+          <span class="toggle-switch-slider"></span>
+          <span class="toggle-switch-text">Peak Normalization to -0.1 dB (Maximize punch &amp; prevent clipping)</span>
+        </label>
+      </div>
+
+      <!-- Export Render Progress Indicator (hidden during idle) -->
+      <div class="export-progress-wrap" id="export-progress-wrap" style="display: none;">
+        <div class="export-progress-bar">
+          <div class="export-progress-fill" id="export-progress-fill"></div>
+        </div>
+        <div class="export-progress-status" id="export-progress-status">Synthesizing audio stems...</div>
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-cancel" id="cancel-export-modal">Cancel</button>
+        <button class="modal-confirm export-confirm-btn" id="confirm-export-modal">
+          <i class="fa-solid fa-download"></i> Export &amp; Download
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sequence Library Slide-in Side Drawer -->
+  <aside class="library-drawer" id="library-drawer" aria-label="Sequence Library Drawer">
+    <div class="lib-drawer-header">
+      <div class="lib-title-row">
+        <div class="lib-icon-badge">
+          <i class="fa-solid fa-bookmark"></i>
+        </div>
+        <div>
+          <h2 class="lib-drawer-title">Sequence Library</h2>
+          <p class="lib-drawer-sub">Saved grooves, patterns, and configurations</p>
+        </div>
+      </div>
+      <button class="lib-close-btn" id="close-library-drawer" aria-label="Close Library">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Library Toolbar: Search & Save Current -->
+    <div class="lib-toolbar">
+      <div class="lib-search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="lib-search-input" placeholder="Search saved sequences by name..." aria-label="Search sequences" />
+        <button class="lib-search-clear-btn" id="lib-search-clear-btn" style="display: none;" title="Clear search">
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
+      </div>
+      <button class="lib-save-now-btn" id="lib-save-now-btn" title="Save current sequence directly">
+        <i class="fa-solid fa-plus"></i> Save Current Beat
+      </button>
+    </div>
+
+    <!-- Sequences Cards List Container -->
+    <div class="lib-sequences-list" id="lib-sequences-list" role="list">
+      <!-- Dynamically rendered sequence cards -->
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="lib-drawer-footer">
+      <div class="lib-storage-info">
+        <i class="fa-solid fa-hard-drive"></i>
+        <span id="lib-storage-count-text">3 Sequences Stored</span>
+      </div>
+      <button class="lib-dismiss-btn" id="lib-dismiss-btn">Close Drawer</button>
+    </div>
+  </aside>
+
+  <!-- Library Backdrop Overlay -->
+  <div class="library-backdrop" id="library-backdrop"></div>
+
+  <!-- Floating Studio Feedback Toast Notification -->
+  <div class="studio-toast" id="studio-toast" role="status" aria-live="polite">
+    <div class="toast-icon-wrap" id="toast-icon-wrap">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <span class="toast-message" id="toast-message">Notification message</span>
   </div>
 
   <!-- Load Structured Manifest Before App Engine -->

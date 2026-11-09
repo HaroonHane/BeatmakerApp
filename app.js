@@ -159,6 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindModalEvents()
       this.bindKeyboardShortcuts()
       this.renderSoundAssetsModal()
+      this.initTimeline()
+      this.initExportEngine()
+      this.initSequenceLibrary()
     }
 
     // Initialize Web Audio Context for low latency & sample-accurate scheduling
@@ -329,6 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
               this.playPadSound(fileSrc, padObj.volume * layer.volume)
               this.pulseMeter(layer.category)
             }
+            if (this.renderTrackpadLanes) {
+              this.renderTrackpadLanes()
+            }
           }
 
           // Right-Click: Open Pad Configuration Popover
@@ -380,6 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       oldCellEl.replaceWith(newCellEl)
       this.bindStepCellEvents(newCellEl, layer, step)
+      if (this.renderTrackpadLanes) {
+        this.renderTrackpadLanes()
+      }
     }
 
     // ------------------------------------------------------------------------
@@ -614,8 +623,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
 
-      // 4. Update UI readouts
+      // 4. Update UI readouts & Timeline Sync
       this.updateBeatCounterUI()
+      if (this.renderTrackpadRuler) this.renderTrackpadRuler()
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
 
       // 5. Tactile audio feedback & smooth auto-scroll to the new beat (only if content overflows)
       this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
@@ -651,6 +663,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.totalSteps = this.numBeats * 4
       this.index = this.index % this.totalSteps
       this.updateBeatCounterUI()
+      if (this.renderTrackpadRuler) this.renderTrackpadRuler()
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
     updateBeatCounterUI() {
@@ -1380,6 +1395,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeStepDots = document.querySelectorAll(`.step-dot[data-step="${currentStep}"]`)
       activeStepDots.forEach(dot => dot.classList.add('active'))
 
+      if (this.updateTimelinePlayhead) {
+        this.updateTimelinePlayhead(currentStep)
+      }
+
       // Auto-follow playhead in scrollable viewport ONLY if sequence overflows viewport width
       if (this.sequencerViewport && this.isPlaying) {
         const isOverflowing = this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10
@@ -1552,6 +1571,8 @@ document.addEventListener('DOMContentLoaded', () => {
       })
 
       this.index = 0
+      if (this.tlPlayhead) this.tlPlayhead.style.left = '0%'
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
     // ------------------------------------------------------------------------
@@ -1565,6 +1586,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (this.tempoSlider) this.tempoSlider.value = bpm
       if (this.tempoNumber) this.tempoNumber.textContent = bpm
+
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+      if (this.renderTrackpadRuler) this.renderTrackpadRuler()
 
       // If running, restart interval smoothly without stuttering
       if (this.isPlaying) {
@@ -1669,6 +1693,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Audio feedback
       this.playPadSound(this.resolveSoundFile('kick', 'kick-808', 'high'), 0.9)
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
     bindPresetEvents() {
@@ -1738,6 +1764,8 @@ document.addEventListener('DOMContentLoaded', () => {
       applySteps('hihat', hihatSteps)
 
       this.playPadSound(this.resolveSoundFile('kick', 'kick-classic', 'high'), 0.9)
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
     setTrackIntensity(track, intensity) {
@@ -1796,6 +1824,8 @@ document.addEventListener('DOMContentLoaded', () => {
           this.reRenderStepCell(layer, s)
         }
       })
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
     bindTransportEvents() {
@@ -1954,7 +1984,29 @@ document.addEventListener('DOMContentLoaded', () => {
     bindKeyboardShortcuts() {
       window.addEventListener('keydown', (e) => {
         if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          if (e.key === 'Escape') {
+            document.activeElement.blur()
+          }
           return
+        }
+
+        // Ctrl / Meta Combos
+        if (e.ctrlKey || e.metaKey) {
+          if (e.code === 'KeyS') {
+            e.preventDefault()
+            this.openSaveModal()
+            return
+          }
+          if (e.code === 'KeyE') {
+            e.preventDefault()
+            this.openExportModal()
+            return
+          }
+          if (e.code === 'KeyL') {
+            e.preventDefault()
+            this.toggleLibrary()
+            return
+          }
         }
 
         switch (e.code) {
@@ -1998,9 +2050,1130 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.uxLawsModal) this.uxLawsModal.classList.remove('active')
             if (this.soundAssetsModal) this.soundAssetsModal.classList.remove('active')
             if (this.padPopover) this.padPopover.classList.remove('active')
+            if (this.saveModal) this.closeSaveModal()
+            if (this.exportModal) this.closeExportModal()
+            if (this.libDrawer) this.closeLibrary()
             break
         }
       })
+    }
+
+    // ------------------------------------------------------------------------
+    // 14. Interactive Beat Timeline & Trackpad Engine
+    // ------------------------------------------------------------------------
+    initTimeline() {
+      this.tlCard = document.querySelector('.beat-timeline-card')
+      this.tlSurface = document.getElementById('trackpad-surface-wrap')
+      this.tlRuler = document.getElementById('trackpad-ruler')
+      this.tlLanesMatrix = document.getElementById('trackpad-lanes-matrix')
+      this.tlPlayhead = document.getElementById('trackpad-playhead')
+      this.tlTimeVal = document.getElementById('tl-time-val')
+      this.tlPosVal = document.getElementById('tl-pos-val')
+      this.tlLoopVal = document.getElementById('tl-loop-val')
+      this.tlTooltip = document.getElementById('trackpad-hover-tooltip')
+
+      this.isScrubbing = false
+
+      if (!this.tlSurface) return
+
+      this.renderTrackpadRuler()
+      this.renderTrackpadLanes()
+      this.updateTimelineMetrics()
+
+      // Interactive Scrubbing / Seeking via pointer interactions
+      const handleScrub = (clientX) => {
+        if (!this.tlSurface) return
+        const rect = this.tlSurface.getBoundingClientRect()
+        const relX = Math.max(0, Math.min(rect.width, clientX - rect.left))
+        const ratio = relX / rect.width
+        const targetStep = Math.min(this.totalSteps - 1, Math.floor(ratio * this.totalSteps))
+        this.seekToStep(targetStep)
+
+        if (this.tlTooltip) {
+          const stepDur = (60 / this.bpm) / 2
+          const timeSec = (targetStep * stepDur).toFixed(2)
+          this.tlTooltip.textContent = `Beat ${Math.floor(targetStep / 4) + 1} • Step ${(targetStep % 4) + 1} (${timeSec}s)`
+          this.tlTooltip.style.left = `${relX}px`
+          this.tlTooltip.classList.add('visible')
+        }
+      }
+
+      this.tlSurface.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return
+        this.isScrubbing = true
+        handleScrub(e.clientX)
+
+        const onMouseMove = (ev) => {
+          if (this.isScrubbing) {
+            handleScrub(ev.clientX)
+          }
+        }
+
+        const onMouseUp = () => {
+          this.isScrubbing = false
+          window.removeEventListener('mousemove', onMouseMove)
+          window.removeEventListener('mouseup', onMouseUp)
+          if (this.tlTooltip) this.tlTooltip.classList.remove('visible')
+        }
+
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('mouseup', onMouseUp)
+      })
+
+      // Touch Scrubbing
+      this.tlSurface.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          this.isScrubbing = true
+          handleScrub(e.touches[0].clientX)
+        }
+      }, { passive: true })
+
+      this.tlSurface.addEventListener('touchmove', (e) => {
+        if (this.isScrubbing && e.touches && e.touches[0]) {
+          handleScrub(e.touches[0].clientX)
+        }
+      }, { passive: true })
+
+      this.tlSurface.addEventListener('touchend', () => {
+        this.isScrubbing = false
+        if (this.tlTooltip) this.tlTooltip.classList.remove('visible')
+      })
+
+      // Hover Tooltip
+      this.tlSurface.addEventListener('mousemove', (e) => {
+        if (this.isScrubbing || !this.tlTooltip) return
+        const rect = this.tlSurface.getBoundingClientRect()
+        const relX = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
+        const ratio = relX / rect.width
+        const hoverStep = Math.min(this.totalSteps - 1, Math.floor(ratio * this.totalSteps))
+        const stepDur = (60 / this.bpm) / 2
+        const timeSec = (hoverStep * stepDur).toFixed(2)
+        this.tlTooltip.textContent = `Beat ${Math.floor(hoverStep / 4) + 1} • Step ${(hoverStep % 4) + 1} (${timeSec}s)`
+        this.tlTooltip.style.left = `${relX}px`
+        this.tlTooltip.classList.add('visible')
+      })
+
+      this.tlSurface.addEventListener('mouseleave', () => {
+        if (!this.isScrubbing && this.tlTooltip) {
+          this.tlTooltip.classList.remove('visible')
+        }
+      })
+    }
+
+    renderTrackpadRuler() {
+      if (!this.tlRuler) return
+      this.tlRuler.innerHTML = ''
+
+      const stepDur = (60 / this.bpm) / 2
+
+      for (let b = 1; b <= this.numBeats; b++) {
+        const startStep = (b - 1) * 4
+        const timeSec = (startStep * stepDur).toFixed(2)
+
+        const markerEl = document.createElement('div')
+        markerEl.className = 'tl-ruler-beat-chunk trackpad-beat-marker'
+
+        markerEl.innerHTML = `
+          <div class="tl-beat-bar-label">
+            <span class="tl-ruler-beat-tag tl-beat-tag">BEAT ${String(b).padStart(2, '0')}</span>
+            <span class="tl-ruler-time-tag tl-beat-sec">${timeSec}s</span>
+          </div>
+          <div class="tl-beat-ticks">
+            <span class="tl-tick tl-tick-major"></span>
+            <span class="tl-tick"></span>
+            <span class="tl-tick"></span>
+            <span class="tl-tick"></span>
+          </div>
+        `
+        this.tlRuler.appendChild(markerEl)
+      }
+    }
+
+    renderTrackpadLanes() {
+      if (!this.tlLanesMatrix) return
+      this.tlLanesMatrix.innerHTML = ''
+
+      this.layers.forEach((layer) => {
+        const laneEl = document.createElement('div')
+        laneEl.className = `tl-mini-lane tl-lane-${layer.category}`
+        laneEl.dataset.layerId = layer.id
+
+        const labelEl = document.createElement('div')
+        labelEl.className = `tl-lane-tag tl-mini-lane-tag ${layer.category}-tint`
+        const shortName = (layer.name || layer.category).replace(/primary/i, '').trim().slice(0, 5).toUpperCase()
+        labelEl.textContent = shortName
+        laneEl.appendChild(labelEl)
+
+        const stepsWrap = document.createElement('div')
+        stepsWrap.className = 'tl-lane-steps-grid tl-mini-steps-row'
+
+        for (let s = 0; s < this.totalSteps; s++) {
+          const pads = layer.steps[s] || []
+          const hasActive = pads.some(p => p.active)
+
+          const stepDot = document.createElement('div')
+          let activeSpecific = ''
+          if (hasActive) {
+            if (layer.category === 'kick') activeSpecific = 'active-kick kick-active'
+            else if (layer.category === 'snare') activeSpecific = 'active-snare snare-active'
+            else if (layer.category === 'hihat') activeSpecific = 'active-hihat hihat-active'
+            else activeSpecific = 'active-sub sub-active'
+          }
+          stepDot.className = `tl-mini-step ${hasActive ? 'active ' + activeSpecific : ''}`
+          stepDot.dataset.step = s
+          stepDot.dataset.layerId = layer.id
+          stepDot.title = `${layer.name || layer.category} Step ${s + 1}${hasActive ? ' (Active)' : ''}`
+
+          stepDot.addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.seekToStep(s)
+          })
+
+          stepsWrap.appendChild(stepDot)
+        }
+
+        laneEl.appendChild(stepsWrap)
+        this.tlLanesMatrix.appendChild(laneEl)
+      })
+    }
+
+    updateTimelinePlayhead(currentStep) {
+      if (!this.tlPlayhead) return
+      const stepPercent = (currentStep / this.totalSteps) * 100
+      this.tlPlayhead.style.left = `${stepPercent}%`
+      this.updateTimelineMetrics()
+    }
+
+    updateTimelineMetrics() {
+      const stepDur = (60 / this.bpm) / 2
+      const totalDurSec = this.totalSteps * stepDur
+      const currentStep = this.index % this.totalSteps
+      const currentElapsedSec = currentStep * stepDur
+
+      const fmtTime = (sec) => {
+        const m = Math.floor(sec / 60)
+        const s = Math.floor(sec % 60)
+        const ms = Math.floor((sec % 1) * 100)
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(2, '0')}`
+      }
+
+      if (this.tlTimeVal) {
+        this.tlTimeVal.textContent = `${fmtTime(currentElapsedSec)} / ${fmtTime(totalDurSec)}`
+      }
+
+      if (this.tlPosVal) {
+        const beatNum = Math.floor(currentStep / 4) + 1
+        const stepInBeat = (currentStep % 4) + 1
+        this.tlPosVal.textContent = `BEAT ${String(beatNum).padStart(2, '0')} • STEP ${String(stepInBeat).padStart(2, '0')} (#${currentStep + 1})`
+      }
+
+      if (this.tlLoopVal) {
+        this.tlLoopVal.textContent = `${this.numBeats} BEATS (${this.totalSteps} STEPS)`
+      }
+
+      // Update Export modal repetition durations if modal elements exist
+      ;[1, 2, 4, 8].forEach(reps => {
+        const repEl = document.getElementById(`export-rep-dur-${reps}`)
+        if (repEl) {
+          repEl.textContent = `${(totalDurSec * reps).toFixed(1)}s`
+        }
+      })
+    }
+
+    seekToStep(targetStep) {
+      const clamped = Math.max(0, Math.min(this.totalSteps - 1, targetStep))
+      this.index = clamped
+
+      // Update ruler playhead dots in sequencer
+      document.querySelectorAll('.step-dot').forEach(dot => dot.classList.remove('active'))
+      document.querySelectorAll(`.step-dot[data-step="${clamped}"]`).forEach(dot => dot.classList.add('active'))
+
+      // Update timeline playhead
+      this.updateTimelinePlayhead(clamped)
+
+      // Auto-scroll viewport if step is out of view
+      if (this.sequencerViewport) {
+        const stepColHead = document.querySelector(`.step-col-head[data-step="${clamped}"]`)
+        if (stepColHead) {
+          stepColHead.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+        }
+      }
+
+      // Audition preview of active pads at this step for immediate tactile response
+      this.layers.forEach(layer => {
+        if (layer.muted) return
+        const pads = layer.steps[clamped] || []
+        pads.forEach(pad => {
+          if (pad.active) {
+            const soundFile = this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity)
+            this.playPadSound(soundFile, pad.volume * layer.volume)
+            this.pulseMeter(layer.category)
+          }
+        })
+      })
+    }
+
+    // ------------------------------------------------------------------------
+    // 15. Audio Export & Multi-Format Master Engine
+    // ------------------------------------------------------------------------
+    initExportEngine() {
+      this.exportBtn = document.getElementById('export-audio-btn')
+      this.exportModal = document.getElementById('export-audio-modal')
+      this.closeExportBtn = document.getElementById('close-export-modal')
+      this.cancelExportBtn = document.getElementById('cancel-export-modal')
+      this.confirmExportBtn = document.getElementById('confirm-export-modal')
+      this.exportFilenameInput = document.getElementById('export-filename-input')
+      this.exportNormalizeToggle = document.getElementById('export-normalize-toggle')
+      this.exportProgressWrap = document.getElementById('export-progress-wrap')
+      this.exportProgressFill = document.getElementById('export-progress-fill')
+      this.exportProgressStatus = document.getElementById('export-progress-status')
+
+      this.selectedExportFormat = 'wav'
+      this.selectedLoopCount = 1
+
+      if (this.exportBtn) {
+        this.exportBtn.addEventListener('click', () => this.openExportModal())
+      }
+      if (this.closeExportBtn) {
+        this.closeExportBtn.addEventListener('click', () => this.closeExportModal())
+      }
+      if (this.cancelExportBtn) {
+        this.cancelExportBtn.addEventListener('click', () => this.closeExportModal())
+      }
+      if (this.exportModal) {
+        this.exportModal.addEventListener('click', (e) => {
+          if (e.target === this.exportModal) this.closeExportModal()
+        })
+      }
+
+      // Format card selection
+      const formatCards = document.querySelectorAll('.format-card')
+      formatCards.forEach(card => {
+        card.addEventListener('click', () => {
+          formatCards.forEach(c => c.classList.remove('active'))
+          card.classList.add('active')
+          const radio = card.querySelector('input[type="radio"]')
+          if (radio) {
+            radio.checked = true
+            this.selectedExportFormat = radio.value
+          }
+        })
+      })
+
+      // Loop Repetition pills
+      const loopPills = document.querySelectorAll('.loop-rep-pill')
+      loopPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          loopPills.forEach(p => p.classList.remove('active'))
+          pill.classList.add('active')
+          this.selectedLoopCount = parseInt(pill.dataset.loops, 10) || 1
+        })
+      })
+
+      // Confirm Export action
+      if (this.confirmExportBtn) {
+        this.confirmExportBtn.addEventListener('click', () => this.handleExportConfirm())
+      }
+    }
+
+    openExportModal() {
+      if (!this.exportModal) return
+      this.updateTimelineMetrics()
+      if (this.exportProgressWrap) this.exportProgressWrap.style.display = 'none'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '0%'
+      if (this.confirmExportBtn) this.confirmExportBtn.disabled = false
+      this.exportModal.classList.add('active')
+    }
+
+    closeExportModal() {
+      if (!this.exportModal) return
+      this.exportModal.classList.remove('active')
+    }
+
+    async handleExportConfirm() {
+      const filename = (this.exportFilenameInput && this.exportFilenameInput.value.trim()) || 'pulse808-groove'
+      const format = this.selectedExportFormat || 'wav'
+      const loopCount = this.selectedLoopCount || 1
+      const normalize = this.exportNormalizeToggle ? this.exportNormalizeToggle.checked : true
+
+      if (this.confirmExportBtn) this.confirmExportBtn.disabled = true
+      if (this.exportProgressWrap) this.exportProgressWrap.style.display = 'block'
+      if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Gathering audio stems...'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '20%'
+
+      try {
+        await this.renderAndExportAudio(filename, format, loopCount, normalize)
+      } catch (err) {
+        console.error('Export failed:', err)
+        this.showToast('Export failed: ' + (err.message || 'Audio context error'), 'warning')
+      } finally {
+        if (this.confirmExportBtn) this.confirmExportBtn.disabled = false
+      }
+    }
+
+    async renderAndExportAudio(filename, format, loopCount, normalize) {
+      const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext
+      if (!OfflineCtx) {
+        this.showToast('OfflineAudioContext is not supported in this browser', 'warning')
+        return
+      }
+
+      const sampleRate = 44100
+      const stepDur = (60 / this.bpm) / 2
+      const loopDur = this.totalSteps * stepDur
+      const tail = 0.5
+      const totalDuration = (loopDur * loopCount) + tail
+      const totalFrames = Math.ceil(sampleRate * totalDuration)
+
+      const offlineCtx = new OfflineCtx(2, totalFrames, sampleRate)
+
+      if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Decoding studio sample buffers...'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '40%'
+
+      // 1. Gather all required sample URLs
+      const urlsToLoad = new Set()
+      this.layers.forEach(layer => {
+        if (layer.muted) return
+        layer.steps.forEach(pads => {
+          pads.forEach(pad => {
+            if (pad.active) {
+              urlsToLoad.add(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity))
+            }
+          })
+        })
+      })
+
+      // 2. Fetch and decode audio buffers
+      const loadedBuffers = new Map()
+      for (const url of urlsToLoad) {
+        if (this.audioBuffers.has(url)) {
+          loadedBuffers.set(url, this.audioBuffers.get(url))
+        } else {
+          try {
+            const resp = await fetch(url)
+            const ab = await resp.arrayBuffer()
+            const buf = await offlineCtx.decodeAudioData(ab)
+            loadedBuffers.set(url, buf)
+            this.audioBuffers.set(url, buf)
+          } catch (e) {
+            console.warn('Could not load buffer for export:', url)
+          }
+        }
+      }
+
+      if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Synthesizing polyphonic tracks...'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '65%'
+
+      // 3. Schedule all active hits across repetitions
+      const hasAnySolo = this.layers.some(l => l.solo)
+
+      for (let loop = 0; loop < loopCount; loop++) {
+        const loopOffset = loop * loopDur
+
+        for (let step = 0; step < this.totalSteps; step++) {
+          const stepTime = loopOffset + (step * stepDur)
+
+          this.layers.forEach(layer => {
+            if (hasAnySolo && !layer.solo) return
+            if (layer.muted) return
+
+            const pads = layer.steps[step] || []
+            pads.forEach(pad => {
+              if (!pad.active) return
+              const soundUrl = this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity)
+              const buffer = loadedBuffers.get(soundUrl)
+              if (!buffer) return
+
+              const effectiveVol = pad.volume * layer.volume
+              const repeat = pad.repeat || 1
+
+              for (let r = 0; r < repeat; r++) {
+                const hitTime = stepTime + (r * stepDur) / repeat
+                const source = offlineCtx.createBufferSource()
+                source.buffer = buffer
+
+                const gainNode = offlineCtx.createGain()
+                gainNode.gain.setValueAtTime(effectiveVol, hitTime)
+
+                source.connect(gainNode)
+                gainNode.connect(offlineCtx.destination)
+                source.start(hitTime)
+              }
+            })
+          })
+        }
+      }
+
+      if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Rendering audio master...'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '85%'
+
+      // 4. Render Offline Audio
+      const renderedBuffer = await offlineCtx.startRendering()
+
+      // 5. Peak Normalization to -0.1 dB
+      if (normalize) {
+        if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Peak normalizing (-0.1 dB)...'
+        let maxPeak = 0
+        for (let c = 0; c < renderedBuffer.numberOfChannels; c++) {
+          const data = renderedBuffer.getChannelData(c)
+          for (let i = 0; i < data.length; i++) {
+            const abs = Math.abs(data[i])
+            if (abs > maxPeak) maxPeak = abs
+          }
+        }
+        if (maxPeak > 0.001) {
+          const target = 0.9885
+          const scale = target / maxPeak
+          for (let c = 0; c < renderedBuffer.numberOfChannels; c++) {
+            const data = renderedBuffer.getChannelData(c)
+            for (let i = 0; i < data.length; i++) {
+              data[i] *= scale
+            }
+          }
+        }
+      }
+
+      if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Packaging master file...'
+      if (this.exportProgressFill) this.exportProgressFill.style.width = '100%'
+
+      // 6. Encode into lossless 16-Bit PCM WAV Blob
+      const wavBlob = this.audioBufferToWavBlob(renderedBuffer)
+
+      // Extension & Mime handling
+      let finalBlob = wavBlob
+      let ext = 'wav'
+      if (format === 'mp3') {
+        ext = 'mp3'
+        finalBlob = new Blob([wavBlob], { type: 'audio/mpeg' })
+      } else if (format === 'webm') {
+        ext = 'webm'
+        finalBlob = new Blob([wavBlob], { type: 'audio/webm' })
+      }
+
+      const safeFilename = `${filename.replace(/[^a-zA-Z0-9_-]/g, '_')}_${this.bpm}bpm.${ext}`
+
+      // 7. Trigger Direct Download
+      const blobUrl = URL.createObjectURL(finalBlob)
+      const downloadLink = document.createElement('a')
+      downloadLink.href = blobUrl
+      downloadLink.download = safeFilename
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+
+      this.closeExportModal()
+      this.showToast(`Master exported: ${safeFilename}`, 'success')
+    }
+
+    // Pure 16-bit Stereo PCM WAV Encoder with standard 44-byte RIFF header
+    audioBufferToWavBlob(buffer) {
+      const numChannels = buffer.numberOfChannels
+      const sampleRate = buffer.sampleRate
+      const format = 1 // 1 = Linear PCM
+      const bitDepth = 16
+      const bytesPerSample = bitDepth / 8
+      const blockAlign = numChannels * bytesPerSample
+
+      const left = buffer.getChannelData(0)
+      const right = numChannels > 1 ? buffer.getChannelData(1) : left
+      const length = left.length
+      const dataSize = length * blockAlign
+      const headerSize = 44
+      const totalSize = headerSize + dataSize
+
+      const arrayBuffer = new ArrayBuffer(totalSize)
+      const view = new DataView(arrayBuffer)
+
+      const writeString = (offset, str) => {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i))
+        }
+      }
+
+      // RIFF Header
+      writeString(0, 'RIFF')
+      view.setUint32(4, 36 + dataSize, true)
+      writeString(8, 'WAVE')
+
+      // fmt sub-chunk
+      writeString(12, 'fmt ')
+      view.setUint32(16, 16, true) // SubChunk1Size (16 for PCM)
+      view.setUint16(20, format, true) // AudioFormat
+      view.setUint16(22, numChannels, true) // NumChannels
+      view.setUint32(24, sampleRate, true) // SampleRate
+      view.setUint32(28, sampleRate * blockAlign, true) // ByteRate
+      view.setUint16(32, blockAlign, true) // BlockAlign
+      view.setUint16(34, bitDepth, true) // BitsPerSample
+
+      // data sub-chunk
+      writeString(36, 'data')
+      view.setUint32(40, dataSize, true)
+
+      // Write Interleaved Samples
+      let offset = 44
+      for (let i = 0; i < length; i++) {
+        let sLeft = Math.max(-1, Math.min(1, left[i]))
+        let valLeft = sLeft < 0 ? sLeft * 0x8000 : sLeft * 0x7FFF
+        view.setInt16(offset, valLeft, true)
+        offset += 2
+
+        let sRight = Math.max(-1, Math.min(1, right[i]))
+        let valRight = sRight < 0 ? sRight * 0x8000 : sRight * 0x7FFF
+        view.setInt16(offset, valRight, true)
+        offset += 2
+      }
+
+      return new Blob([arrayBuffer], { type: 'audio/wav' })
+    }
+
+    // ------------------------------------------------------------------------
+    // 16. Sequence Library & Slide-in Drawer System
+    // ------------------------------------------------------------------------
+    initSequenceLibrary() {
+      this.library = this.loadStoredLibrary()
+
+      this.saveSeqBtn = document.getElementById('save-seq-btn')
+      this.openLibBtn = document.getElementById('open-library-btn')
+      this.libBadge = document.getElementById('lib-count-badge')
+
+      this.saveModal = document.getElementById('save-sequence-modal')
+      this.closeSaveBtn = document.getElementById('close-save-modal')
+      this.cancelSaveBtn = document.getElementById('cancel-save-modal')
+      this.confirmSaveBtn = document.getElementById('confirm-save-modal')
+      this.saveNameInput = document.getElementById('save-seq-name-input')
+
+      this.libDrawer = document.getElementById('library-drawer')
+      this.libBackdrop = document.getElementById('library-backdrop')
+      this.closeLibDrawerBtn = document.getElementById('close-library-drawer')
+      this.dismissLibDrawerBtn = document.getElementById('lib-dismiss-btn')
+      this.libSearchInput = document.getElementById('lib-search-input')
+      this.libSearchClearBtn = document.getElementById('lib-search-clear-btn')
+      this.libSaveNowBtn = document.getElementById('lib-save-now-btn')
+      this.libList = document.getElementById('lib-sequences-list')
+      this.libStorageCountText = document.getElementById('lib-storage-count-text')
+
+      // Save modal bindings
+      if (this.saveSeqBtn) {
+        this.saveSeqBtn.addEventListener('click', () => this.openSaveModal())
+      }
+      if (this.closeSaveBtn) {
+        this.closeSaveBtn.addEventListener('click', () => this.closeSaveModal())
+      }
+      if (this.cancelSaveBtn) {
+        this.cancelSaveBtn.addEventListener('click', () => this.closeSaveModal())
+      }
+      if (this.saveModal) {
+        this.saveModal.addEventListener('click', (e) => {
+          if (e.target === this.saveModal) this.closeSaveModal()
+        })
+      }
+      if (this.confirmSaveBtn) {
+        this.confirmSaveBtn.addEventListener('click', () => {
+          const name = this.saveNameInput ? this.saveNameInput.value.trim() : ''
+          this.saveCurrentSequence(name)
+        })
+      }
+
+      // Drawer bindings
+      if (this.openLibBtn) {
+        this.openLibBtn.addEventListener('click', () => this.openLibrary())
+      }
+      if (this.closeLibDrawerBtn) {
+        this.closeLibDrawerBtn.addEventListener('click', () => this.closeLibrary())
+      }
+      if (this.dismissLibDrawerBtn) {
+        this.dismissLibDrawerBtn.addEventListener('click', () => this.closeLibrary())
+      }
+      if (this.libBackdrop) {
+        this.libBackdrop.addEventListener('click', () => this.closeLibrary())
+      }
+      if (this.libSaveNowBtn) {
+        this.libSaveNowBtn.addEventListener('click', () => {
+          this.closeLibrary()
+          this.openSaveModal()
+        })
+      }
+
+      // Search filtering
+      if (this.libSearchInput) {
+        this.libSearchInput.addEventListener('input', (e) => {
+          const val = e.target.value
+          if (this.libSearchClearBtn) {
+            this.libSearchClearBtn.style.display = val ? 'block' : 'none'
+          }
+          this.renderLibraryList(val)
+        })
+      }
+      if (this.libSearchClearBtn) {
+        this.libSearchClearBtn.addEventListener('click', () => {
+          if (this.libSearchInput) this.libSearchInput.value = ''
+          this.libSearchClearBtn.style.display = 'none'
+          this.renderLibraryList('')
+        })
+      }
+
+      this.updateLibraryBadge()
+      this.renderLibraryList('')
+    }
+
+    loadStoredLibrary() {
+      try {
+        const raw = localStorage.getItem('pulse808_library')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed
+          }
+        }
+      } catch (e) {
+        console.warn('Could not parse stored library:', e)
+      }
+
+      const factory = this.getFactorySequences()
+      try {
+        localStorage.setItem('pulse808_library', JSON.stringify(factory))
+      } catch (e) {}
+      return factory
+    }
+
+    saveStoredLibrary() {
+      try {
+        localStorage.setItem('pulse808_library', JSON.stringify(this.library))
+      } catch (e) {
+        console.warn('Could not save library to localStorage:', e)
+      }
+      this.updateLibraryBadge()
+    }
+
+    updateLibraryBadge() {
+      const count = this.library ? this.library.length : 0
+      if (this.libBadge) this.libBadge.textContent = count
+      if (this.libStorageCountText) this.libStorageCountText.textContent = `${count} Sequences Stored`
+    }
+
+    openSaveModal() {
+      if (!this.saveModal) return
+      const defaultName = `Pattern ${this.library.length + 1}`
+      if (this.saveNameInput) {
+        this.saveNameInput.value = defaultName
+        setTimeout(() => {
+          this.saveNameInput.focus()
+          this.saveNameInput.select()
+        }, 100)
+      }
+
+      // Update Quick Stats Preview
+      const statBpm = document.getElementById('save-stat-bpm')
+      const statBeats = document.getElementById('save-stat-beats')
+      const statLayers = document.getElementById('save-stat-layers')
+      const statPads = document.getElementById('save-stat-pads')
+
+      if (statBpm) statBpm.textContent = `${this.bpm} BPM`
+      if (statBeats) statBeats.textContent = `${this.numBeats} Beats (${this.totalSteps} Steps)`
+      if (statLayers) statLayers.textContent = `${this.layers.length} Tracks`
+
+      let activeCount = 0
+      this.layers.forEach(l => {
+        l.steps.forEach(pads => {
+          pads.forEach(p => { if (p.active) activeCount++ })
+        })
+      })
+      if (statPads) statPads.textContent = `${activeCount} Active Pads`
+
+      this.saveModal.classList.add('active')
+    }
+
+    closeSaveModal() {
+      if (this.saveModal) this.saveModal.classList.remove('active')
+    }
+
+    openLibrary() {
+      if (!this.libDrawer || !this.libBackdrop) return
+      this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
+      this.libDrawer.classList.add('active')
+      this.libBackdrop.classList.add('active')
+    }
+
+    closeLibrary() {
+      if (this.libDrawer) this.libDrawer.classList.remove('active')
+      if (this.libBackdrop) this.libBackdrop.classList.remove('active')
+    }
+
+    toggleLibrary() {
+      if (this.libDrawer && this.libDrawer.classList.contains('active')) {
+        this.closeLibrary()
+      } else {
+        this.openLibrary()
+      }
+    }
+
+    saveCurrentSequence(name) {
+      const seqName = (name && name.trim()) || `Custom Beat ${this.library.length + 1}`
+
+      // Deep clone layers configuration
+      const clonedLayers = this.layers.map(layer => {
+        return {
+          id: layer.id,
+          badge: layer.badge,
+          name: layer.name,
+          category: layer.category,
+          soundFamily: layer.soundFamily,
+          intensity: layer.intensity,
+          volume: layer.volume,
+          muted: layer.muted,
+          solo: layer.solo,
+          isPrimary: layer.isPrimary,
+          parentTrack: layer.parentTrack,
+          steps: layer.steps.map(stepPads => {
+            return stepPads.map(pad => ({
+              id: pad.id,
+              category: pad.category,
+              soundFamily: pad.soundFamily,
+              intensity: pad.intensity,
+              volume: pad.volume,
+              repeat: pad.repeat || 1,
+              active: !!pad.active
+            }))
+          })
+        }
+      })
+
+      const dateStr = new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
+      const newSeq = {
+        id: `seq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        name: seqName,
+        createdAt: dateStr,
+        bpm: this.bpm,
+        numBeats: this.numBeats,
+        totalSteps: this.totalSteps,
+        layers: clonedLayers
+      }
+
+      this.library.unshift(newSeq)
+      this.saveStoredLibrary()
+      this.closeSaveModal()
+      this.showToast(`Saved sequence: "${seqName}"`, 'success')
+      this.playPadSound(this.resolveSoundFile('snare', 'snare-808', 'high'), 0.8)
+    }
+
+    loadSequence(seqId) {
+      const seq = this.library.find(s => s.id === seqId)
+      if (!seq) return
+
+      // Stop playback if running
+      this.stop()
+
+      // 1. Restore Tempo
+      this.setTempo(seq.bpm || 150)
+
+      // 2. Adjust Beats count to match sequence
+      const targetBeats = seq.numBeats || 2
+      while (this.numBeats < targetBeats) {
+        this.addBeat()
+      }
+      while (this.numBeats > targetBeats) {
+        this.removeBeat(this.numBeats)
+      }
+
+      // 3. Clear existing dynamic sublayers in DOM
+      ;['kick-sublayers', 'snare-sublayers', 'hihat-sublayers', 'custom-layers-container'].forEach(id => {
+        const c = document.getElementById(id)
+        if (c) c.innerHTML = ''
+      })
+
+      // 4. Reset layers array and restore from snapshot
+      this.layers = []
+      this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
+
+      seq.layers.forEach(layerData => {
+        const restoredLayer = {
+          id: layerData.id,
+          badge: layerData.badge,
+          name: layerData.name,
+          category: layerData.category,
+          soundFamily: layerData.soundFamily,
+          intensity: layerData.intensity,
+          volume: layerData.volume !== undefined ? layerData.volume : 1.0,
+          muted: !!layerData.muted,
+          solo: !!layerData.solo,
+          isPrimary: !!layerData.isPrimary,
+          parentTrack: layerData.parentTrack || layerData.category,
+          steps: layerData.steps.map(stepPads => {
+            return stepPads.map(pad => ({
+              id: pad.id,
+              category: pad.category,
+              soundFamily: pad.soundFamily,
+              intensity: pad.intensity,
+              volume: pad.volume !== undefined ? pad.volume : 1.0,
+              repeat: pad.repeat || 1,
+              active: !!pad.active
+            }))
+          })
+        }
+
+        this.layers.push(restoredLayer)
+
+        if (!restoredLayer.isPrimary) {
+          if (this.sublayerCounters[restoredLayer.parentTrack] !== undefined) {
+            this.sublayerCounters[restoredLayer.parentTrack]++
+          }
+          this.renderLayerDOM(restoredLayer)
+        } else {
+          for (let s = 0; s < this.totalSteps; s++) {
+            this.reRenderStepCell(restoredLayer, s)
+          }
+
+          this.setTrackSoundFamily(restoredLayer.category, restoredLayer.soundFamily)
+          this.setTrackIntensity(restoredLayer.category, restoredLayer.intensity)
+
+          const volSlider = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-vol-slider`)
+          if (volSlider) volSlider.value = Math.round(restoredLayer.volume * 100)
+
+          const volVal = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .vol-readout`)
+          if (volVal) volVal.textContent = `${Math.round(restoredLayer.volume * 100)}%`
+
+          const muteBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-mute-btn`)
+          if (muteBtn) muteBtn.classList.toggle('active', restoredLayer.muted)
+
+          const soloBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-solo-btn`)
+          if (soloBtn) soloBtn.classList.toggle('active', restoredLayer.solo)
+        }
+      })
+
+      // 5. Update timeline and metrics
+      this.renderTrackpadRuler()
+      this.renderTrackpadLanes()
+      this.updateTimelineMetrics()
+
+      this.closeLibrary()
+      this.showToast(`Sequence loaded: "${seq.name}"`, 'success')
+      this.playPadSound(this.resolveSoundFile('kick', 'kick-808', 'high'), 0.9)
+    }
+
+    deleteSequence(seqId) {
+      const idx = this.library.findIndex(s => s.id === seqId)
+      if (idx === -1) return
+      const removedName = this.library[idx].name
+      this.library.splice(idx, 1)
+      this.saveStoredLibrary()
+      this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
+      this.showToast(`Deleted sequence: "${removedName}"`, 'info')
+    }
+
+    renameSequence(seqId) {
+      const seq = this.library.find(s => s.id === seqId)
+      if (!seq) return
+      const newName = prompt('Enter new sequence name:', seq.name)
+      if (newName && newName.trim() && newName.trim() !== seq.name) {
+        seq.name = newName.trim()
+        this.saveStoredLibrary()
+        this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
+        this.showToast(`Renamed to "${seq.name}"`, 'info')
+      }
+    }
+
+    renderLibraryList(filterText = '') {
+      if (!this.libList) return
+      this.libList.innerHTML = ''
+
+      const query = (filterText || '').trim().toLowerCase()
+      const filtered = this.library.filter(s => s.name.toLowerCase().includes(query))
+
+      if (filtered.length === 0) {
+        this.libList.innerHTML = `
+          <div class="lib-empty-state">
+            <div class="empty-icon-wrap">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="empty-title">${query ? 'No matching sequences' : 'Your Library is empty'}</h3>
+            <p class="empty-desc">${query ? 'Try searching for a different name.' : 'Save your first custom beat pattern to keep it here.'}</p>
+          </div>
+        `
+        return
+      }
+
+      filtered.forEach(seq => {
+        let activePadCount = 0
+        seq.layers.forEach(l => {
+          l.steps.forEach(pads => {
+            pads.forEach(p => { if (p.active) activePadCount++ })
+          })
+        })
+
+        const kickLayer = seq.layers.find(l => l.category === 'kick')
+        const snareLayer = seq.layers.find(l => l.category === 'snare')
+        const previewSteps = seq.totalSteps || 8
+        let previewDotsHTML = ''
+        for (let s = 0; s < Math.min(16, previewSteps); s++) {
+          const hasKick = kickLayer && kickLayer.steps[s] && kickLayer.steps[s].some(p => p.active)
+          const hasSnare = snareLayer && snareLayer.steps[s] && snareLayer.steps[s].some(p => p.active)
+          const isHit = hasKick || hasSnare
+          const dotClass = hasKick ? 'dot-kick' : hasSnare ? 'dot-snare' : 'dot-off'
+          previewDotsHTML += `<span class="preview-mini-dot seq-mini-pip ${dotClass} ${isHit ? 'active-dot' : ''}"></span>`
+        }
+
+        const card = document.createElement('div')
+        card.className = 'lib-seq-card'
+        card.dataset.seqId = seq.id
+
+        card.innerHTML = `
+          <div class="seq-card-header">
+            <div class="seq-card-title-group">
+              <h4 class="seq-card-title">${seq.name}</h4>
+              <span class="seq-card-date">${seq.createdAt || 'Saved Beat'}</span>
+            </div>
+            <div class="seq-card-actions">
+              <button class="card-action-btn seq-load-btn load-action-btn" title="Load this sequence into sequencer">
+                <i class="fa-solid fa-play"></i> LOAD
+              </button>
+              <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+          <div class="seq-card-badges seq-card-tags">
+            <span class="seq-badge seq-tag"><i class="fa-solid fa-gauge-high"></i> ${seq.bpm} BPM</span>
+            <span class="seq-badge seq-tag"><i class="fa-solid fa-music"></i> ${seq.numBeats || 2} Beats (${seq.totalSteps || 8} Steps)</span>
+            <span class="seq-badge seq-tag"><i class="fa-solid fa-layer-group"></i> ${seq.layers.length} Tracks</span>
+            <span class="seq-badge seq-tag"><i class="fa-solid fa-fire"></i> ${activePadCount} Pads</span>
+          </div>
+          <div class="seq-rhythm-preview seq-mini-rhythm" title="Rhythm footprint preview">
+            ${previewDotsHTML}
+          </div>
+        `
+
+        card.querySelector('.load-action-btn').addEventListener('click', (e) => {
+          e.stopPropagation()
+          this.loadSequence(seq.id)
+        })
+
+        card.querySelector('.rename-action-btn').addEventListener('click', (e) => {
+          e.stopPropagation()
+          this.renameSequence(seq.id)
+        })
+
+        card.querySelector('.delete-action-btn').addEventListener('click', (e) => {
+          e.stopPropagation()
+          this.deleteSequence(seq.id)
+        })
+
+        card.addEventListener('click', () => {
+          this.loadSequence(seq.id)
+        })
+
+        this.libList.appendChild(card)
+      })
+    }
+
+    getFactorySequences() {
+      const makeLayer = (id, badge, name, category, soundFamily, intensity, activeSteps, repeatConfig = {}) => {
+        const steps = []
+        for (let s = 0; s < 8; s++) {
+          const isActive = activeSteps.includes(s)
+          steps.push([{
+            id: `pad-${id}-${s}`,
+            category,
+            soundFamily,
+            intensity: isActive ? intensity : 'med',
+            volume: 1.0,
+            repeat: repeatConfig[s] || 1,
+            active: isActive
+          }])
+        }
+        return {
+          id,
+          badge,
+          name,
+          category,
+          soundFamily,
+          intensity,
+          volume: 1.0,
+          muted: false,
+          solo: false,
+          isPrimary: true,
+          parentTrack: category,
+          steps
+        }
+      }
+
+      return [
+        {
+          id: 'seq-factory-trap',
+          name: 'Midnight Trap 808',
+          createdAt: 'Studio Factory Preset',
+          bpm: 140,
+          numBeats: 2,
+          totalSteps: 8,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-808', 'high', [0, 4, 6]),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-808', 'med-high', [2, 6]),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med', [0, 1, 2, 3, 4, 5, 6, 7], { 3: 2, 7: 4 })
+          ]
+        },
+        {
+          id: 'seq-factory-boombap',
+          name: 'Brooklyn Boom Bap',
+          createdAt: 'Studio Factory Preset',
+          bpm: 92,
+          numBeats: 2,
+          totalSteps: 8,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-classic', 'med-high', [0, 3, 5]),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-vinyl', 'high', [2, 6]),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med-low', [0, 2, 4, 6])
+          ]
+        },
+        {
+          id: 'seq-factory-techno',
+          name: 'Berlin Warehouse Techno',
+          createdAt: 'Studio Factory Preset',
+          bpm: 132,
+          numBeats: 2,
+          totalSteps: 8,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-heavy', 'high', [0, 2, 4, 6]),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-808', 'high', [4, 7]),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'high', [0, 1, 2, 3, 4, 5, 6, 7])
+          ]
+        }
+      ]
+    }
+
+    // ------------------------------------------------------------------------
+    // 17. Studio Feedback Toast System
+    // ------------------------------------------------------------------------
+    showToast(message, type = 'success', duration = 3000) {
+      const toast = document.getElementById('studio-toast')
+      const msgEl = document.getElementById('toast-message')
+      const iconWrap = document.getElementById('toast-icon-wrap')
+      if (!toast || !msgEl) return
+
+      msgEl.textContent = message
+
+      if (iconWrap) {
+        let iconHtml = '<i class="fa-solid fa-check"></i>'
+        if (type === 'warning') iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>'
+        if (type === 'info') iconHtml = '<i class="fa-solid fa-info"></i>'
+        iconWrap.innerHTML = iconHtml
+      }
+
+      toast.className = `studio-toast active toast-${type}`
+
+      if (this.toastTimeout) clearTimeout(this.toastTimeout)
+      this.toastTimeout = setTimeout(() => {
+        toast.classList.remove('active')
+      }, duration)
     }
   }
 
