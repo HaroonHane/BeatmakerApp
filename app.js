@@ -469,12 +469,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       })
 
-      // 2. "Add Layer" under each 4-pad beat chunk
+      // 2. "Add Layer" on each 4-pad beat card -> adds a 4-pad layer to THIS specific beat!
       document.querySelectorAll('.chunk-add-layer-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const track = btn.dataset.track || 'kick'
-          const beatChunk = btn.dataset.beat || '1'
-          this.addLayer(track, { focusedBeat: parseInt(beatChunk, 10) })
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const rowEl = btn.closest('.track-channel')
+          const layerId = (rowEl && rowEl.dataset.layerId) || btn.dataset.layerId || `${btn.dataset.track}-primary`
+          const beatNum = btn.dataset.beat || '1'
+          this.addLayerToBeatChunk(layerId, parseInt(beatNum, 10))
         })
       })
 
@@ -602,11 +604,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Bind Add Layer button on this new chunk
+        // Bind Add Layer button on this new chunk -> adds 4 pads directly to THIS specific beat card
         const chunkAddLayerBtn = chunkEl.querySelector('.chunk-add-layer-btn')
         if (chunkAddLayerBtn) {
-          chunkAddLayerBtn.addEventListener('click', () => {
-            this.addLayer(layer.category, { focusedBeat: newBeatNum })
+          chunkAddLayerBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.addLayerToBeatChunk(layer.id, newBeatNum)
           })
         }
       })
@@ -662,9 +665,9 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let b = 1; b <= this.numBeats; b++) {
         const startStep = (b - 1) * 4
         chunksHTML += `
-          <div class="beat-chunk beat-chunk-${b} ${b % 2 === 0 ? 'even-chunk' : ''}" data-beat="${b}">
+          <div class="beat-chunk beat-chunk-${b} ${b % 2 === 0 ? 'even-chunk' : ''}" data-beat="${b}" data-layer-id="${layer.id}">
             ${[startStep, startStep + 1, startStep + 2, startStep + 3].map(s => this.renderStepCellHTML(layer, s)).join('')}
-            <button class="chunk-add-layer-btn" data-track="${layer.category}" data-beat="${b}" title="Add Layer to Beat ${b}">
+            <button class="chunk-add-layer-btn" data-track="${layer.category}" data-layer-id="${layer.id}" data-beat="${b}" title="Add 4-Pad Layer to Beat ${b}">
               <i class="fa-solid fa-plus"></i> Add Layer
             </button>
           </div>
@@ -899,12 +902,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // 9. Bind chunk add layer buttons inside this sublayer
+      // 9. Bind chunk add layer buttons inside this sublayer -> adds 4 pads directly to that specific beat card
       layerEl.querySelectorAll('.chunk-add-layer-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const track = btn.dataset.track || layer.category
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
           const beat = parseInt(btn.dataset.beat, 10) || 1
-          this.addLayer(track, { focusedBeat: beat })
+          this.addLayerToBeatChunk(layer.id, beat)
         })
       })
     }
@@ -930,8 +933,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 4. Multiple Pads at the Same Beat Position (Pad Stacking & Removal)
+    // 4. Multiple Pads at the Same Beat Position (Beat Chunk Layering & Pad Stacking)
     // ------------------------------------------------------------------------
+    // Adds a 4-pad layer specifically to a single 4-pad beat chunk card (not overall beats)
+    addLayerToBeatChunk(layerId, beatNum) {
+      this.ensureAudioContextRunning()
+      const layer = this.getLayer(layerId)
+      if (!layer) return
+
+      const b = parseInt(beatNum, 10) || 1
+      const startStep = (b - 1) * 4
+      const endStep = startStep + 4
+
+      // Add a pad instance to each of the 4 steps of this specific beat card
+      for (let s = startStep; s < endStep; s++) {
+        const newPadId = `pad-${layer.id}-${s}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+        const newPad = {
+          id: newPadId,
+          category: layer.category,
+          soundFamily: layer.soundFamily,
+          intensity: layer.intensity,
+          volume: 1.0,
+          repeat: 1,
+          active: true
+        }
+
+        if (!layer.steps[s]) layer.steps[s] = []
+        layer.steps[s].push(newPad)
+        this.reRenderStepCell(layer, s)
+      }
+
+      // Audition preview hit
+      this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), 0.8)
+      this.pulseMeter(layer.category)
+    }
+
     addPadToStep(layerId, step, config = {}) {
       const layer = this.getLayer(layerId)
       if (!layer) return
