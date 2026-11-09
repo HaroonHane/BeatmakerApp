@@ -754,6 +754,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="sublayer-identity">
               <span class="track-badge">${layer.badge}</span>
               <input type="text" class="sublayer-name-input" value="${layer.name}" title="Edit layer name" aria-label="Layer name" />
+              <button class="track-btn audition-btn sublayer-audition-btn" data-layer-id="${layer.id}" title="Preview Layer Sound" aria-label="Audition Layer">
+                <i class="fa-solid fa-play"></i>
+              </button>
               <button class="track-btn mute-btn" data-layer-id="${layer.id}" title="Mute Layer (M)">
                 <i class="fa-solid fa-volume-high"></i>
               </button>
@@ -821,6 +824,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (nameInput) {
         nameInput.addEventListener('change', (e) => {
           layer.name = e.target.value.trim() || layer.name
+        })
+      }
+
+      // Audition Button
+      const auditionBtn = layerEl.querySelector('.sublayer-audition-btn')
+      if (auditionBtn) {
+        auditionBtn.addEventListener('click', () => {
+          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
         })
       }
 
