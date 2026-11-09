@@ -133,17 +133,23 @@
 
       <!-- Master Transport Buttons (Fitts's Law & Von Restorff Isolation Effect) -->
       <div class="transport-station">
-        <button class="play-btn play" id="master-play" aria-label="Start or Stop Playback"
-          title="Play / Pause (Spacebar)">
-          <div class="play-icon-wrap">
-            <i class="fa-solid fa-play"></i>
-          </div>
-          <span class="play-text">START</span>
-        </button>
-        <button class="clear-btn" id="master-clear" aria-label="Clear All Pads" title="Clear Grid (C)">
-          <i class="fa-solid fa-trash-can"></i>
-          <span>CLEAR</span>
-        </button>
+        <div class="station-label">
+          <i class="fa-solid fa-play"></i>
+          <span>MASTER TRANSPORT</span>
+        </div>
+        <div class="transport-controls-wrap">
+          <button class="play-btn play" id="master-play" aria-label="Start or Stop Playback"
+            title="Play / Pause (Spacebar)">
+            <div class="play-icon-wrap">
+              <i class="fa-solid fa-play"></i>
+            </div>
+            <span class="play-text">START</span>
+          </button>
+          <button class="clear-btn" id="master-clear" aria-label="Clear All Pads" title="Clear Grid (C)">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>CLEAR</span>
+          </button>
+        </div>
       </div>
     </section>
 
