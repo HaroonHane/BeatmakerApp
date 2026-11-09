@@ -75,11 +75,11 @@
           <i class="fa-solid fa-graduation-cap"></i>
           <span>8 UX Laws</span>
         </button>
-          <div class="hotkey-pill" title="Keyboard Shortcuts & Pad Velocity">
-            <i class="fa-regular fa-keyboard"></i>
-            <span>[Space] Play &bull; [C] Clear &bull; [1-3] Audition &bull; [Right-Click] Accent/Ghost</span>
-          </div>
+        <div class="hotkey-pill" title="Keyboard Shortcuts & Pad Controls">
+          <i class="fa-regular fa-keyboard"></i>
+          <span>[Space] Play &bull; [C] Clear &bull; [1-3] Audition &bull; [⚙ / Right-Click] Pad Config &bull; [+] Add Layer/Pad</span>
         </div>
+      </div>
     </header>
 
     <!-- Master Control Deck: BPM Engine, Groove Presets, Master Transport -->
@@ -197,258 +197,301 @@
       </div>
 
       <!-- TRACK 01: KICK DRUM (Cyan Glow Accent) -->
-      <div class="track-channel kick-beat" data-track="kick">
-        <div class="channel-strip">
+      <div class="track-channel-group" data-track="kick">
+        <div class="track-channel kick-beat primary-layer" data-track="kick" data-layer-id="kick-primary">
+          <div class="channel-strip">
 
-          <div class="channel-main-row">
-            <!-- Channel Identity -->
-            <div class="channel-identity">
-              <div class="track-badge">01</div>
-              <div class="channel-name-wrap">
-                <div class="title-mute">
-                  <h2 class="channel-name">Kick</h2>
-                  <button class="track-btn mute-btn" id="kick-mute" title="Mute Kick (M)" aria-label="Mute Kick">
-                    <i class="fa-solid fa-volume-high"></i>
-                  </button>
-                  <button class="track-btn solo-btn" id="kick-solo" title="Solo Kick (S)" aria-label="Solo Kick">
-                    <span>S</span>
-                  </button>
-                  <button class="track-btn audition-btn" data-audition="kick" title="Preview Kick Sound"
-                    aria-label="Audition Kick">
-                    <i class="fa-solid fa-play"></i>
-                  </button>
+            <div class="channel-main-row">
+              <!-- Channel Identity -->
+              <div class="channel-identity">
+                <div class="track-badge">01</div>
+                <div class="channel-name-wrap">
+                  <div class="title-mute">
+                    <h2 class="channel-name">Kick</h2>
+                    <button class="track-btn mute-btn" id="kick-mute" title="Mute Kick (M)" aria-label="Mute Kick">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button class="track-btn solo-btn" id="kick-solo" title="Solo Kick (S)" aria-label="Solo Kick">
+                      <span>S</span>
+                    </button>
+                    <button class="track-btn audition-btn" data-audition="kick" title="Preview Kick Sound"
+                      aria-label="Audition Kick">
+                      <i class="fa-solid fa-play"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Categorized Sound Family Selector -->
+              <div class="sample-picker-wrap">
+                <i class="fa-solid fa-compact-disc sample-icon"></i>
+                <select name="beat-audio-versions" id="kick-beat-audio" class="sample-select"
+                  aria-label="Kick Sound Family">
+                  <option value="./sounds/kick/base/kick-classic.wav" data-sound-id="kick-classic" selected>Kick Classic
+                    (Base)</option>
+                  <option value="./sounds/kick/base/kick-808.wav" data-sound-id="kick-808">Kick 808</option>
+                  <option value="./sounds/kick/base/kick-heavy.wav" data-sound-id="kick-heavy">Kick Heavy</option>
+                  <option value="./sounds/kick/base/kick-softy.wav" data-sound-id="kick-softy">Kick Softy</option>
+                </select>
+              </div>
+
+              <!-- Channel Volume Fader -->
+              <div class="volume-station">
+                <i class="fa-solid fa-volume-low vol-icon"></i>
+                <input type="range" class="volume-slider" id="kick-volume" min="0" max="100" value="100"
+                  aria-label="Kick Volume" />
+                <span class="volume-value">100%</span>
+                <div class="mini-meter" id="kick-meter">
+                  <div class="meter-bar"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Categorized Sound Family Selector -->
-            <div class="sample-picker-wrap">
-              <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="beat-audio-versions" id="kick-beat-audio" class="sample-select"
-                aria-label="Kick Sound Family">
-                <option value="./sounds/kick/base/kick-classic.wav" data-sound-id="kick-classic" selected>Kick Classic
-                  (Base)</option>
-                <option value="./sounds/kick/base/kick-808.wav" data-sound-id="kick-808">Kick 808</option>
-                <option value="./sounds/kick/base/kick-heavy.wav" data-sound-id="kick-heavy">Kick Heavy</option>
-                <option value="./sounds/kick/base/kick-softy.wav" data-sound-id="kick-softy">Kick Softy</option>
-              </select>
-            </div>
-
-            <!-- Channel Volume Fader -->
-            <div class="volume-station">
-              <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="kick-volume" min="0" max="100" value="100"
-                aria-label="Kick Volume" />
-              <span class="volume-value">100%</span>
-              <div class="mini-meter" id="kick-meter">
-                <div class="meter-bar"></div>
+            <!-- 5-Tier Intensity Variation Selector -->
+            <div class="intensity-station" data-track="kick">
+              <span class="intensity-label" title="Low-to-High Sound Variation">
+                <i class="fa-solid fa-bolt"></i> VARIATION:
+              </span>
+              <div class="intensity-pills" role="radiogroup" aria-label="Kick intensity variation">
+                <button class="intensity-pill" data-intensity="low" title="Low: Soft, subtle kick">LOW</button>
+                <button class="intensity-pill" data-intensity="med-low"
+                  title="Med-Low: Smooth rounded thud">M-LOW</button>
+                <button class="intensity-pill active" data-intensity="med"
+                  title="Medium: Balanced default base">MED</button>
+                <button class="intensity-pill" data-intensity="med-high"
+                  title="Med-High: Punchy articulate strike">M-HIGH</button>
+                <button class="intensity-pill" data-intensity="high" title="High: Saturated power hit">HIGH</button>
               </div>
             </div>
+
           </div>
 
-          <!-- 5-Tier Intensity Variation Selector -->
-          <div class="intensity-station" data-track="kick">
-            <span class="intensity-label" title="Low-to-High Sound Variation">
-              <i class="fa-solid fa-bolt"></i> VARIATION:
-            </span>
-            <div class="intensity-pills" role="radiogroup" aria-label="Kick intensity variation">
-              <button class="intensity-pill" data-intensity="low" title="Low: Soft, subtle kick">LOW</button>
-              <button class="intensity-pill" data-intensity="med-low"
-                title="Med-Low: Smooth rounded thud">M-LOW</button>
-              <button class="intensity-pill active" data-intensity="med"
-                title="Medium: Balanced default base">MED</button>
-              <button class="intensity-pill" data-intensity="med-high"
-                title="Med-High: Punchy articulate strike">M-HIGH</button>
-              <button class="intensity-pill" data-intensity="high" title="High: Saturated power hit">HIGH</button>
+          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+          <div class="kick-pads pads-grid">
+            <div class="beat-chunk beat-chunk-1">
+              <div class="beat-step-cell" data-step="0"><button class="pad kick-pad b0" data-step="0" data-track="kick" aria-label="Kick step 1"></button><button class="pad-gear-btn" data-step="0" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="0" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="1"><button class="pad kick-pad b1" data-step="1" data-track="kick" aria-label="Kick step 2"></button><button class="pad-gear-btn" data-step="1" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="1" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="2"><button class="pad kick-pad b2" data-step="2" data-track="kick" aria-label="Kick step 3"></button><button class="pad-gear-btn" data-step="2" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="2" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="3"><button class="pad kick-pad b3" data-step="3" data-track="kick" aria-label="Kick step 4"></button><button class="pad-gear-btn" data-step="3" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="3" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="kick" data-beat="1" title="Add Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
+            </div>
+            <div class="beat-chunk beat-chunk-2">
+              <div class="beat-step-cell" data-step="4"><button class="pad kick-pad b4" data-step="4" data-track="kick" aria-label="Kick step 5"></button><button class="pad-gear-btn" data-step="4" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="4" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="5"><button class="pad kick-pad b5" data-step="5" data-track="kick" aria-label="Kick step 6"></button><button class="pad-gear-btn" data-step="5" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="5" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="6"><button class="pad kick-pad b6" data-step="6" data-track="kick" aria-label="Kick step 7"></button><button class="pad-gear-btn" data-step="6" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="6" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="7"><button class="pad kick-pad b7" data-step="7" data-track="kick" aria-label="Kick step 8"></button><button class="pad-gear-btn" data-step="7" data-track="kick" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="7" data-track="kick" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="kick" data-beat="2" title="Add Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
             </div>
           </div>
-
         </div>
-
-        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-        <div class="kick-pads pads-grid">
-          <div class="beat-chunk beat-chunk-1">
-            <button class="pad kick-pad b0" data-step="0" data-track="kick" aria-label="Kick step 1"></button>
-            <button class="pad kick-pad b1" data-step="1" data-track="kick" aria-label="Kick step 2"></button>
-            <button class="pad kick-pad b2" data-step="2" data-track="kick" aria-label="Kick step 3"></button>
-            <button class="pad kick-pad b3" data-step="3" data-track="kick" aria-label="Kick step 4"></button>
-          </div>
-          <div class="beat-chunk beat-chunk-2">
-            <button class="pad kick-pad b4" data-step="4" data-track="kick" aria-label="Kick step 5"></button>
-            <button class="pad kick-pad b5" data-step="5" data-track="kick" aria-label="Kick step 6"></button>
-            <button class="pad kick-pad b6" data-step="6" data-track="kick" aria-label="Kick step 7"></button>
-            <button class="pad kick-pad b7" data-step="7" data-track="kick" aria-label="Kick step 8"></button>
-          </div>
+        <!-- Sub-Layers Container for Kick -->
+        <div class="track-sublayers" id="kick-sublayers"></div>
+        <div class="add-layer-bar">
+          <button class="add-layer-btn" data-track="kick" title="Add independent 4-pad layer beneath Kick">
+            <i class="fa-solid fa-plus"></i> Add Layer to Kick
+          </button>
         </div>
       </div>
 
       <!-- TRACK 02: SNARE DRUM (Amber Gold Accent) -->
-      <div class="track-channel snare-beat" data-track="snare">
-        <div class="channel-strip">
+      <div class="track-channel-group" data-track="snare">
+        <div class="track-channel snare-beat primary-layer" data-track="snare" data-layer-id="snare-primary">
+          <div class="channel-strip">
 
-          <div class="channel-main-row">
-            <!-- Channel Identity -->
-            <div class="channel-identity">
-              <div class="track-badge">02</div>
-              <div class="channel-name-wrap">
-                <div class="title-mute">
-                  <h2 class="channel-name">Snare</h2>
-                  <button class="track-btn mute-btn" id="snare-mute" title="Mute Snare (M)" aria-label="Mute Snare">
-                    <i class="fa-solid fa-volume-high"></i>
-                  </button>
-                  <button class="track-btn solo-btn" id="snare-solo" title="Solo Snare (S)" aria-label="Solo Snare">
-                    <span>S</span>
-                  </button>
-                  <button class="track-btn audition-btn" data-audition="snare" title="Preview Snare Sound"
-                    aria-label="Audition Snare">
-                    <i class="fa-solid fa-play"></i>
-                  </button>
+            <div class="channel-main-row">
+              <!-- Channel Identity -->
+              <div class="channel-identity">
+                <div class="track-badge">02</div>
+                <div class="channel-name-wrap">
+                  <div class="title-mute">
+                    <h2 class="channel-name">Snare</h2>
+                    <button class="track-btn mute-btn" id="snare-mute" title="Mute Snare (M)" aria-label="Mute Snare">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button class="track-btn solo-btn" id="snare-solo" title="Solo Snare (S)" aria-label="Solo Snare">
+                      <span>S</span>
+                    </button>
+                    <button class="track-btn audition-btn" data-audition="snare" title="Preview Snare Sound"
+                      aria-label="Audition Snare">
+                      <i class="fa-solid fa-play"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Categorized Sound Family Selector -->
+              <div class="sample-picker-wrap">
+                <i class="fa-solid fa-compact-disc sample-icon"></i>
+                <select name="beat-audio-versions" id="snare-beat-audio" class="sample-select"
+                  aria-label="Snare Sound Family">
+                  <option value="./sounds/snare/base/snare-acoustic01.wav" data-sound-id="snare-acoustic" selected>Snare
+                    Acoustic (Base)</option>
+                  <option value="./sounds/snare/base/snare-808.wav" data-sound-id="snare-808">Snare 808</option>
+                  <option value="./sounds/snare/base/snare-vinyl02.wav" data-sound-id="snare-vinyl">Snare Vinyl</option>
+                </select>
+              </div>
+
+              <!-- Channel Volume Fader -->
+              <div class="volume-station">
+                <i class="fa-solid fa-volume-low vol-icon"></i>
+                <input type="range" class="volume-slider" id="snare-volume" min="0" max="100" value="100"
+                  aria-label="Snare Volume" />
+                <span class="volume-value">100%</span>
+                <div class="mini-meter" id="snare-meter">
+                  <div class="meter-bar"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Categorized Sound Family Selector -->
-            <div class="sample-picker-wrap">
-              <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="beat-audio-versions" id="snare-beat-audio" class="sample-select"
-                aria-label="Snare Sound Family">
-                <option value="./sounds/snare/base/snare-acoustic01.wav" data-sound-id="snare-acoustic" selected>Snare
-                  Acoustic (Base)</option>
-                <option value="./sounds/snare/base/snare-808.wav" data-sound-id="snare-808">Snare 808</option>
-                <option value="./sounds/snare/base/snare-vinyl02.wav" data-sound-id="snare-vinyl">Snare Vinyl</option>
-              </select>
-            </div>
-
-            <!-- Channel Volume Fader -->
-            <div class="volume-station">
-              <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="snare-volume" min="0" max="100" value="100"
-                aria-label="Snare Volume" />
-              <span class="volume-value">100%</span>
-              <div class="mini-meter" id="snare-meter">
-                <div class="meter-bar"></div>
+            <!-- 5-Tier Intensity Variation Selector -->
+            <div class="intensity-station" data-track="snare">
+              <span class="intensity-label" title="Low-to-High Sound Variation">
+                <i class="fa-solid fa-bolt"></i> VARIATION:
+              </span>
+              <div class="intensity-pills" role="radiogroup" aria-label="Snare intensity variation">
+                <button class="intensity-pill" data-intensity="low" title="Low: Soft ghost note">LOW</button>
+                <button class="intensity-pill" data-intensity="med-low"
+                  title="Med-Low: Gentle side-stick feel">M-LOW</button>
+                <button class="intensity-pill active" data-intensity="med"
+                  title="Medium: Balanced acoustic crack">MED</button>
+                <button class="intensity-pill" data-intensity="med-high"
+                  title="Med-High: Firm center snap">M-HIGH</button>
+                <button class="intensity-pill" data-intensity="high" title="High: Power rimshot hit">HIGH</button>
               </div>
             </div>
+
           </div>
 
-          <!-- 5-Tier Intensity Variation Selector -->
-          <div class="intensity-station" data-track="snare">
-            <span class="intensity-label" title="Low-to-High Sound Variation">
-              <i class="fa-solid fa-bolt"></i> VARIATION:
-            </span>
-            <div class="intensity-pills" role="radiogroup" aria-label="Snare intensity variation">
-              <button class="intensity-pill" data-intensity="low" title="Low: Soft ghost note">LOW</button>
-              <button class="intensity-pill" data-intensity="med-low"
-                title="Med-Low: Gentle side-stick feel">M-LOW</button>
-              <button class="intensity-pill active" data-intensity="med"
-                title="Medium: Balanced acoustic crack">MED</button>
-              <button class="intensity-pill" data-intensity="med-high"
-                title="Med-High: Firm center snap">M-HIGH</button>
-              <button class="intensity-pill" data-intensity="high" title="High: Power rimshot hit">HIGH</button>
+          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+          <div class="snare-pads pads-grid">
+            <div class="beat-chunk beat-chunk-1">
+              <div class="beat-step-cell" data-step="0"><button class="pad snare-pad b0" data-step="0" data-track="snare" aria-label="Snare step 1"></button><button class="pad-gear-btn" data-step="0" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="0" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="1"><button class="pad snare-pad b1" data-step="1" data-track="snare" aria-label="Snare step 2"></button><button class="pad-gear-btn" data-step="1" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="1" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="2"><button class="pad snare-pad b2" data-step="2" data-track="snare" aria-label="Snare step 3"></button><button class="pad-gear-btn" data-step="2" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="2" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="3"><button class="pad snare-pad b3" data-step="3" data-track="snare" aria-label="Snare step 4"></button><button class="pad-gear-btn" data-step="3" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="3" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="snare" data-beat="1" title="Add Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
+            </div>
+            <div class="beat-chunk beat-chunk-2">
+              <div class="beat-step-cell" data-step="4"><button class="pad snare-pad b4" data-step="4" data-track="snare" aria-label="Snare step 5"></button><button class="pad-gear-btn" data-step="4" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="4" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="5"><button class="pad snare-pad b5" data-step="5" data-track="snare" aria-label="Snare step 6"></button><button class="pad-gear-btn" data-step="5" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="5" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="6"><button class="pad snare-pad b6" data-step="6" data-track="snare" aria-label="Snare step 7"></button><button class="pad-gear-btn" data-step="6" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="6" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="7"><button class="pad snare-pad b7" data-step="7" data-track="snare" aria-label="Snare step 8"></button><button class="pad-gear-btn" data-step="7" data-track="snare" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="7" data-track="snare" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="snare" data-beat="2" title="Add Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
             </div>
           </div>
-
         </div>
-
-        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-        <div class="snare-pads pads-grid">
-          <div class="beat-chunk beat-chunk-1">
-            <button class="pad snare-pad b0" data-step="0" data-track="snare" aria-label="Snare step 1"></button>
-            <button class="pad snare-pad b1" data-step="1" data-track="snare" aria-label="Snare step 2"></button>
-            <button class="pad snare-pad b2" data-step="2" data-track="snare" aria-label="Snare step 3"></button>
-            <button class="pad snare-pad b3" data-step="3" data-track="snare" aria-label="Snare step 4"></button>
-          </div>
-          <div class="beat-chunk beat-chunk-2">
-            <button class="pad snare-pad b4" data-step="4" data-track="snare" aria-label="Snare step 5"></button>
-            <button class="pad snare-pad b5" data-step="5" data-track="snare" aria-label="Snare step 6"></button>
-            <button class="pad snare-pad b6" data-step="6" data-track="snare" aria-label="Snare step 7"></button>
-            <button class="pad snare-pad b7" data-step="7" data-track="snare" aria-label="Snare step 8"></button>
-          </div>
+        <!-- Sub-Layers Container for Snare -->
+        <div class="track-sublayers" id="snare-sublayers"></div>
+        <div class="add-layer-bar">
+          <button class="add-layer-btn" data-track="snare" title="Add independent 4-pad layer beneath Snare">
+            <i class="fa-solid fa-plus"></i> Add Layer to Snare
+          </button>
         </div>
       </div>
 
       <!-- TRACK 03: HI-HAT (Magenta Pink Accent) -->
-      <div class="track-channel hihat-beat" data-track="hihat">
-        <div class="channel-strip">
+      <div class="track-channel-group" data-track="hihat">
+        <div class="track-channel hihat-beat primary-layer" data-track="hihat" data-layer-id="hihat-primary">
+          <div class="channel-strip">
 
-          <div class="channel-main-row">
-            <!-- Channel Identity -->
-            <div class="channel-identity">
-              <div class="track-badge">03</div>
-              <div class="channel-name-wrap">
-                <div class="title-mute">
-                  <h2 class="channel-name">Hi-Hat</h2>
-                  <button class="track-btn mute-btn" id="hihat-mute" title="Mute Hihat (M)" aria-label="Mute Hihat">
-                    <i class="fa-solid fa-volume-high"></i>
-                  </button>
-                  <button class="track-btn solo-btn" id="hihat-solo" title="Solo Hihat (S)" aria-label="Solo Hihat">
-                    <span>S</span>
-                  </button>
-                  <button class="track-btn audition-btn" data-audition="hihat" title="Preview Hihat Sound"
-                    aria-label="Audition Hihat">
-                    <i class="fa-solid fa-play"></i>
-                  </button>
+            <div class="channel-main-row">
+              <!-- Channel Identity -->
+              <div class="channel-identity">
+                <div class="track-badge">03</div>
+                <div class="channel-name-wrap">
+                  <div class="title-mute">
+                    <h2 class="channel-name">Hi-Hat</h2>
+                    <button class="track-btn mute-btn" id="hihat-mute" title="Mute Hihat (M)" aria-label="Mute Hihat">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button class="track-btn solo-btn" id="hihat-solo" title="Solo Hihat (S)" aria-label="Solo Hihat">
+                      <span>S</span>
+                    </button>
+                    <button class="track-btn audition-btn" data-audition="hihat" title="Preview Hihat Sound"
+                      aria-label="Audition Hihat">
+                      <i class="fa-solid fa-play"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Categorized Sound Family Selector -->
+              <div class="sample-picker-wrap">
+                <i class="fa-solid fa-compact-disc sample-icon"></i>
+                <select name="hihatbeat-audio-versions" id="hihat-beat-audio" class="sample-select"
+                  aria-label="Hihat Sound Family">
+                  <option value="./sounds/hihat/base/hihat-808.wav" data-sound-id="hihat-808" selected>Hi-Hat 808 (Base)
+                  </option>
+                  <option value="./sounds/hihat/base/hihat-acoustic01.wav" data-sound-id="hihat-acoustic">Hi-Hat Acoustic
+                  </option>
+                </select>
+              </div>
+
+              <!-- Channel Volume Fader -->
+              <div class="volume-station">
+                <i class="fa-solid fa-volume-low vol-icon"></i>
+                <input type="range" class="volume-slider" id="hihat-volume" min="0" max="100" value="100"
+                  aria-label="Hihat Volume" />
+                <span class="volume-value">100%</span>
+                <div class="mini-meter" id="hihat-meter">
+                  <div class="meter-bar"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Categorized Sound Family Selector -->
-            <div class="sample-picker-wrap">
-              <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="hihatbeat-audio-versions" id="hihat-beat-audio" class="sample-select"
-                aria-label="Hihat Sound Family">
-                <option value="./sounds/hihat/base/hihat-808.wav" data-sound-id="hihat-808" selected>Hi-Hat 808 (Base)
-                </option>
-                <option value="./sounds/hihat/base/hihat-acoustic01.wav" data-sound-id="hihat-acoustic">Hi-Hat Acoustic
-                </option>
-              </select>
-            </div>
-
-            <!-- Channel Volume Fader -->
-            <div class="volume-station">
-              <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="hihat-volume" min="0" max="100" value="100"
-                aria-label="Hihat Volume" />
-              <span class="volume-value">100%</span>
-              <div class="mini-meter" id="hihat-meter">
-                <div class="meter-bar"></div>
+            <!-- 5-Tier Intensity Variation Selector -->
+            <div class="intensity-station" data-track="hihat">
+              <span class="intensity-label" title="Low-to-High Sound Variation">
+                <i class="fa-solid fa-bolt"></i> VARIATION:
+              </span>
+              <div class="intensity-pills" role="radiogroup" aria-label="Hi-Hat intensity variation">
+                <button class="intensity-pill" data-intensity="low" title="Low: Delicate cymbal tick">LOW</button>
+                <button class="intensity-pill" data-intensity="med-low" title="Med-Low: Smooth closed hat">M-LOW</button>
+                <button class="intensity-pill active" data-intensity="med"
+                  title="Medium: Balanced crisp sizzle">MED</button>
+                <button class="intensity-pill" data-intensity="med-high"
+                  title="Med-High: Bright articulate bite">M-HIGH</button>
+                <button class="intensity-pill" data-intensity="high" title="High: Sizzling open-edge strike">HIGH</button>
               </div>
             </div>
+
           </div>
 
-          <!-- 5-Tier Intensity Variation Selector -->
-          <div class="intensity-station" data-track="hihat">
-            <span class="intensity-label" title="Low-to-High Sound Variation">
-              <i class="fa-solid fa-bolt"></i> VARIATION:
-            </span>
-            <div class="intensity-pills" role="radiogroup" aria-label="Hi-Hat intensity variation">
-              <button class="intensity-pill" data-intensity="low" title="Low: Delicate cymbal tick">LOW</button>
-              <button class="intensity-pill" data-intensity="med-low" title="Med-Low: Smooth closed hat">M-LOW</button>
-              <button class="intensity-pill active" data-intensity="med"
-                title="Medium: Balanced crisp sizzle">MED</button>
-              <button class="intensity-pill" data-intensity="med-high"
-                title="Med-High: Bright articulate bite">M-HIGH</button>
-              <button class="intensity-pill" data-intensity="high" title="High: Sizzling open-edge strike">HIGH</button>
+          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+          <div class="hihat-pads pads-grid">
+            <div class="beat-chunk beat-chunk-1">
+              <div class="beat-step-cell" data-step="0"><button class="pad hihat-pad b0" data-step="0" data-track="hihat" aria-label="Hihat step 1"></button><button class="pad-gear-btn" data-step="0" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="0" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="1"><button class="pad hihat-pad b1" data-step="1" data-track="hihat" aria-label="Hihat step 2"></button><button class="pad-gear-btn" data-step="1" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="1" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="2"><button class="pad hihat-pad b2" data-step="2" data-track="hihat" aria-label="Hihat step 3"></button><button class="pad-gear-btn" data-step="2" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="2" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="3"><button class="pad hihat-pad b3" data-step="3" data-track="hihat" aria-label="Hihat step 4"></button><button class="pad-gear-btn" data-step="3" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="3" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="hihat" data-beat="1" title="Add Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
+            </div>
+            <div class="beat-chunk beat-chunk-2">
+              <div class="beat-step-cell" data-step="4"><button class="pad hihat-pad b4" data-step="4" data-track="hihat" aria-label="Hihat step 5"></button><button class="pad-gear-btn" data-step="4" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="4" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="5"><button class="pad hihat-pad b5" data-step="5" data-track="hihat" aria-label="Hihat step 6"></button><button class="pad-gear-btn" data-step="5" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="5" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="6"><button class="pad hihat-pad b6" data-step="6" data-track="hihat" aria-label="Hihat step 7"></button><button class="pad-gear-btn" data-step="6" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="6" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <div class="beat-step-cell" data-step="7"><button class="pad hihat-pad b7" data-step="7" data-track="hihat" aria-label="Hihat step 8"></button><button class="pad-gear-btn" data-step="7" data-track="hihat" title="Configure Pad"><i class="fa-solid fa-gear"></i></button><button class="add-pad-step-btn" data-step="7" data-track="hihat" title="Stack Pad"><i class="fa-solid fa-plus"></i></button></div>
+              <button class="chunk-add-layer-btn" data-track="hihat" data-beat="2" title="Add Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
             </div>
           </div>
-
         </div>
-
-        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-        <div class="hihat-pads pads-grid">
-          <div class="beat-chunk beat-chunk-1">
-            <button class="pad hihat-pad b0" data-step="0" data-track="hihat" aria-label="Hihat step 1"></button>
-            <button class="pad hihat-pad b1" data-step="1" data-track="hihat" aria-label="Hihat step 2"></button>
-            <button class="pad hihat-pad b2" data-step="2" data-track="hihat" aria-label="Hihat step 3"></button>
-            <button class="pad hihat-pad b3" data-step="3" data-track="hihat" aria-label="Hihat step 4"></button>
-          </div>
-          <div class="beat-chunk beat-chunk-2">
-            <button class="pad hihat-pad b4" data-step="4" data-track="hihat" aria-label="Hihat step 5"></button>
-            <button class="pad hihat-pad b5" data-step="5" data-track="hihat" aria-label="Hihat step 6"></button>
-            <button class="pad hihat-pad b6" data-step="6" data-track="hihat" aria-label="Hihat step 7"></button>
-            <button class="pad hihat-pad b7" data-step="7" data-track="hihat" aria-label="Hihat step 8"></button>
-          </div>
+        <!-- Sub-Layers Container for Hi-Hat -->
+        <div class="track-sublayers" id="hihat-sublayers"></div>
+        <div class="add-layer-bar">
+          <button class="add-layer-btn" data-track="hihat" title="Add independent 4-pad layer beneath Hi-Hat">
+            <i class="fa-solid fa-plus"></i> Add Layer to Hi-Hat
+          </button>
         </div>
+      </div>
+
+      <!-- Custom Master Instrument Layers Container -->
+      <div class="custom-layers-container" id="custom-layers-container"></div>
+
+      <!-- Add Master Layer Action -->
+      <div class="matrix-bottom-actions">
+        <button class="add-master-layer-btn" id="add-master-layer-btn" title="Add a new independent instrument layer">
+          <i class="fa-solid fa-plus"></i> Add New Instrument Layer
+        </button>
       </div>
 
     </section>
@@ -613,6 +656,87 @@
 
       <div class="ux-modal-footer">
         <button class="modal-confirm" id="dismiss-assets-modal">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pad Inspector / Config Popover Modal -->
+  <div class="pad-popover modal-overlay" id="pad-popover" role="dialog" aria-modal="true" aria-labelledby="popover-title">
+    <div class="pad-popover-card glass-card">
+      <div class="popover-header">
+        <div class="popover-title-wrap">
+          <i class="fa-solid fa-sliders popover-icon"></i>
+          <h3 id="popover-title">Configure Pad</h3>
+        </div>
+        <button class="popover-close-btn" id="popover-close" aria-label="Close pad configuration">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="popover-body">
+        <!-- Category & Sound Family -->
+        <div class="popover-field">
+          <label class="popover-label"><i class="fa-solid fa-layer-group"></i> Sound Category</label>
+          <select id="popover-sound-category" class="popover-select">
+            <option value="kick">Kick Drums</option>
+            <option value="snare">Snare Drums</option>
+            <option value="hihat">Hi-Hats</option>
+          </select>
+        </div>
+
+        <div class="popover-field">
+          <label class="popover-label"><i class="fa-solid fa-compact-disc"></i> Sound Family</label>
+          <select id="popover-sound-family" class="popover-select">
+            <!-- Populated dynamically based on category -->
+          </select>
+        </div>
+
+        <!-- Intensity Variations -->
+        <div class="popover-field">
+          <label class="popover-label"><i class="fa-solid fa-bolt"></i> Intensity Variation</label>
+          <div class="popover-intensity-pills" id="popover-intensity-pills">
+            <button class="popover-pill" data-intensity="low">LOW</button>
+            <button class="popover-pill" data-intensity="med-low">M-LOW</button>
+            <button class="popover-pill active" data-intensity="med">MED</button>
+            <button class="popover-pill" data-intensity="med-high">M-HIGH</button>
+            <button class="popover-pill" data-intensity="high">HIGH</button>
+          </div>
+        </div>
+
+        <!-- Independent Volume -->
+        <div class="popover-field">
+          <div class="popover-label-row">
+            <label class="popover-label"><i class="fa-solid fa-volume-high"></i> Pad Volume</label>
+            <span class="popover-val" id="popover-volume-val">100%</span>
+          </div>
+          <input type="range" class="popover-slider" id="popover-volume" min="0" max="100" value="100" />
+        </div>
+
+        <!-- Repetition / Frequency (Flam, Double, Triplet, Roll) -->
+        <div class="popover-field">
+          <label class="popover-label"><i class="fa-solid fa-repeat"></i> Repetition / Sub-division</label>
+          <div class="popover-repeat-pills" id="popover-repeat-pills">
+            <button class="repeat-pill active" data-repeat="1" title="1 Hit per step (Standard)">1x (Single)</button>
+            <button class="repeat-pill" data-repeat="2" title="2 Hits per step (Flam / Double)">2x (Flam)</button>
+            <button class="repeat-pill" data-repeat="3" title="3 Hits per step (Triplet roll)">3x (Triplet)</button>
+            <button class="repeat-pill" data-repeat="4" title="4 Hits per step (16th roll / stutter)">4x (Roll)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="popover-footer">
+        <button class="popover-btn preview-btn" id="popover-audition">
+          <i class="fa-solid fa-play"></i> Audition
+        </button>
+        <button class="popover-btn add-stacked-btn" id="popover-add-stacked" title="Stack another pad at this exact beat position">
+          <i class="fa-solid fa-plus"></i> Stack Pad
+        </button>
+        <button class="popover-btn delete-btn" id="popover-delete" title="Remove this pad">
+          <i class="fa-solid fa-trash-can"></i> Remove
+        </button>
+        <button class="popover-btn apply-btn" id="popover-done">
+          <i class="fa-solid fa-check"></i> Done
+        </button>
       </div>
     </div>
   </div>
