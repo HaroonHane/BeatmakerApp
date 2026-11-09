@@ -1510,7 +1510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 8. Transport Engine: Start / Stop
+    // 8. Transport Engine: Start / Pause / Stop
     // ------------------------------------------------------------------------
     start() {
       this.ensureAudioContextRunning()
@@ -1522,28 +1522,68 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="play-icon-wrap">
               <i class="fa-solid fa-pause"></i>
             </div>
-            <span class="play-text">STOP</span>
+            <span class="play-text">PAUSE</span>
           `
           this.playBtn.classList.add('active')
         }
 
         if (this.statusBadge) {
           this.statusBadge.classList.add('running')
-          if (this.statusLabel) this.statusLabel.textContent = 'SEQUENCING'
+          if (this.statusLabel) this.statusLabel.textContent = 'PLAYING'
         }
 
         if (this.clearBtn) this.clearBtn.disabled = true
 
+        // Fire current step immediately and start tick loop
         this.repeatAnimation()
         this.isPlaying = setInterval(() => {
           this.repeatAnimation()
         }, interval)
       } else {
-        this.stop()
+        // While playing, clicking pauses at the exact current position instead of resetting
+        this.pause()
       }
     }
 
-    stop() {
+    pause() {
+      if (this.isPlaying) {
+        clearInterval(this.isPlaying)
+        this.isPlaying = null
+      }
+
+      if (this.playBtn) {
+        this.playBtn.innerHTML = `
+          <div class="play-icon-wrap">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <span class="play-text">RESUME</span>
+        `
+        this.playBtn.classList.remove('active')
+      }
+
+      if (this.statusBadge) {
+        this.statusBadge.classList.remove('running')
+        if (this.statusLabel) this.statusLabel.textContent = 'PAUSED'
+      }
+
+      if (this.clearBtn) this.clearBtn.disabled = false
+
+      // Keep playhead and step dots stationed at the paused step
+      const pausedStep = (this.index - 1 + this.totalSteps) % this.totalSteps
+      document.querySelectorAll('.step-dot').forEach(dot => {
+        dot.classList.remove('active')
+      })
+      const activeStepDots = document.querySelectorAll(`.step-dot[data-step="${pausedStep}"]`)
+      activeStepDots.forEach(dot => dot.classList.add('active'))
+
+      if (this.tlPlayhead) {
+        const stepPercent = (pausedStep / this.totalSteps) * 100
+        this.tlPlayhead.style.left = `${stepPercent}%`
+      }
+      if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+    }
+
+    stop(reset = true) {
       if (this.isPlaying) {
         clearInterval(this.isPlaying)
         this.isPlaying = null
@@ -1566,12 +1606,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (this.clearBtn) this.clearBtn.disabled = false
 
-      document.querySelectorAll('.step-dot').forEach(dot => {
-        dot.classList.remove('active')
-      })
-
-      this.index = 0
-      if (this.tlPlayhead) this.tlPlayhead.style.left = '0%'
+      if (reset) {
+        this.index = 0
+        document.querySelectorAll('.step-dot').forEach(dot => {
+          dot.classList.remove('active')
+        })
+        if (this.tlPlayhead) this.tlPlayhead.style.left = '0%'
+      }
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
     }
 
