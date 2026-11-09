@@ -1,7 +1,7 @@
 /**
  * BEATMAKER STUDIO | ADVANCED MULTI-LAYER DRUM SEQUENCER ENGINE
  * Crafted with Pinterest/Dribbble Hardware Studio Aesthetics
- * Built following the 8 Laws of UX with Unlimited Beat Layers, Multi-Pad Stacking & 5-Tier Intensity Variations
+ * Built following the 8 Laws of UX with Reusable Pad Components, Multi-Pad Stacking & 5-Tier Intensity Variations
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 1. Data Model: Primary Layers & Multi-Pad Architecture
+    // 1. Data Model & Reusable Pad Component Architecture
     // ------------------------------------------------------------------------
     initPrimaryLayers() {
       const primaryConfigs = [
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
           steps: []
         }
 
-        // Initialize 8 steps with 1 initial pad per step matching the DOM
+        // Initialize 8 steps with 1 initial pad per step matching data architecture
         for (let s = 0; s < 8; s++) {
           const pad = {
             id: `pad-${cfg.category}-primary-${s}`,
@@ -233,67 +233,142 @@ document.addEventListener('DOMContentLoaded', () => {
         return layer
       })
 
-      // Bind events for the initial pads in DOM
-      this.bindPrimaryPadDOM()
-    }
-
-    bindPrimaryPadDOM() {
+      // Hydrate all primary track step cells using the exact same reusable pad component!
       this.layers.forEach(layer => {
-        if (!layer.isPrimary) return
-        const track = layer.category
-
         for (let s = 0; s < 8; s++) {
-          const padObj = layer.steps[s][0]
-          const padEl = document.querySelector(`.primary-layer[data-track="${track}"] .pad.b${s}`)
-          const cellEl = document.querySelector(`.primary-layer[data-track="${track}"] .beat-step-cell[data-step="${s}"]`)
-
-          if (padEl) {
-            padEl.dataset.layerId = layer.id
-            padEl.dataset.padId = padObj.id
-            padEl.dataset.step = s
-
-            // Left-Click: Toggle pad active / inactive
-            padEl.onclick = (e) => {
-              e.stopPropagation()
-              this.ensureAudioContextRunning()
-              padObj.active = !padObj.active
-              padEl.classList.toggle('active', padObj.active)
-              if (padObj.active) {
-                this.playPadSound(this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity), padObj.volume * layer.volume)
-                this.pulseMeter(layer.category)
-              }
-            }
-
-            // Right-Click: Open Pad Configuration Popover
-            padEl.oncontextmenu = (e) => {
-              e.preventDefault()
-              this.openPadPopover(layer.id, s, padObj.id)
-            }
-          }
-
-          // Gear Button: Open Popover
-          const gearBtn = cellEl ? cellEl.querySelector('.pad-gear-btn') : null
-          if (gearBtn) {
-            gearBtn.onclick = (e) => {
-              e.stopPropagation()
-              this.openPadPopover(layer.id, s, padObj.id)
-            }
-          }
-
-          // Stack Pad Button: Add another pad to this step
-          const stackBtn = cellEl ? cellEl.querySelector('.add-pad-step-btn') : null
-          if (stackBtn) {
-            stackBtn.onclick = (e) => {
-              e.stopPropagation()
-              this.addPadToStep(layer.id, s)
-            }
-          }
+          this.reRenderStepCell(layer, s)
         }
       })
     }
 
     getLayer(layerId) {
       return this.layers.find(l => l.id === layerId) || null
+    }
+
+    // Reusable Pad Component HTML: Exactly the same for original and dynamically added pads
+    renderPadHTML(pad, layer, step) {
+      const isGhost = pad.intensity === 'low'
+      const isAccent = pad.intensity === 'high'
+      const intensityClass = isAccent ? 'accent' : isGhost ? 'ghost' : ''
+      const activeClass = pad.active ? 'active' : ''
+
+      return `
+        <div class="pad-wrapper" data-pad-id="${pad.id}" data-layer-id="${layer.id}" data-step="${step}">
+          <button class="pad ${pad.category}-pad b${step} ${activeClass} ${intensityClass}"
+            data-pad-id="${pad.id}"
+            data-layer-id="${layer.id}"
+            data-step="${step}"
+            title="${layer.name} Step ${step + 1} (${pad.soundFamily} - ${pad.intensity}) - Click to toggle"
+            aria-label="${layer.name} Step ${step + 1}">
+            ${pad.repeat > 1 ? `<span class="pad-repeat-badge">${pad.repeat}x</span>` : ''}
+            ${isAccent ? `<span class="pad-intensity-badge badge-high">H</span>` : ''}
+            ${isGhost ? `<span class="pad-intensity-badge badge-low">L</span>` : ''}
+          </button>
+          <div class="pad-controls">
+            <button class="pad-ctrl-btn pad-settings-btn" data-pad-id="${pad.id}" data-layer-id="${layer.id}" data-step="${step}" title="Configure Pad Settings">
+              <i class="fa-solid fa-gear"></i>
+            </button>
+            <button class="pad-ctrl-btn pad-remove-btn" data-pad-id="${pad.id}" data-layer-id="${layer.id}" data-step="${step}" title="Remove this pad">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `
+    }
+
+    // Reusable Step Cell HTML: Wraps pad-wrappers and docks the Add Pad (+) button
+    renderStepCellHTML(layer, step) {
+      const pads = layer.steps[step]
+      const hasStack = pads.length > 1
+
+      return `
+        <div class="beat-step-cell ${hasStack ? 'has-stack' : ''}" data-layer-id="${layer.id}" data-step="${step}">
+          <div class="pads-stack-container">
+            ${pads.map(pad => this.renderPadHTML(pad, layer, step)).join('')}
+          </div>
+          <button class="cell-add-pad-btn" data-layer-id="${layer.id}" data-step="${step}" title="Add Pad to Step ${step + 1}">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      `
+    }
+
+    // Binds all events for a step cell: pad click, right-click, settings, removal, add pad
+    bindStepCellEvents(cellEl, layer, step) {
+      const pads = layer.steps[step]
+
+      cellEl.querySelectorAll('.pad-wrapper').forEach(wrapperEl => {
+        const padId = wrapperEl.dataset.padId
+        const padObj = pads.find(p => p.id === padId)
+        if (!padObj) return
+
+        const padBtn = wrapperEl.querySelector('.pad')
+        const settingsBtn = wrapperEl.querySelector('.pad-settings-btn')
+        const removeBtn = wrapperEl.querySelector('.pad-remove-btn')
+
+        // 1. Pad click: Toggle active state & audition
+        if (padBtn) {
+          padBtn.onclick = (e) => {
+            e.stopPropagation()
+            this.ensureAudioContextRunning()
+            padObj.active = !padObj.active
+            padBtn.classList.toggle('active', padObj.active)
+            if (padObj.active) {
+              const fileSrc = this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity)
+              this.playPadSound(fileSrc, padObj.volume * layer.volume)
+              this.pulseMeter(layer.category)
+            }
+          }
+
+          // Right-Click: Open Pad Configuration Popover
+          padBtn.oncontextmenu = (e) => {
+            e.preventDefault()
+            this.openPadPopover(layer.id, step, padObj.id)
+          }
+        }
+
+        // 2. Settings button: Configure THIS specific pad instance
+        if (settingsBtn) {
+          settingsBtn.onclick = (e) => {
+            e.stopPropagation()
+            this.openPadPopover(layer.id, step, padObj.id)
+          }
+        }
+
+        // 3. Removal button: Delete THIS specific pad instance
+        if (removeBtn) {
+          removeBtn.onclick = (e) => {
+            e.stopPropagation()
+            this.removePad(layer.id, step, padObj.id)
+          }
+        }
+      })
+
+      // 4. Add Pad (+) button at the bottom of the step column
+      const addBtn = cellEl.querySelector('.cell-add-pad-btn')
+      if (addBtn) {
+        addBtn.onclick = (e) => {
+          e.stopPropagation()
+          this.addPadToStep(layer.id, step)
+        }
+      }
+    }
+
+    // Re-renders a step cell in DOM safely without shifting layout
+    reRenderStepCell(layer, step) {
+      const parentSelector = layer.isPrimary
+        ? `.primary-layer[data-track="${layer.category}"]`
+        : `.track-channel.sublayer[data-layer-id="${layer.id}"]`
+
+      const oldCellEl = document.querySelector(`${parentSelector} .beat-step-cell[data-step="${step}"]`)
+      if (!oldCellEl) return
+
+      const temp = document.createElement('div')
+      temp.innerHTML = this.renderStepCellHTML(layer, step).trim()
+      const newCellEl = temp.firstElementChild
+
+      oldCellEl.replaceWith(newCellEl)
+      this.bindStepCellEvents(newCellEl, layer, step)
     }
 
     // ------------------------------------------------------------------------
@@ -458,7 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderLayerDOM(layer) {
-      // Find container
       let container
       if (layer.parentTrack === 'custom') {
         container = document.getElementById('custom-layers-container')
@@ -472,7 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
       layerEl.dataset.layerId = layer.id
       layerEl.dataset.track = layer.category
 
-      // Generate Sound Family Options based on Category
       const familyOptionsHTML = this.getSoundFamilyOptionsHTML(layer.category, layer.soundFamily)
 
       layerEl.innerHTML = `
@@ -524,45 +597,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- 8-Step Sequencer Pad Grid Chunked in 4+4 -->
         <div class="pads-grid">
           <div class="beat-chunk beat-chunk-1">
-            ${[0, 1, 2, 3].map(s => this.generateStepCellHTML(layer, s)).join('')}
+            ${[0, 1, 2, 3].map(s => this.renderStepCellHTML(layer, s)).join('')}
           </div>
           <div class="beat-chunk beat-chunk-2">
-            ${[4, 5, 6, 7].map(s => this.generateStepCellHTML(layer, s)).join('')}
+            ${[4, 5, 6, 7].map(s => this.renderStepCellHTML(layer, s)).join('')}
           </div>
         </div>
       `
 
       container.appendChild(layerEl)
-      this.bindLayerDOMEvevts(layerEl, layer)
-    }
-
-    generateStepCellHTML(layer, step) {
-      const pads = layer.steps[step]
-      const hasStack = pads.length > 1
-      const primaryPad = pads[0]
-
-      return `
-        <div class="beat-step-cell ${hasStack ? 'has-stack' : ''}" data-layer-id="${layer.id}" data-step="${step}">
-          <div class="pad-stack-list">
-            ${pads.map(pad => `
-              <button class="pad ${layer.category}-pad b${step} ${pad.active ? 'active' : ''} ${pad.intensity === 'high' ? 'accent' : pad.intensity === 'low' ? 'ghost' : ''}"
-                data-layer-id="${layer.id}"
-                data-pad-id="${pad.id}"
-                data-step="${step}"
-                aria-label="${layer.name} step ${step + 1}">
-                ${pad.repeat > 1 ? `<span class="pad-repeat-badge">${pad.repeat}x</span>` : ''}
-                ${pad.intensity === 'high' ? `<span class="pad-intensity-badge badge-high">H</span>` : pad.intensity === 'low' ? `<span class="pad-intensity-badge badge-low">L</span>` : ''}
-              </button>
-            `).join('')}
-          </div>
-          <button class="pad-gear-btn" data-layer-id="${layer.id}" data-pad-id="${primaryPad.id}" data-step="${step}" title="Configure Pad">
-            <i class="fa-solid fa-gear"></i>
-          </button>
-          <button class="add-pad-step-btn" data-layer-id="${layer.id}" data-step="${step}" title="Stack Pad">
-            <i class="fa-solid fa-plus"></i>
-          </button>
-        </div>
-      `
+      this.bindLayerDOMEvents(layerEl, layer)
     }
 
     getSoundFamilyOptionsHTML(category, selectedSoundFamily) {
@@ -576,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return `<option value="${selectedSoundFamily}" selected>${selectedSoundFamily}</option>`
     }
 
-    bindLayerDOMEvevts(layerEl, layer) {
+    bindLayerDOMEvents(layerEl, layer) {
       // 1. Layer Name Input
       const nameInput = layerEl.querySelector('.sublayer-name-input')
       if (nameInput) {
@@ -622,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (familySelect) {
         familySelect.addEventListener('change', (e) => {
           layer.soundFamily = e.target.value
-          // Update all pads in this layer that inherited family
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = layer.soundFamily })
           })
@@ -656,54 +699,11 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       })
 
-      // 8. Bind Pads in this layer
-      this.bindLayerPads(layerEl, layer)
-    }
-
-    bindLayerPads(layerEl, layer) {
+      // 8. Bind all 8 step cells using the unified bindStepCellEvents method
       for (let s = 0; s < 8; s++) {
         const cellEl = layerEl.querySelector(`.beat-step-cell[data-step="${s}"]`)
-        if (!cellEl) continue
-
-        // Pad buttons click & contextmenu
-        cellEl.querySelectorAll('.pad').forEach(padEl => {
-          const padId = padEl.dataset.padId
-          const padObj = layer.steps[s].find(p => p.id === padId)
-          if (!padObj) return
-
-          padEl.onclick = (e) => {
-            e.stopPropagation()
-            this.ensureAudioContextRunning()
-            padObj.active = !padObj.active
-            padEl.classList.toggle('active', padObj.active)
-            if (padObj.active) {
-              this.playPadSound(this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity), padObj.volume * layer.volume)
-            }
-          }
-
-          padEl.oncontextmenu = (e) => {
-            e.preventDefault()
-            this.openPadPopover(layer.id, s, padObj.id)
-          }
-        })
-
-        // Gear Button
-        const gearBtn = cellEl.querySelector('.pad-gear-btn')
-        if (gearBtn) {
-          gearBtn.onclick = (e) => {
-            e.stopPropagation()
-            const primaryPad = layer.steps[s][0]
-            if (primaryPad) this.openPadPopover(layer.id, s, primaryPad.id)
-          }
-        }
-
-        // Stack Pad Button
-        const stackBtn = cellEl.querySelector('.add-pad-step-btn')
-        if (stackBtn) {
-          stackBtn.onclick = (e) => {
-            e.stopPropagation()
-            this.addPadToStep(layer.id, s)
-          }
+        if (cellEl) {
+          this.bindStepCellEvents(cellEl, layer, s)
         }
       }
     }
@@ -729,13 +729,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 4. Multiple Pads at the Same Beat Position (Pad Stacking)
+    // 4. Multiple Pads at the Same Beat Position (Pad Stacking & Removal)
     // ------------------------------------------------------------------------
     addPadToStep(layerId, step, config = {}) {
       const layer = this.getLayer(layerId)
       if (!layer) return
 
-      const newPadId = `pad-${layerId}-${step}-${Date.now()}`
+      const newPadId = `pad-${layerId}-${step}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
       const newPad = {
         id: newPadId,
         category: config.category || layer.category,
@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       layer.steps[step].push(newPad)
 
-      // Re-render the specific step cell in DOM
+      // Re-render the specific step cell in DOM immediately with its settings & remove buttons
       this.reRenderStepCell(layer, step)
 
       // Audition preview
@@ -765,89 +765,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const padIdx = pads.findIndex(p => p.id === padId)
       if (padIdx === -1) return
 
-      // If only 1 pad remains in a primary layer, just deactivate it
+      // If only 1 pad remains in a primary layer, deactivate and reset it cleanly
       if (pads.length === 1 && layer.isPrimary) {
         pads[0].active = false
+        pads[0].repeat = 1
+        pads[0].intensity = layer.intensity
         this.reRenderStepCell(layer, step)
         return
       }
 
+      // If stacked pad or sublayer pad: remove it completely
       pads.splice(padIdx, 1)
+
+      // Ensure step never has 0 pads
+      if (pads.length === 0) {
+        pads.push({
+          id: `pad-${layer.id}-${step}-${Date.now()}`,
+          category: layer.category,
+          soundFamily: layer.soundFamily,
+          intensity: layer.intensity,
+          volume: 1.0,
+          repeat: 1,
+          active: false
+        })
+      }
+
       this.reRenderStepCell(layer, step)
-    }
-
-    reRenderStepCell(layer, step) {
-      const parentSelector = layer.isPrimary
-        ? `.primary-layer[data-track="${layer.category}"]`
-        : `.track-channel.sublayer[data-layer-id="${layer.id}"]`
-
-      const cellEl = document.querySelector(`${parentSelector} .beat-step-cell[data-step="${step}"]`)
-      if (!cellEl) return
-
-      const pads = layer.steps[step]
-      const hasStack = pads.length > 1
-      cellEl.classList.toggle('has-stack', hasStack)
-
-      const stackList = cellEl.querySelector('.pad-stack-list') || cellEl
-      let padsHTML = pads.map(pad => `
-        <button class="pad ${pad.category}-pad b${step} ${pad.active ? 'active' : ''} ${pad.intensity === 'high' ? 'accent' : pad.intensity === 'low' ? 'ghost' : ''}"
-          data-layer-id="${layer.id}"
-          data-pad-id="${pad.id}"
-          data-step="${step}"
-          aria-label="${layer.name} step ${step + 1}">
-          ${pad.repeat > 1 ? `<span class="pad-repeat-badge">${pad.repeat}x</span>` : ''}
-          ${pad.intensity === 'high' ? `<span class="pad-intensity-badge badge-high">H</span>` : pad.intensity === 'low' ? `<span class="pad-intensity-badge badge-low">L</span>` : ''}
-        </button>
-      `).join('')
-
-      cellEl.innerHTML = `
-        <div class="pad-stack-list">${padsHTML}</div>
-        <button class="pad-gear-btn" data-layer-id="${layer.id}" data-pad-id="${pads[0] ? pads[0].id : ''}" data-step="${step}" title="Configure Pad">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-        <button class="add-pad-step-btn" data-layer-id="${layer.id}" data-step="${step}" title="Stack Pad">
-          <i class="fa-solid fa-plus"></i>
-        </button>
-      `
-
-      // Re-bind pad events for this cell
-      cellEl.querySelectorAll('.pad').forEach(padEl => {
-        const padId = padEl.dataset.padId
-        const padObj = pads.find(p => p.id === padId)
-        if (!padObj) return
-
-        padEl.onclick = (e) => {
-          e.stopPropagation()
-          this.ensureAudioContextRunning()
-          padObj.active = !padObj.active
-          padEl.classList.toggle('active', padObj.active)
-          if (padObj.active) {
-            this.playPadSound(this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity), padObj.volume * layer.volume)
-          }
-        }
-
-        padEl.oncontextmenu = (e) => {
-          e.preventDefault()
-          this.openPadPopover(layer.id, step, padObj.id)
-        }
-      })
-
-      const gearBtn = cellEl.querySelector('.pad-gear-btn')
-      if (gearBtn) {
-        gearBtn.onclick = (e) => {
-          e.stopPropagation()
-          const primaryPad = pads[0]
-          if (primaryPad) this.openPadPopover(layer.id, step, primaryPad.id)
-        }
-      }
-
-      const stackBtn = cellEl.querySelector('.add-pad-step-btn')
-      if (stackBtn) {
-        stackBtn.onclick = (e) => {
-          e.stopPropagation()
-          this.addPadToStep(layer.id, step)
-        }
-      }
     }
 
     // ------------------------------------------------------------------------
@@ -1055,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Primary Track Channel Controls (Mute, Solo, Volume, Sample Select)
     // ------------------------------------------------------------------------
     bindPrimaryTrackControls() {
-      ['kick', 'snare', 'hihat'].forEach(track => {
+      ;['kick', 'snare', 'hihat'].forEach(track => {
         const layer = this.layers.find(l => l.category === track && l.isPrimary)
         if (!layer) return
 
