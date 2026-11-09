@@ -880,7 +880,7 @@ kbd {
 .sequencer-canvas {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.45rem;
   width: max-content;
   min-width: 100%;
 }
@@ -1141,9 +1141,10 @@ kbd {
   flex: 0 0 285px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.75rem 0.55rem 0.85rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem 0.65rem 0.85rem;
   border-right: 1.5px solid #edf1f7;
   border-radius: 17px 0 0 17px;
   position: sticky;
@@ -1594,7 +1595,7 @@ kbd {
 .track-channel-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.2rem;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -1616,7 +1617,7 @@ kbd {
 .track-sublayers {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
   width: max-content;
   min-width: 100%;
 }
@@ -1676,12 +1677,13 @@ kbd {
   color: #ffffff;
 }
 
+/* Category Add Layer Bubble Button - Compact & directly beneath category card */
 .add-layer-bar,
 .track-layer-actions {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.25rem 0.85rem;
+  padding: 0.15rem 0 0.15rem 0.75rem;
   position: sticky;
   left: 0;
   width: max-content;
@@ -1690,19 +1692,67 @@ kbd {
 
 .add-layer-btn {
   background: #ffffff;
-  border: 1px dashed #cbd5e1;
+  border: 1px solid #dce2ed;
   border-radius: 9999px;
-  padding: 0.35rem 0.85rem;
+  padding: 0.2rem 0.75rem 0.2rem 0.6rem;
+  font-family: var(--font-main);
+  font-size: 0.68rem;
+  font-weight: 700;
   color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  gap: 0.35rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.2px;
+}
+
+.add-layer-btn i {
+  font-size: 0.58rem;
+}
+
+/* Category-specific visual association & signature glow */
+.track-channel-group[data-track="kick"] .add-layer-btn {
+  color: #ff5e1e;
+  border-color: rgba(255, 94, 30, 0.28);
+  background: linear-gradient(180deg, #ffffff 0%, #fff7f2 100%);
+}
+
+.track-channel-group[data-track="kick"] .add-layer-btn:hover {
+  background: var(--color-primary-gradient);
+  color: #ffffff;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(255, 94, 30, 0.35);
+}
+
+.track-channel-group[data-track="snare"] .add-layer-btn {
+  color: #1a1d24;
+  border-color: rgba(26, 29, 36, 0.25);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f5f8 100%);
+}
+
+.track-channel-group[data-track="snare"] .add-layer-btn:hover {
+  background: var(--color-charcoal);
+  color: #ffffff;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(26, 29, 36, 0.25);
+}
+
+.track-channel-group[data-track="hihat"] .add-layer-btn {
+  color: #3b8206;
+  border-color: rgba(118, 224, 26, 0.45);
+  background: linear-gradient(180deg, #ffffff 0%, #f4fbf0 100%);
+}
+
+.track-channel-group[data-track="hihat"] .add-layer-btn:hover {
+  background: linear-gradient(135deg, #76e01a 0%, #4b9b09 100%);
+  color: #ffffff;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(118, 224, 26, 0.35);
 }
 
 .add-layer-btn:hover {
