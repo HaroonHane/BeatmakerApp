@@ -1204,6 +1204,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (this.visualizerContainer) {
             this.visualizerContainer.classList.remove('pulsing')
+            this.visualizerBars.forEach(bar => {
+              bar.style.height = ''
+            })
           }
         }, 140)
       }

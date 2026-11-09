@@ -31,48 +31,89 @@
   <!-- Main Studio Sequencer Card -->
   <main class="sequencer-studio" role="application" aria-label="Beatmaker Drum Machine">
 
-    <!-- Top Studio Header (Branding, Live Visualizer, Sound Assets & UX Guide) -->
+    <!-- Top Studio Header (Branding, Live Full-Width Spectrum Visualizer & Keyboard Controls) -->
     <header class="studio-header">
-      <div class="brand-block">
-        <div class="brand-badge">
-          <i class="fa-solid fa-wave-square"></i>
-        </div>
-        <div class="brand-text">
-          <div class="brand-title-row">
-            <h1 class="studio-title">PULSE<span>808</span></h1>
-            <span class="status-indicator" id="status-badge">
-              <span class="status-dot"></span>
-              <span class="status-label">STANDBY</span>
-            </span>
+      <!-- Left Header Panel: Logo Branding & Sound Assets Action -->
+      <div class="header-left-panel">
+        <div class="brand-block">
+          <div class="brand-badge">
+            <i class="fa-solid fa-wave-square"></i>
           </div>
-          <p class="brand-subtitle">Pro Drum Machine &amp; Multi-Intensity Sequencer</p>
+          <div class="brand-text">
+            <div class="brand-title-row">
+              <h1 class="studio-title">PULSE<span>808</span></h1>
+              <span class="status-indicator" id="status-badge">
+                <span class="status-dot"></span>
+                <span class="status-label">STANDBY</span>
+              </span>
+            </div>
+            <p class="brand-subtitle">Pro Drum Machine &amp; Multi-Intensity Sequencer</p>
+          </div>
         </div>
-      </div>
 
-      <!-- Real-time Audio Spectrum Visualizer (Pulsing with Beats) -->
-      <div class="visualizer-container" title="Audio Spectrum Visualizer">
-        <div class="visualizer-bar" style="--h: 20%;"></div>
-        <div class="visualizer-bar" style="--h: 45%;"></div>
-        <div class="visualizer-bar" style="--h: 75%;"></div>
-        <div class="visualizer-bar" style="--h: 30%;"></div>
-        <div class="visualizer-bar" style="--h: 90%;"></div>
-        <div class="visualizer-bar" style="--h: 60%;"></div>
-        <div class="visualizer-bar" style="--h: 40%;"></div>
-        <div class="visualizer-bar" style="--h: 80%;"></div>
-        <div class="visualizer-bar" style="--h: 25%;"></div>
-        <div class="visualizer-bar" style="--h: 65%;"></div>
-        <div class="visualizer-bar" style="--h: 50%;"></div>
-        <div class="visualizer-bar" style="--h: 85%;"></div>
-      </div>
-
-      <!-- Header Actions: Sound Assets & Keyboard Shortcuts Pill -->
-      <div class="header-actions">
         <button class="sound-assets-btn" id="sound-assets-btn" title="View Categorized Sound Assets & Variations">
           <div class="sound-assets-icon-wrap">
             <i class="fa-solid fa-layer-group"></i>
           </div>
           <span>Sound Assets</span>
         </button>
+      </div>
+
+      <!-- Right Header Panel: Visualizer (Top) and Keyboard Shortcuts (Exact Beneath, Matching Width) -->
+      <div class="header-right-panel">
+        <!-- Real-time Audio Spectrum Visualizer -->
+        <div class="visualizer-container" title="Audio Spectrum Visualizer">
+          <div class="visualizer-bar" style="--h: 22%; --i: 0;"></div>
+          <div class="visualizer-bar" style="--h: 38%; --i: 1;"></div>
+          <div class="visualizer-bar" style="--h: 58%; --i: 2;"></div>
+          <div class="visualizer-bar" style="--h: 75%; --i: 3;"></div>
+          <div class="visualizer-bar" style="--h: 62%; --i: 4;"></div>
+          <div class="visualizer-bar" style="--h: 45%; --i: 5;"></div>
+          <div class="visualizer-bar" style="--h: 35%; --i: 6;"></div>
+          <div class="visualizer-bar" style="--h: 52%; --i: 7;"></div>
+          <div class="visualizer-bar" style="--h: 70%; --i: 8;"></div>
+          <div class="visualizer-bar" style="--h: 88%; --i: 9;"></div>
+          <div class="visualizer-bar" style="--h: 92%; --i: 10;"></div>
+          <div class="visualizer-bar" style="--h: 78%; --i: 11;"></div>
+          <div class="visualizer-bar" style="--h: 60%; --i: 12;"></div>
+          <div class="visualizer-bar" style="--h: 42%; --i: 13;"></div>
+          <div class="visualizer-bar" style="--h: 30%; --i: 14;"></div>
+          <div class="visualizer-bar" style="--h: 48%; --i: 15;"></div>
+          <div class="visualizer-bar" style="--h: 66%; --i: 16;"></div>
+          <div class="visualizer-bar" style="--h: 84%; --i: 17;"></div>
+          <div class="visualizer-bar" style="--h: 96%; --i: 18;"></div>
+          <div class="visualizer-bar" style="--h: 80%; --i: 19;"></div>
+          <div class="visualizer-bar" style="--h: 64%; --i: 20;"></div>
+          <div class="visualizer-bar" style="--h: 46%; --i: 21;"></div>
+          <div class="visualizer-bar" style="--h: 32%; --i: 22;"></div>
+          <div class="visualizer-bar" style="--h: 50%; --i: 23;"></div>
+          <div class="visualizer-bar" style="--h: 68%; --i: 24;"></div>
+          <div class="visualizer-bar" style="--h: 86%; --i: 25;"></div>
+          <div class="visualizer-bar" style="--h: 74%; --i: 26;"></div>
+          <div class="visualizer-bar" style="--h: 56%; --i: 27;"></div>
+          <div class="visualizer-bar" style="--h: 40%; --i: 28;"></div>
+          <div class="visualizer-bar" style="--h: 54%; --i: 29;"></div>
+          <div class="visualizer-bar" style="--h: 72%; --i: 30;"></div>
+          <div class="visualizer-bar" style="--h: 90%; --i: 31;"></div>
+          <div class="visualizer-bar" style="--h: 82%; --i: 32;"></div>
+          <div class="visualizer-bar" style="--h: 65%; --i: 33;"></div>
+          <div class="visualizer-bar" style="--h: 48%; --i: 34;"></div>
+          <div class="visualizer-bar" style="--h: 34%; --i: 35;"></div>
+          <div class="visualizer-bar" style="--h: 52%; --i: 36;"></div>
+          <div class="visualizer-bar" style="--h: 70%; --i: 37;"></div>
+          <div class="visualizer-bar" style="--h: 88%; --i: 38;"></div>
+          <div class="visualizer-bar" style="--h: 76%; --i: 39;"></div>
+          <div class="visualizer-bar" style="--h: 58%; --i: 40;"></div>
+          <div class="visualizer-bar" style="--h: 44%; --i: 41;"></div>
+          <div class="visualizer-bar" style="--h: 62%; --i: 42;"></div>
+          <div class="visualizer-bar" style="--h: 80%; --i: 43;"></div>
+          <div class="visualizer-bar" style="--h: 68%; --i: 44;"></div>
+          <div class="visualizer-bar" style="--h: 50%; --i: 45;"></div>
+          <div class="visualizer-bar" style="--h: 36%; --i: 46;"></div>
+          <div class="visualizer-bar" style="--h: 24%; --i: 47;"></div>
+        </div>
+
+        <!-- Tactile Keyboard Shortcuts Pill (Directly beneath visualizer, exact width) -->
         <div class="hotkey-pill" title="Keyboard Shortcuts & Pad Controls">
           <div class="hotkey-icon-wrap">
             <i class="fa-solid fa-keyboard"></i>
