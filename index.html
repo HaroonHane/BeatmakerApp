@@ -65,20 +65,29 @@
         <div class="visualizer-bar" style="--h: 85%;"></div>
       </div>
 
-      <!-- Header Actions: Sound Assets, UX Guide & Hotkey Pill -->
+      <!-- Header Actions: Sound Assets & Keyboard Shortcuts Pill -->
       <div class="header-actions">
         <button class="sound-assets-btn" id="sound-assets-btn" title="View Categorized Sound Assets & Variations">
-          <i class="fa-solid fa-layer-group"></i>
+          <div class="sound-assets-icon-wrap">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
           <span>Sound Assets</span>
         </button>
-        <button class="ux-badge-btn" id="ux-laws-btn" title="View 8 UX Laws Applied">
-          <i class="fa-solid fa-graduation-cap"></i>
-          <span>8 UX Laws</span>
-        </button>
         <div class="hotkey-pill" title="Keyboard Shortcuts & Pad Controls">
-          <i class="fa-regular fa-keyboard"></i>
-          <span>[Space] Play &bull; [C] Clear &bull; [1-3] Audition &bull; [⚙ / Right-Click] Pad Config &bull; [+] Add
-            Layer/Pad</span>
+          <div class="hotkey-icon-wrap">
+            <i class="fa-solid fa-keyboard"></i>
+          </div>
+          <div class="hotkey-items">
+            <div class="hotkey-item"><kbd>Space</kbd><span>Play</span></div>
+            <div class="hotkey-sep"></div>
+            <div class="hotkey-item"><kbd>C</kbd><span>Clear</span></div>
+            <div class="hotkey-sep"></div>
+            <div class="hotkey-item"><kbd>1-3</kbd><span>Audition</span></div>
+            <div class="hotkey-sep"></div>
+            <div class="hotkey-item"><kbd>⚙</kbd><span>Pad Config</span></div>
+            <div class="hotkey-sep"></div>
+            <div class="hotkey-item"><kbd>+</kbd><span>Add Layer</span></div>
+          </div>
         </div>
       </div>
     </header>
@@ -837,102 +846,6 @@
     </div>
   </div>
 
-  <!-- 8 UX Laws Inspector Modal -->
-  <div class="modal-overlay" id="ux-laws-modal" role="dialog" aria-modal="true" aria-labelledby="ux-modal-title">
-    <div class="modal-content ux-modal-content glass-card">
-      <div class="ux-modal-header">
-        <div class="ux-header-title">
-          <i class="fa-solid fa-brain ux-accent-icon"></i>
-          <h2 id="ux-modal-title">8 Laws of UX in Beatmaker Studio</h2>
-        </div>
-        <button class="modal-close-btn" id="close-ux-modal" aria-label="Close modal">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div class="ux-laws-grid">
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">01</span>
-            <h3>Fitts's Law</h3>
-          </div>
-          <p>Touch and click targets are ergonomically proportioned: the primary <strong>START</strong> button is
-            generously sized and centered, drum pads have minimum 54px hit targets, and ±5/±1 BPM stepper buttons
-            prevent tedious slider hunting.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">02</span>
-            <h3>Hick's Law</h3>
-          </div>
-          <p>Reduced cognitive overload through progressive disclosure: instant <strong>Groove Presets</strong> and
-            5-tier intensity variations let users make music immediately without deciding on 24 blank steps.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">03</span>
-            <h3>Jakob's Law</h3>
-          </div>
-          <p>Adheres strictly to industry-standard DAW and drum machine conventions (Roland TR-808, MPC, Ableton):
-            vertical track lanes, left-to-right playhead motion, standard <strong>Mute (M)</strong> and <strong>Solo
-              (S)</strong>, and Spacebar trigger.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">04</span>
-            <h3>Law of Proximity</h3>
-          </div>
-          <p>Related controls are placed directly within their functional context: channel sample selector, 5-tier
-            intensity pills, Mute, Solo, and volume faders are docked immediately adjacent to that track's step
-            sequence.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">05</span>
-            <h3>Law of Common Region</h3>
-          </div>
-          <p>Frosted glass hardware chassis clearly separate distinct functional zones: Studio Header, Master Transport
-            Deck, Track Channel Strips, and Sequencer Pad Grid.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">06</span>
-            <h3>Miller's Law (Chunking)</h3>
-          </div>
-          <p>Working memory capacity is protected by chunking the 8-step sequencer into two distinct 4-step musical
-            beats (Beat 1: 1–4, Beat 2: 5–8) with alternating shading and numbered rulers.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">07</span>
-            <h3>Von Restorff Effect</h3>
-          </div>
-          <p>Key states stand out unmistakably: active pads ignite in neon cyan, amber, or magenta against deep obsidian
-            surfaces; the sweeping playhead beam isolates the active beat column in real time.</p>
-        </div>
-
-        <div class="ux-law-card">
-          <div class="ux-card-top">
-            <span class="ux-num">08</span>
-            <h3>Doherty Threshold</h3>
-          </div>
-          <p>All micro-interactions respond in under 50ms: clicking any pad, intensity pill, or sample immediately
-            auditions the sound, smooth tactile press physics, animated live audio visualizer, and instant hotkey
-            responses.</p>
-        </div>
-
-      </div>
-      <div class="ux-modal-footer">
-        <button class="modal-confirm" id="dismiss-ux-modal">Back to Studio</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Sound Assets & Categorized Variations Inspector Modal -->
   <div class="modal-overlay" id="sound-assets-modal" role="dialog" aria-modal="true"
