@@ -985,15 +985,19 @@
 
   <!-- Confirmation Modal (Clear Grid) -->
   <div class="modal-overlay" id="clear-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-content glass-card">
+    <div class="modal-content glass-card clear-modal-card">
       <div class="modal-icon">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
       <h2 id="modal-title">Clear Active Pattern?</h2>
       <p>This will erase all active drum pads across all tracks. This operation cannot be reversed.</p>
       <div class="modal-buttons">
-        <button class="modal-cancel" id="modal-cancel-btn">Keep Pattern</button>
-        <button class="modal-confirm" id="modal-confirm-btn">Yes, Clear All</button>
+        <button class="modal-cancel" id="modal-cancel-btn">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Keep Pattern
+        </button>
+        <button class="modal-confirm" id="modal-confirm-btn">
+          <i class="fa-solid fa-trash-can"></i> Yes, Clear All
+        </button>
       </div>
     </div>
   </div>
@@ -1145,7 +1149,9 @@
       </div>
 
       <div class="ux-modal-footer">
-        <button class="modal-cancel" id="cancel-save-modal">Cancel</button>
+        <button class="modal-cancel" id="cancel-save-modal">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
         <button class="modal-confirm" id="confirm-save-modal">
           <i class="fa-solid fa-bookmark"></i> Save Sequence
         </button>
@@ -1239,7 +1245,9 @@
       </div>
 
       <div class="ux-modal-footer">
-        <button class="modal-cancel" id="cancel-export-modal">Cancel</button>
+        <button class="modal-cancel" id="cancel-export-modal">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
         <button class="modal-confirm export-confirm-btn" id="confirm-export-modal">
           <i class="fa-solid fa-download"></i> Export &amp; Download
         </button>

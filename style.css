@@ -2497,21 +2497,25 @@ kbd {
   pointer-events: auto;
 }
 
+/* All Modals & Popovers Base Card Chassis */
+.modal-content,
 .pad-popover-card,
 .sound-assets-modal,
 .ux-modal {
-  max-width: 460px;
+  max-width: 480px;
   width: 95%;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 24px;
-  box-shadow: 0 25px 65px -10px rgba(20, 30, 50, 0.18), 0 10px 25px -5px rgba(20, 30, 50, 0.1);
-  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 25px 65px -10px rgba(20, 30, 50, 0.22), 0 10px 25px -5px rgba(20, 30, 50, 0.12);
+  padding: 1.65rem;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
-  animation: modalSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   color: var(--text-primary);
+  box-sizing: border-box;
+  position: relative;
 }
 
 @keyframes modalSlideUp {
@@ -2526,20 +2530,32 @@ kbd {
   }
 }
 
+.ux-modal-header,
 .popover-header,
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid #edf1f7;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.85rem;
+  width: 100%;
+}
+
+.ux-modal-header h2,
+.modal-title-with-icon h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-title);
+  margin: 0;
+  line-height: 1.25;
 }
 
 .popover-title-wrap,
-.modal-title-wrap {
+.modal-title-wrap,
+.modal-title-with-icon {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
 }
 
 .popover-icon,
@@ -2557,23 +2573,26 @@ kbd {
 
 .popover-close-btn,
 .modal-close-btn {
-  background: #edf1f7;
+  background: #f8fafc;
   border: 1px solid #dce2ed;
-  color: var(--text-secondary);
-  width: 30px;
-  height: 30px;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .popover-close-btn:hover,
 .modal-close-btn:hover {
-  background: #e2e7ef;
-  color: var(--text-title);
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 .popover-body,
@@ -2999,21 +3018,157 @@ kbd {
   color: var(--text-muted);
 }
 
+/* Universal Modal Footer & Buttons */
 .ux-modal-footer {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 0.65rem;
   border-top: 1px solid #edf1f7;
-  padding-top: 0.85rem;
+  padding-top: 1rem;
+  margin-top: 0.35rem;
+  width: 100%;
+}
+
+.modal-cancel {
+  height: 38px;
+  padding: 0 1.25rem;
+  background: #f1f5f9;
+  border: 1px solid #dce2ed;
+  border-radius: 8px;
+  color: #475569;
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: all 0.15s ease;
+}
+
+.modal-cancel:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modal-confirm {
+  height: 38px;
+  padding: 0 1.35rem;
+  background: var(--color-primary-gradient);
+  border: 1px solid rgba(255, 94, 30, 0.4);
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  box-shadow: 0 2px 8px rgba(255, 94, 30, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 94, 30, 0.48);
+  filter: brightness(1.05);
+}
+
+.modal-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(255, 94, 30, 0.3);
 }
 
 /* --------------------------------------------------------------------------
-   11. Save Modal, Audio Export Modal & Sequence Library Drawer
+   Clear Active Pattern Modal (Danger Confirmation Dialog)
    -------------------------------------------------------------------------- */
-/* Save Sequence Modal Card */
-.save-modal-card,
-.export-modal-card {
-  max-width: 480px;
+#clear-modal .modal-content {
+  max-width: 410px;
+  width: 90%;
+  text-align: center;
+  align-items: center;
+  padding: 2.2rem 1.85rem 1.85rem;
+  border-radius: 20px;
+  gap: 0.95rem;
+  box-shadow: 0 25px 65px -10px rgba(239, 68, 68, 0.16), 0 15px 30px -5px rgba(15, 23, 42, 0.14);
+}
+
+#clear-modal .modal-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+  font-size: 1.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.15);
+}
+
+#clear-modal h2 {
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--text-title);
+  margin: 0;
+}
+
+#clear-modal p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+  text-align: center;
+}
+
+#clear-modal .modal-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.65rem;
+}
+
+#clear-modal .modal-buttons .modal-cancel,
+#clear-modal .modal-buttons .modal-confirm {
+  flex: 1;
+  height: 40px;
+  font-size: 0.8rem;
+}
+
+#clear-modal .modal-buttons .modal-confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #b91c1c;
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.35);
+}
+
+#clear-modal .modal-buttons .modal-confirm:hover {
+  box-shadow: 0 5px 16px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   Save Sequence Modal & Audio Export Modal Specific Cards
+   -------------------------------------------------------------------------- */
+.save-modal-card {
+  max-width: 490px;
   width: 95%;
+  gap: 1.15rem;
+}
+
+.export-modal-card {
+  max-width: 540px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  gap: 1.15rem;
 }
 
 .modal-title-with-icon {
@@ -3023,13 +3178,14 @@ kbd {
 }
 
 .modal-header-icon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  flex-shrink: 0;
 }
 
 .save-icon-tint {
@@ -3043,7 +3199,7 @@ kbd {
 }
 
 .modal-desc {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
@@ -3315,6 +3471,12 @@ kbd {
 .export-confirm-btn {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
   border-color: #15803d !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35) !important;
+}
+
+.export-confirm-btn:hover {
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.5) !important;
+  transform: translateY(-1px);
 }
 
 /* Slide-in Sequence Library Side Drawer */
@@ -3507,115 +3669,148 @@ kbd {
 .lib-seq-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 0.85rem;
+  border-left: 3px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  cursor: pointer;
 }
 
 .lib-seq-card:hover {
   border-color: #cbd5e1;
+  border-left-color: var(--color-primary);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+}
+
+.lib-seq-card.is-active-seq {
+  border-color: #fdba74;
+  border-left-color: var(--color-primary);
+  background: linear-gradient(to right, rgba(255, 94, 30, 0.03), #ffffff);
 }
 
 .seq-card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.65rem;
+}
+
+.seq-card-title-group {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.seq-card-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .seq-card-title {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: var(--text-title);
   margin: 0;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seq-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #059669;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 0.1rem 0.38rem;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .seq-card-date {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
-  color: #94a3b8;
-}
-
-.seq-card-tags {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.seq-tag {
-  background: #f1f4f9;
-  border-radius: 6px;
-  padding: 0.15rem 0.4rem;
-  font-family: var(--font-mono);
   font-size: 0.6rem;
-  font-weight: 700;
-  color: #475569;
-}
-
-/* Mini Visual Rhythm Preview in Card */
-.seq-mini-rhythm {
-  height: 8px;
-  width: 100%;
-  background: #141720;
-  border-radius: 4px;
+  color: #94a3b8;
   display: flex;
-  gap: 2px;
-  padding: 1px;
-  overflow: hidden;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.seq-mini-pip {
-  flex: 1;
-  height: 100%;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.seq-mini-pip.active-dot {
-  background: var(--color-primary);
-  box-shadow: 0 0 3px rgba(255, 94, 30, 0.8);
+.seq-card-date i {
+  font-size: 0.58rem;
 }
 
 .seq-card-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem;
-  margin-top: 0.2rem;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-top: 0;
 }
 
+/* Primary Load Button: Highly Intuitive, Non-Clipped, Bold Affordance */
 .seq-load-btn {
-  flex: 1;
   height: 32px;
+  min-width: 82px;
+  padding: 0 0.85rem;
   background: var(--color-primary-gradient);
-  border: none;
+  border: 1px solid rgba(255, 94, 30, 0.4);
   border-radius: 8px;
   color: #ffffff;
   font-family: var(--font-main);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(255, 94, 30, 0.3);
+  gap: 0.45rem;
+  white-space: nowrap;
+  flex: none;
+  box-shadow: 0 2px 7px rgba(255, 94, 30, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.seq-load-btn i {
+  font-size: 0.68rem;
+  margin-top: -1px;
+}
+
+.seq-load-btn span {
+  display: inline-block;
+  line-height: 1;
 }
 
 .seq-load-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(255, 94, 30, 0.45);
+  box-shadow: 0 4px 12px rgba(255, 94, 30, 0.48);
+  filter: brightness(1.05);
 }
 
+.seq-load-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(255, 94, 30, 0.3);
+}
+
+/* Secondary Action Buttons (Rename / Delete) */
 .seq-action-btn {
   width: 32px;
   height: 32px;
@@ -3624,22 +3819,125 @@ kbd {
   background: #f8fafc;
   color: #64748b;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  transition: all 0.15s ease;
+  font-size: 0.74rem;
+  flex-shrink: 0;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .seq-action-btn:hover {
-  background: #edf1f7;
-  color: #1e293b;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.seq-action-btn:active {
+  transform: translateY(0);
 }
 
 .seq-action-btn.delete-seq:hover {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #ef4444;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15);
+}
+
+/* Streamlined Sequence Tags */
+.seq-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.seq-tag {
+  background: #f1f4f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.18rem 0.48rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.seq-tag i {
+  font-size: 0.62rem;
+}
+
+.seq-tag.tag-bpm i {
+  color: var(--color-primary);
+}
+
+.seq-tag.tag-length i {
+  color: #6366f1;
+}
+
+.seq-tag.tag-tracks i {
+  color: #0284c7;
+}
+
+.seq-tag.tag-pads i {
+  color: #f59e0b;
+}
+
+/* DAW Cockpit Rhythm Preview */
+.seq-mini-rhythm {
+  height: 12px;
+  width: 100%;
+  background: #0f172a;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.seq-mini-pip {
+  flex: 1;
+  height: 6px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.15s ease;
+}
+
+.seq-mini-pip.beat-divider {
+  margin-right: 3px;
+}
+
+.seq-mini-pip.active-dot {
+  height: 8px;
+}
+
+.seq-mini-pip.hit-kick {
+  background: var(--color-primary);
+  box-shadow: 0 0 4px rgba(255, 94, 30, 0.9);
+}
+
+.seq-mini-pip.hit-snare {
+  background: #38bdf8;
+  box-shadow: 0 0 4px rgba(56, 189, 248, 0.9);
+}
+
+.seq-mini-pip.hit-hihat {
+  background: #a855f7;
+  box-shadow: 0 0 4px rgba(168, 85, 247, 0.9);
+}
+
+.seq-mini-pip.hit-both {
+  background: linear-gradient(180deg, var(--color-primary), #38bdf8);
+  box-shadow: 0 0 5px rgba(255, 120, 50, 0.95);
 }
 
 /* Empty State */

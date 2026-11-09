@@ -2899,6 +2899,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       this.library.unshift(newSeq)
+      this.currentSeqId = newSeq.id
       this.saveStoredLibrary()
       this.closeSaveModal()
       this.showToast(`Saved sequence: "${seqName}"`, 'success')
@@ -2990,6 +2991,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
 
       // 5. Update timeline and metrics
+      this.currentSeqId = seq.id
       this.renderTrackpadRuler()
       this.renderTrackpadLanes()
       this.updateTimelineMetrics()
@@ -3003,7 +3005,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const idx = this.library.findIndex(s => s.id === seqId)
       if (idx === -1) return
       const removedName = this.library[idx].name
+      if (!confirm(`Are you sure you want to delete sequence "${removedName}"?`)) return
       this.library.splice(idx, 1)
+      if (this.currentSeqId === seqId) {
+        this.currentSeqId = null
+      }
       this.saveStoredLibrary()
       this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
       this.showToast(`Deleted sequence: "${removedName}"`, 'info')
@@ -3051,45 +3057,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const kickLayer = seq.layers.find(l => l.category === 'kick')
         const snareLayer = seq.layers.find(l => l.category === 'snare')
+        const hihatLayer = seq.layers.find(l => l.category === 'hihat')
         const previewSteps = seq.totalSteps || 8
+        const maxPreviewSteps = Math.min(24, previewSteps)
         let previewDotsHTML = ''
-        for (let s = 0; s < Math.min(16, previewSteps); s++) {
+        for (let s = 0; s < maxPreviewSteps; s++) {
           const hasKick = kickLayer && kickLayer.steps[s] && kickLayer.steps[s].some(p => p.active)
           const hasSnare = snareLayer && snareLayer.steps[s] && snareLayer.steps[s].some(p => p.active)
-          const isHit = hasKick || hasSnare
-          const dotClass = hasKick ? 'dot-kick' : hasSnare ? 'dot-snare' : 'dot-off'
-          previewDotsHTML += `<span class="preview-mini-dot seq-mini-pip ${dotClass} ${isHit ? 'active-dot' : ''}"></span>`
+          const hasHihat = hihatLayer && hihatLayer.steps[s] && hihatLayer.steps[s].some(p => p.active)
+          const isHit = hasKick || hasSnare || hasHihat
+          const isBeatBoundary = (s + 1) % 4 === 0 && s < maxPreviewSteps - 1
+
+          let hitClass = 'dot-off'
+          if (hasKick && hasSnare) hitClass = 'hit-both'
+          else if (hasKick) hitClass = 'hit-kick'
+          else if (hasSnare) hitClass = 'hit-snare'
+          else if (hasHihat) hitClass = 'hit-hihat'
+
+          previewDotsHTML += `<span class="seq-mini-pip ${hitClass} ${isHit ? 'active-dot' : ''} ${isBeatBoundary ? 'beat-divider' : ''}"></span>`
         }
 
+        const isCurrentActive = this.currentSeqId === seq.id
         const card = document.createElement('div')
-        card.className = 'lib-seq-card'
+        card.className = `lib-seq-card ${isCurrentActive ? 'is-active-seq' : ''}`
         card.dataset.seqId = seq.id
 
         card.innerHTML = `
           <div class="seq-card-header">
             <div class="seq-card-title-group">
-              <h4 class="seq-card-title">${seq.name}</h4>
-              <span class="seq-card-date">${seq.createdAt || 'Saved Beat'}</span>
+              <div class="seq-card-title-line">
+                <h4 class="seq-card-title" title="${seq.name}">${seq.name}</h4>
+                ${isCurrentActive ? '<span class="seq-active-badge"><i class="fa-solid fa-circle-check"></i> ACTIVE</span>' : ''}
+              </div>
+              <span class="seq-card-date"><i class="fa-regular fa-clock"></i> ${seq.createdAt || 'Saved Beat'}</span>
             </div>
             <div class="seq-card-actions">
-              <button class="card-action-btn seq-load-btn load-action-btn" title="Load this sequence into sequencer">
-                <i class="fa-solid fa-play"></i> LOAD
+              <button class="card-action-btn seq-load-btn load-action-btn" title="Load this sequence into sequencer" aria-label="Load sequence ${seq.name}">
+                <i class="fa-solid fa-play"></i>
+                <span>LOAD</span>
               </button>
-              <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence">
+              <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence" aria-label="Rename sequence ${seq.name}">
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence">
+              <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence" aria-label="Delete sequence ${seq.name}">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
           </div>
           <div class="seq-card-badges seq-card-tags">
-            <span class="seq-badge seq-tag"><i class="fa-solid fa-gauge-high"></i> ${seq.bpm} BPM</span>
-            <span class="seq-badge seq-tag"><i class="fa-solid fa-music"></i> ${seq.numBeats || 2} Beats (${seq.totalSteps || 8} Steps)</span>
-            <span class="seq-badge seq-tag"><i class="fa-solid fa-layer-group"></i> ${seq.layers.length} Tracks</span>
-            <span class="seq-badge seq-tag"><i class="fa-solid fa-fire"></i> ${activePadCount} Pads</span>
+            <span class="seq-badge seq-tag tag-bpm" title="Tempo"><i class="fa-solid fa-gauge-high"></i> ${seq.bpm} BPM</span>
+            <span class="seq-badge seq-tag tag-length" title="Sequence Length"><i class="fa-solid fa-music"></i> ${seq.numBeats || 2}B (${seq.totalSteps || 8}S)</span>
+            <span class="seq-badge seq-tag tag-tracks" title="Active Instrument Tracks"><i class="fa-solid fa-layer-group"></i> ${seq.layers.length} Tracks</span>
+            <span class="seq-badge seq-tag tag-pads" title="Active Trigger Pads"><i class="fa-solid fa-fire"></i> ${activePadCount} Pads</span>
           </div>
-          <div class="seq-rhythm-preview seq-mini-rhythm" title="Rhythm footprint preview">
+          <div class="seq-rhythm-preview seq-mini-rhythm" title="Rhythm Pattern Footprint (${previewSteps} Steps)">
             ${previewDotsHTML}
           </div>
         `
