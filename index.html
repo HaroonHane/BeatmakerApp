@@ -1,192 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Beatmaker Studio | Next-Gen Drum Sequencer</title>
-    <meta name="description" content="A professional dark neon beat maker and step sequencer crafted with Pinterest-inspired studio UI and the 8 Laws of UX." />
-    <meta name="google-site-verification" content="OzqqZRYjQqZpu3X1E8fyYukUeAqV7xZt2t_Em_jIKEk" />
-    <link
-      rel="shortcut icon"
-      href="./utility-images/favicon.png"
-      type="image/x-icon"
-    />
-    <!-- Google Fonts: Inter for UI & JetBrains Mono / Orbitron for hardware displays -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- Background Ambient Glow Orbs -->
-    <div class="ambient-glow glow-cyan"></div>
-    <div class="ambient-glow glow-purple"></div>
-    <div class="ambient-glow glow-amber"></div>
 
-    <!-- Main Studio Sequencer Card -->
-    <main class="sequencer-studio" role="application" aria-label="Beatmaker Drum Machine">
-      
-      <!-- Top Studio Header (Branding, Live Visualizer, UX Guide Pill) -->
-      <header class="studio-header">
-        <div class="brand-block">
-          <div class="brand-badge">
-            <i class="fa-solid fa-wave-square"></i>
-          </div>
-          <div class="brand-text">
-            <div class="brand-title-row">
-              <h1 class="studio-title">PULSE<span>808</span></h1>
-              <span class="status-indicator" id="status-badge">
-                <span class="status-dot"></span>
-                <span class="status-label">STANDBY</span>
-              </span>
-            </div>
-            <p class="brand-subtitle">Pro Drum Machine &amp; Step Sequencer</p>
-          </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beatmaker Studio | Next-Gen Drum Sequencer</title>
+  <meta name="description"
+    content="A professional dark neon beat maker and step sequencer crafted with Pinterest-inspired studio UI, categorized sound assets, 5-tier intensity variations, and the 8 Laws of UX." />
+  <meta name="google-site-verification" content="OzqqZRYjQqZpu3X1E8fyYukUeAqV7xZt2t_Em_jIKEk" />
+  <link rel="shortcut icon" href="./utility-images/favicon.png" type="image/x-icon" />
+  <!-- Google Fonts: Inter for UI & JetBrains Mono / Orbitron for hardware displays -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;800;900&display=swap"
+    rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Background Ambient Glow Orbs -->
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-purple"></div>
+  <div class="ambient-glow glow-amber"></div>
+
+  <!-- Main Studio Sequencer Card -->
+  <main class="sequencer-studio" role="application" aria-label="Beatmaker Drum Machine">
+
+    <!-- Top Studio Header (Branding, Live Visualizer, Sound Assets & UX Guide) -->
+    <header class="studio-header">
+      <div class="brand-block">
+        <div class="brand-badge">
+          <i class="fa-solid fa-wave-square"></i>
         </div>
-
-        <!-- Real-time Audio Spectrum Visualizer (Pulsing with Beats) -->
-        <div class="visualizer-container" title="Audio Spectrum Visualizer">
-          <div class="visualizer-bar" style="--h: 20%;"></div>
-          <div class="visualizer-bar" style="--h: 45%;"></div>
-          <div class="visualizer-bar" style="--h: 75%;"></div>
-          <div class="visualizer-bar" style="--h: 30%;"></div>
-          <div class="visualizer-bar" style="--h: 90%;"></div>
-          <div class="visualizer-bar" style="--h: 60%;"></div>
-          <div class="visualizer-bar" style="--h: 40%;"></div>
-          <div class="visualizer-bar" style="--h: 80%;"></div>
-          <div class="visualizer-bar" style="--h: 25%;"></div>
-          <div class="visualizer-bar" style="--h: 65%;"></div>
-          <div class="visualizer-bar" style="--h: 50%;"></div>
-          <div class="visualizer-bar" style="--h: 85%;"></div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1 class="studio-title">PULSE<span>808</span></h1>
+            <span class="status-indicator" id="status-badge">
+              <span class="status-dot"></span>
+              <span class="status-label">STANDBY</span>
+            </span>
+          </div>
+          <p class="brand-subtitle">Pro Drum Machine &amp; Multi-Intensity Sequencer</p>
         </div>
+      </div>
 
-        <!-- Header Actions: Shortcuts & 8 UX Laws Guide -->
-        <div class="header-actions">
-          <button class="ux-badge-btn" id="ux-laws-btn" title="View 8 UX Laws Applied">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <span>8 UX Laws</span>
-          </button>
-          <div class="hotkey-pill" title="Keyboard Shortcuts Active">
+      <!-- Real-time Audio Spectrum Visualizer (Pulsing with Beats) -->
+      <div class="visualizer-container" title="Audio Spectrum Visualizer">
+        <div class="visualizer-bar" style="--h: 20%;"></div>
+        <div class="visualizer-bar" style="--h: 45%;"></div>
+        <div class="visualizer-bar" style="--h: 75%;"></div>
+        <div class="visualizer-bar" style="--h: 30%;"></div>
+        <div class="visualizer-bar" style="--h: 90%;"></div>
+        <div class="visualizer-bar" style="--h: 60%;"></div>
+        <div class="visualizer-bar" style="--h: 40%;"></div>
+        <div class="visualizer-bar" style="--h: 80%;"></div>
+        <div class="visualizer-bar" style="--h: 25%;"></div>
+        <div class="visualizer-bar" style="--h: 65%;"></div>
+        <div class="visualizer-bar" style="--h: 50%;"></div>
+        <div class="visualizer-bar" style="--h: 85%;"></div>
+      </div>
+
+      <!-- Header Actions: Sound Assets, UX Guide & Hotkey Pill -->
+      <div class="header-actions">
+        <button class="sound-assets-btn" id="sound-assets-btn" title="View Categorized Sound Assets & Variations">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Sound Assets</span>
+        </button>
+        <button class="ux-badge-btn" id="ux-laws-btn" title="View 8 UX Laws Applied">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>8 UX Laws</span>
+        </button>
+          <div class="hotkey-pill" title="Keyboard Shortcuts & Pad Velocity">
             <i class="fa-regular fa-keyboard"></i>
-            <span>[Space] Play &bull; [C] Clear &bull; [1-3] Audition</span>
+            <span>[Space] Play &bull; [C] Clear &bull; [1-3] Audition &bull; [Right-Click] Accent/Ghost</span>
           </div>
         </div>
-      </header>
+    </header>
 
-      <!-- Master Control Deck: BPM Engine, Groove Presets, Master Transport -->
-      <section class="master-deck" aria-label="Master Controls">
-        
-        <!-- Tempo / BPM Engine (Fitts's Law + Jakob's Law) -->
-        <div class="tempo-station">
-          <div class="station-label">
-            <i class="fa-solid fa-gauge-high"></i>
-            <span>TEMPO CONTROL</span>
-          </div>
-          <div class="tempo-controls-wrap">
-            <div class="bpm-screen">
-              <span class="bpm-num" id="tempo-nr">150</span>
-              <span class="bpm-unit">BPM</span>
-            </div>
-            <div class="bpm-nudgers">
-              <button class="bpm-btn" id="bpm-minus-5" title="Decrease 5 BPM">-5</button>
-              <button class="bpm-btn" id="bpm-minus-1" title="Decrease 1 BPM">-1</button>
-              <input
-                class="tempo-slider"
-                id="tempo-slider"
-                type="range"
-                min="20"
-                max="300"
-                value="150"
-                aria-label="Tempo BPM Slider"
-              />
-              <button class="bpm-btn" id="bpm-plus-1" title="Increase 1 BPM">+1</button>
-              <button class="bpm-btn" id="bpm-plus-5" title="Increase 5 BPM">+5</button>
-              <button class="tap-tempo-btn" id="tap-tempo-btn" title="Tap Tempo repeatedly to set BPM">
-                <i class="fa-solid fa-hand-pointer"></i> TAP
-              </button>
-            </div>
-          </div>
+    <!-- Master Control Deck: BPM Engine, Groove Presets, Master Transport -->
+    <section class="master-deck" aria-label="Master Controls">
+
+      <!-- Tempo / BPM Engine (Fitts's Law + Jakob's Law) -->
+      <div class="tempo-station">
+        <div class="station-label">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>TEMPO CONTROL</span>
         </div>
-
-        <!-- Groove Presets Station (Hick's Law - Bypass Blank Canvas) -->
-        <div class="preset-station">
-          <div class="station-label">
-            <i class="fa-solid fa-sliders"></i>
-            <span>GROOVE PRESETS</span>
+        <div class="tempo-controls-wrap">
+          <div class="bpm-screen">
+            <span class="bpm-num" id="tempo-nr">150</span>
+            <span class="bpm-unit">BPM</span>
           </div>
-          <div class="preset-selector-wrap">
-            <select id="groove-presets" class="preset-dropdown" aria-label="Load Groove Preset">
-              <option value="" disabled selected>⚡ Load Preset Beat...</option>
-              <option value="trap">🔥 Trap 808 Heat</option>
-              <option value="boombap">🥁 Hip-Hop Boom Bap</option>
-              <option value="house">🕺 Four-on-the-Floor House</option>
-              <option value="techno">⚡ Cyber Techno</option>
-              <option value="lofi">☕ Lo-Fi Chill Hop</option>
-            </select>
-            <button class="random-beat-btn" id="random-beat-btn" title="Generate Random Beat Pattern">
-              <i class="fa-solid fa-dice"></i> Dice
+          <div class="bpm-nudgers">
+            <button class="bpm-btn" id="bpm-minus-5" title="Decrease 5 BPM">-5</button>
+            <button class="bpm-btn" id="bpm-minus-1" title="Decrease 1 BPM">-1</button>
+            <input class="tempo-slider" id="tempo-slider" type="range" min="20" max="300" value="150"
+              aria-label="Tempo BPM Slider" />
+            <button class="bpm-btn" id="bpm-plus-1" title="Increase 1 BPM">+1</button>
+            <button class="bpm-btn" id="bpm-plus-5" title="Increase 5 BPM">+5</button>
+            <button class="tap-tempo-btn" id="tap-tempo-btn" title="Tap Tempo repeatedly to set BPM">
+              <i class="fa-solid fa-hand-pointer"></i> TAP
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Master Transport Buttons (Fitts's Law & Von Restorff Isolation Effect) -->
-        <div class="transport-station">
-          <button class="play-btn play" id="master-play" aria-label="Start or Stop Playback" title="Play / Pause (Spacebar)">
-            <div class="play-icon-wrap">
-              <i class="fa-solid fa-play"></i>
-            </div>
-            <span class="play-text">START</span>
-          </button>
-          <button class="clear-btn" id="master-clear" aria-label="Clear All Pads" title="Clear Grid (C)">
-            <i class="fa-solid fa-trash-can"></i>
-            <span>CLEAR</span>
+      <!-- Groove Presets Station (Hick's Law - Bypass Blank Canvas) -->
+      <div class="preset-station">
+        <div class="station-label">
+          <i class="fa-solid fa-sliders"></i>
+          <span>GROOVE PRESETS</span>
+        </div>
+        <div class="preset-selector-wrap">
+          <select id="groove-presets" class="preset-dropdown" aria-label="Load Groove Preset">
+            <option value="" disabled selected>⚡ Load Preset Beat...</option>
+            <option value="trap">🔥 Trap 808 Heat</option>
+            <option value="boombap">🥁 Hip-Hop Boom Bap</option>
+            <option value="house">🕺 Four-on-the-Floor House</option>
+            <option value="techno">⚡ Cyber Techno</option>
+            <option value="lofi">☕ Lo-Fi Chill Hop</option>
+          </select>
+          <button class="random-beat-btn" id="random-beat-btn" title="Generate Random Beat Pattern">
+            <i class="fa-solid fa-dice"></i> Dice
           </button>
         </div>
-      </section>
+      </div>
 
-      <!-- Sequencer Matrix (Jakob's Law, Miller's Law Chunking, Common Region) -->
-      <section class="sequencer-matrix" aria-label="Drum Sequencer Matrix">
-        
-        <!-- Step Column Header (Miller's Law 4-beat chunking & Playhead Beam) -->
-        <div class="step-header-bar">
-          <div class="step-header-spacer">
-            <span class="tracks-title"><i class="fa-solid fa-layer-group"></i> INSTRUMENTS</span>
+      <!-- Master Transport Buttons (Fitts's Law & Von Restorff Isolation Effect) -->
+      <div class="transport-station">
+        <button class="play-btn play" id="master-play" aria-label="Start or Stop Playback"
+          title="Play / Pause (Spacebar)">
+          <div class="play-icon-wrap">
+            <i class="fa-solid fa-play"></i>
           </div>
-          <div class="step-ruler">
-            <!-- Beat 1 (Steps 1-4) -->
-            <div class="beat-group-header beat-1-header">
-              <span class="beat-label">BEAT 01</span>
-              <div class="step-numbers">
-                <div class="step-col-head" data-step="0"><span class="step-idx">1</span><div class="step-dot" data-step="0"></div></div>
-                <div class="step-col-head" data-step="1"><span class="step-idx">2</span><div class="step-dot" data-step="1"></div></div>
-                <div class="step-col-head" data-step="2"><span class="step-idx">3</span><div class="step-dot" data-step="2"></div></div>
-                <div class="step-col-head" data-step="3"><span class="step-idx">4</span><div class="step-dot" data-step="3"></div></div>
+          <span class="play-text">START</span>
+        </button>
+        <button class="clear-btn" id="master-clear" aria-label="Clear All Pads" title="Clear Grid (C)">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>CLEAR</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Sequencer Matrix (Jakob's Law, Miller's Law Chunking, Common Region) -->
+    <section class="sequencer-matrix" aria-label="Drum Sequencer Matrix">
+
+      <!-- Step Column Header (Miller's Law 4-beat chunking & Playhead Beam) -->
+      <div class="step-header-bar">
+        <div class="step-header-spacer">
+          <span class="tracks-title"><i class="fa-solid fa-layer-group"></i> INSTRUMENTS &amp; INTENSITY
+            VARIATIONS</span>
+        </div>
+        <div class="step-ruler">
+          <!-- Beat 1 (Steps 1-4) -->
+          <div class="beat-group-header beat-1-header">
+            <span class="beat-label">BEAT 01</span>
+            <div class="step-numbers">
+              <div class="step-col-head" data-step="0"><span class="step-idx">1</span>
+                <div class="step-dot" data-step="0"></div>
+              </div>
+              <div class="step-col-head" data-step="1"><span class="step-idx">2</span>
+                <div class="step-dot" data-step="1"></div>
+              </div>
+              <div class="step-col-head" data-step="2"><span class="step-idx">3</span>
+                <div class="step-dot" data-step="2"></div>
+              </div>
+              <div class="step-col-head" data-step="3"><span class="step-idx">4</span>
+                <div class="step-dot" data-step="3"></div>
               </div>
             </div>
-            <!-- Beat 2 (Steps 5-8) -->
-            <div class="beat-group-header beat-2-header">
-              <span class="beat-label">BEAT 02</span>
-              <div class="step-numbers">
-                <div class="step-col-head" data-step="4"><span class="step-idx">5</span><div class="step-dot" data-step="4"></div></div>
-                <div class="step-col-head" data-step="5"><span class="step-idx">6</span><div class="step-dot" data-step="5"></div></div>
-                <div class="step-col-head" data-step="6"><span class="step-idx">7</span><div class="step-dot" data-step="6"></div></div>
-                <div class="step-col-head" data-step="7"><span class="step-idx">8</span><div class="step-dot" data-step="7"></div></div>
+          </div>
+          <!-- Beat 2 (Steps 5-8) -->
+          <div class="beat-group-header beat-2-header">
+            <span class="beat-label">BEAT 02</span>
+            <div class="step-numbers">
+              <div class="step-col-head" data-step="4"><span class="step-idx">5</span>
+                <div class="step-dot" data-step="4"></div>
+              </div>
+              <div class="step-col-head" data-step="5"><span class="step-idx">6</span>
+                <div class="step-dot" data-step="5"></div>
+              </div>
+              <div class="step-col-head" data-step="6"><span class="step-idx">7</span>
+                <div class="step-dot" data-step="6"></div>
+              </div>
+              <div class="step-col-head" data-step="7"><span class="step-idx">8</span>
+                <div class="step-dot" data-step="7"></div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- TRACK 01: KICK DRUM (Cyan Glow Accent) -->
-        <div class="track-channel kick-beat" data-track="kick">
-          <div class="channel-strip">
+      <!-- TRACK 01: KICK DRUM (Cyan Glow Accent) -->
+      <div class="track-channel kick-beat" data-track="kick">
+        <div class="channel-strip">
+
+          <div class="channel-main-row">
+            <!-- Channel Identity -->
             <div class="channel-identity">
               <div class="track-badge">01</div>
               <div class="channel-name-wrap">
@@ -198,53 +213,81 @@
                   <button class="track-btn solo-btn" id="kick-solo" title="Solo Kick (S)" aria-label="Solo Kick">
                     <span>S</span>
                   </button>
-                  <button class="track-btn audition-btn" data-audition="kick" title="Preview Kick Sound" aria-label="Audition Kick">
+                  <button class="track-btn audition-btn" data-audition="kick" title="Preview Kick Sound"
+                    aria-label="Audition Kick">
                     <i class="fa-solid fa-play"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Sample Sound Picker -->
+            <!-- Categorized Sound Family Selector -->
             <div class="sample-picker-wrap">
               <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="beat-audio-versions" id="kick-beat-audio" class="sample-select" aria-label="Kick Sample Version">
-                <option value="./sounds/kick-classic.wav">Kick Classic</option>
-                <option value="./sounds/kick-808.wav">Kick 808</option>
-                <option value="./sounds/kick-heavy.wav">Kick Heavy</option>
-                <option value="./sounds/kick-softy.wav">Kick Softy</option>
+              <select name="beat-audio-versions" id="kick-beat-audio" class="sample-select"
+                aria-label="Kick Sound Family">
+                <option value="./sounds/kick/base/kick-classic.wav" data-sound-id="kick-classic" selected>Kick Classic
+                  (Base)</option>
+                <option value="./sounds/kick/base/kick-808.wav" data-sound-id="kick-808">Kick 808</option>
+                <option value="./sounds/kick/base/kick-heavy.wav" data-sound-id="kick-heavy">Kick Heavy</option>
+                <option value="./sounds/kick/base/kick-softy.wav" data-sound-id="kick-softy">Kick Softy</option>
               </select>
             </div>
 
             <!-- Channel Volume Fader -->
             <div class="volume-station">
               <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="kick-volume" min="0" max="100" value="100" aria-label="Kick Volume" />
+              <input type="range" class="volume-slider" id="kick-volume" min="0" max="100" value="100"
+                aria-label="Kick Volume" />
               <span class="volume-value">100%</span>
-              <div class="mini-meter" id="kick-meter"><div class="meter-bar"></div></div>
+              <div class="mini-meter" id="kick-meter">
+                <div class="meter-bar"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-          <div class="kick-pads pads-grid">
-            <div class="beat-chunk beat-chunk-1">
-              <button class="pad kick-pad b0" data-step="0" data-track="kick" aria-label="Kick step 1"></button>
-              <button class="pad kick-pad b1" data-step="1" data-track="kick" aria-label="Kick step 2"></button>
-              <button class="pad kick-pad b2" data-step="2" data-track="kick" aria-label="Kick step 3"></button>
-              <button class="pad kick-pad b3" data-step="3" data-track="kick" aria-label="Kick step 4"></button>
-            </div>
-            <div class="beat-chunk beat-chunk-2">
-              <button class="pad kick-pad b4" data-step="4" data-track="kick" aria-label="Kick step 5"></button>
-              <button class="pad kick-pad b5" data-step="5" data-track="kick" aria-label="Kick step 6"></button>
-              <button class="pad kick-pad b6" data-step="6" data-track="kick" aria-label="Kick step 7"></button>
-              <button class="pad kick-pad b7" data-step="7" data-track="kick" aria-label="Kick step 8"></button>
+          <!-- 5-Tier Intensity Variation Selector -->
+          <div class="intensity-station" data-track="kick">
+            <span class="intensity-label" title="Low-to-High Sound Variation">
+              <i class="fa-solid fa-bolt"></i> VARIATION:
+            </span>
+            <div class="intensity-pills" role="radiogroup" aria-label="Kick intensity variation">
+              <button class="intensity-pill" data-intensity="low" title="Low: Soft, subtle kick">LOW</button>
+              <button class="intensity-pill" data-intensity="med-low"
+                title="Med-Low: Smooth rounded thud">M-LOW</button>
+              <button class="intensity-pill active" data-intensity="med"
+                title="Medium: Balanced default base">MED</button>
+              <button class="intensity-pill" data-intensity="med-high"
+                title="Med-High: Punchy articulate strike">M-HIGH</button>
+              <button class="intensity-pill" data-intensity="high" title="High: Saturated power hit">HIGH</button>
             </div>
           </div>
+
         </div>
 
-        <!-- TRACK 02: SNARE DRUM (Amber Gold Accent) -->
-        <div class="track-channel snare-beat" data-track="snare">
-          <div class="channel-strip">
+        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+        <div class="kick-pads pads-grid">
+          <div class="beat-chunk beat-chunk-1">
+            <button class="pad kick-pad b0" data-step="0" data-track="kick" aria-label="Kick step 1"></button>
+            <button class="pad kick-pad b1" data-step="1" data-track="kick" aria-label="Kick step 2"></button>
+            <button class="pad kick-pad b2" data-step="2" data-track="kick" aria-label="Kick step 3"></button>
+            <button class="pad kick-pad b3" data-step="3" data-track="kick" aria-label="Kick step 4"></button>
+          </div>
+          <div class="beat-chunk beat-chunk-2">
+            <button class="pad kick-pad b4" data-step="4" data-track="kick" aria-label="Kick step 5"></button>
+            <button class="pad kick-pad b5" data-step="5" data-track="kick" aria-label="Kick step 6"></button>
+            <button class="pad kick-pad b6" data-step="6" data-track="kick" aria-label="Kick step 7"></button>
+            <button class="pad kick-pad b7" data-step="7" data-track="kick" aria-label="Kick step 8"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACK 02: SNARE DRUM (Amber Gold Accent) -->
+      <div class="track-channel snare-beat" data-track="snare">
+        <div class="channel-strip">
+
+          <div class="channel-main-row">
+            <!-- Channel Identity -->
             <div class="channel-identity">
               <div class="track-badge">02</div>
               <div class="channel-name-wrap">
@@ -256,52 +299,80 @@
                   <button class="track-btn solo-btn" id="snare-solo" title="Solo Snare (S)" aria-label="Solo Snare">
                     <span>S</span>
                   </button>
-                  <button class="track-btn audition-btn" data-audition="snare" title="Preview Snare Sound" aria-label="Audition Snare">
+                  <button class="track-btn audition-btn" data-audition="snare" title="Preview Snare Sound"
+                    aria-label="Audition Snare">
                     <i class="fa-solid fa-play"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Sample Sound Picker -->
+            <!-- Categorized Sound Family Selector -->
             <div class="sample-picker-wrap">
               <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="beat-audio-versions" id="snare-beat-audio" class="sample-select" aria-label="Snare Sample Version">
-                <option value="./sounds/snare-acoustic01.wav">Snare Acoustic</option>
-                <option value="./sounds/snare-808.wav">Snare 808</option>
-                <option value="./sounds/snare-vinyl02.wav">Snare Vinyl</option>
+              <select name="beat-audio-versions" id="snare-beat-audio" class="sample-select"
+                aria-label="Snare Sound Family">
+                <option value="./sounds/snare/base/snare-acoustic01.wav" data-sound-id="snare-acoustic" selected>Snare
+                  Acoustic (Base)</option>
+                <option value="./sounds/snare/base/snare-808.wav" data-sound-id="snare-808">Snare 808</option>
+                <option value="./sounds/snare/base/snare-vinyl02.wav" data-sound-id="snare-vinyl">Snare Vinyl</option>
               </select>
             </div>
 
             <!-- Channel Volume Fader -->
             <div class="volume-station">
               <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="snare-volume" min="0" max="100" value="100" aria-label="Snare Volume" />
+              <input type="range" class="volume-slider" id="snare-volume" min="0" max="100" value="100"
+                aria-label="Snare Volume" />
               <span class="volume-value">100%</span>
-              <div class="mini-meter" id="snare-meter"><div class="meter-bar"></div></div>
+              <div class="mini-meter" id="snare-meter">
+                <div class="meter-bar"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-          <div class="snare-pads pads-grid">
-            <div class="beat-chunk beat-chunk-1">
-              <button class="pad snare-pad b0" data-step="0" data-track="snare" aria-label="Snare step 1"></button>
-              <button class="pad snare-pad b1" data-step="1" data-track="snare" aria-label="Snare step 2"></button>
-              <button class="pad snare-pad b2" data-step="2" data-track="snare" aria-label="Snare step 3"></button>
-              <button class="pad snare-pad b3" data-step="3" data-track="snare" aria-label="Snare step 4"></button>
-            </div>
-            <div class="beat-chunk beat-chunk-2">
-              <button class="pad snare-pad b4" data-step="4" data-track="snare" aria-label="Snare step 5"></button>
-              <button class="pad snare-pad b5" data-step="5" data-track="snare" aria-label="Snare step 6"></button>
-              <button class="pad snare-pad b6" data-step="6" data-track="snare" aria-label="Snare step 7"></button>
-              <button class="pad snare-pad b7" data-step="7" data-track="snare" aria-label="Snare step 8"></button>
+          <!-- 5-Tier Intensity Variation Selector -->
+          <div class="intensity-station" data-track="snare">
+            <span class="intensity-label" title="Low-to-High Sound Variation">
+              <i class="fa-solid fa-bolt"></i> VARIATION:
+            </span>
+            <div class="intensity-pills" role="radiogroup" aria-label="Snare intensity variation">
+              <button class="intensity-pill" data-intensity="low" title="Low: Soft ghost note">LOW</button>
+              <button class="intensity-pill" data-intensity="med-low"
+                title="Med-Low: Gentle side-stick feel">M-LOW</button>
+              <button class="intensity-pill active" data-intensity="med"
+                title="Medium: Balanced acoustic crack">MED</button>
+              <button class="intensity-pill" data-intensity="med-high"
+                title="Med-High: Firm center snap">M-HIGH</button>
+              <button class="intensity-pill" data-intensity="high" title="High: Power rimshot hit">HIGH</button>
             </div>
           </div>
+
         </div>
 
-        <!-- TRACK 03: HI-HAT (Magenta Pink Accent) -->
-        <div class="track-channel hihat-beat" data-track="hihat">
-          <div class="channel-strip">
+        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+        <div class="snare-pads pads-grid">
+          <div class="beat-chunk beat-chunk-1">
+            <button class="pad snare-pad b0" data-step="0" data-track="snare" aria-label="Snare step 1"></button>
+            <button class="pad snare-pad b1" data-step="1" data-track="snare" aria-label="Snare step 2"></button>
+            <button class="pad snare-pad b2" data-step="2" data-track="snare" aria-label="Snare step 3"></button>
+            <button class="pad snare-pad b3" data-step="3" data-track="snare" aria-label="Snare step 4"></button>
+          </div>
+          <div class="beat-chunk beat-chunk-2">
+            <button class="pad snare-pad b4" data-step="4" data-track="snare" aria-label="Snare step 5"></button>
+            <button class="pad snare-pad b5" data-step="5" data-track="snare" aria-label="Snare step 6"></button>
+            <button class="pad snare-pad b6" data-step="6" data-track="snare" aria-label="Snare step 7"></button>
+            <button class="pad snare-pad b7" data-step="7" data-track="snare" aria-label="Snare step 8"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACK 03: HI-HAT (Magenta Pink Accent) -->
+      <div class="track-channel hihat-beat" data-track="hihat">
+        <div class="channel-strip">
+
+          <div class="channel-main-row">
+            <!-- Channel Identity -->
             <div class="channel-identity">
               <div class="track-badge">03</div>
               <div class="channel-name-wrap">
@@ -313,172 +384,242 @@
                   <button class="track-btn solo-btn" id="hihat-solo" title="Solo Hihat (S)" aria-label="Solo Hihat">
                     <span>S</span>
                   </button>
-                  <button class="track-btn audition-btn" data-audition="hihat" title="Preview Hihat Sound" aria-label="Audition Hihat">
+                  <button class="track-btn audition-btn" data-audition="hihat" title="Preview Hihat Sound"
+                    aria-label="Audition Hihat">
                     <i class="fa-solid fa-play"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Sample Sound Picker -->
+            <!-- Categorized Sound Family Selector -->
             <div class="sample-picker-wrap">
               <i class="fa-solid fa-compact-disc sample-icon"></i>
-              <select name="hihatbeat-audio-versions" id="hihat-beat-audio" class="sample-select" aria-label="Hihat Sample Version">
-                <option value="./sounds/hihat-808.wav">Hihat 808</option>
-                <option value="./sounds/hihat-acoustic01.wav">Hihat Acoustic</option>
+              <select name="hihatbeat-audio-versions" id="hihat-beat-audio" class="sample-select"
+                aria-label="Hihat Sound Family">
+                <option value="./sounds/hihat/base/hihat-808.wav" data-sound-id="hihat-808" selected>Hi-Hat 808 (Base)
+                </option>
+                <option value="./sounds/hihat/base/hihat-acoustic01.wav" data-sound-id="hihat-acoustic">Hi-Hat Acoustic
+                </option>
               </select>
             </div>
 
             <!-- Channel Volume Fader -->
             <div class="volume-station">
               <i class="fa-solid fa-volume-low vol-icon"></i>
-              <input type="range" class="volume-slider" id="hihat-volume" min="0" max="100" value="100" aria-label="Hihat Volume" />
+              <input type="range" class="volume-slider" id="hihat-volume" min="0" max="100" value="100"
+                aria-label="Hihat Volume" />
               <span class="volume-value">100%</span>
-              <div class="mini-meter" id="hihat-meter"><div class="meter-bar"></div></div>
+              <div class="mini-meter" id="hihat-meter">
+                <div class="meter-bar"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-          <div class="hihat-pads pads-grid">
-            <div class="beat-chunk beat-chunk-1">
-              <button class="pad hihat-pad b0" data-step="0" data-track="hihat" aria-label="Hihat step 1"></button>
-              <button class="pad hihat-pad b1" data-step="1" data-track="hihat" aria-label="Hihat step 2"></button>
-              <button class="pad hihat-pad b2" data-step="2" data-track="hihat" aria-label="Hihat step 3"></button>
-              <button class="pad hihat-pad b3" data-step="3" data-track="hihat" aria-label="Hihat step 4"></button>
-            </div>
-            <div class="beat-chunk beat-chunk-2">
-              <button class="pad hihat-pad b4" data-step="4" data-track="hihat" aria-label="Hihat step 5"></button>
-              <button class="pad hihat-pad b5" data-step="5" data-track="hihat" aria-label="Hihat step 6"></button>
-              <button class="pad hihat-pad b6" data-step="6" data-track="hihat" aria-label="Hihat step 7"></button>
-              <button class="pad hihat-pad b7" data-step="7" data-track="hihat" aria-label="Hihat step 8"></button>
+          <!-- 5-Tier Intensity Variation Selector -->
+          <div class="intensity-station" data-track="hihat">
+            <span class="intensity-label" title="Low-to-High Sound Variation">
+              <i class="fa-solid fa-bolt"></i> VARIATION:
+            </span>
+            <div class="intensity-pills" role="radiogroup" aria-label="Hi-Hat intensity variation">
+              <button class="intensity-pill" data-intensity="low" title="Low: Delicate cymbal tick">LOW</button>
+              <button class="intensity-pill" data-intensity="med-low" title="Med-Low: Smooth closed hat">M-LOW</button>
+              <button class="intensity-pill active" data-intensity="med"
+                title="Medium: Balanced crisp sizzle">MED</button>
+              <button class="intensity-pill" data-intensity="med-high"
+                title="Med-High: Bright articulate bite">M-HIGH</button>
+              <button class="intensity-pill" data-intensity="high" title="High: Sizzling open-edge strike">HIGH</button>
             </div>
           </div>
+
         </div>
 
-      </section>
-
-      <!-- Audio Elements -->
-      <audio class="kick-pad-audio" src="./sounds/kick-classic.wav" preload="auto"></audio>
-      <audio class="snare-pad-audio" src="./sounds/snare-acoustic01.wav" preload="auto"></audio>
-      <audio class="hihat-pad-audio" src="./sounds/hihat-808.wav" preload="auto"></audio>
-
-      <!-- Footer Info Bar -->
-      <footer class="studio-footer">
-        <div class="footer-stat">
-          <i class="fa-solid fa-music"></i>
-          <span>Mode: <strong>8-Step Polyphonic</strong></span>
-        </div>
-        <div class="footer-stat">
-          <i class="fa-solid fa-microchip"></i>
-          <span>Engine: <strong>Low-Latency WebAudio</strong></span>
-        </div>
-        <div class="footer-stat">
-          <i class="fa-solid fa-sliders"></i>
-          <span>Resolution: <strong>16th Notes</strong></span>
-        </div>
-      </footer>
-    </main>
-
-    <!-- Confirmation Modal (Clear Grid) -->
-    <div class="modal-overlay" id="clear-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-content glass-card">
-        <div class="modal-icon">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-        <h2 id="modal-title">Clear Active Pattern?</h2>
-        <p>This will erase all active drum pads across all tracks. This operation cannot be reversed.</p>
-        <div class="modal-buttons">
-          <button class="modal-cancel" id="modal-cancel-btn">Keep Pattern</button>
-          <button class="modal-confirm" id="modal-confirm-btn">Yes, Clear All</button>
+        <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
+        <div class="hihat-pads pads-grid">
+          <div class="beat-chunk beat-chunk-1">
+            <button class="pad hihat-pad b0" data-step="0" data-track="hihat" aria-label="Hihat step 1"></button>
+            <button class="pad hihat-pad b1" data-step="1" data-track="hihat" aria-label="Hihat step 2"></button>
+            <button class="pad hihat-pad b2" data-step="2" data-track="hihat" aria-label="Hihat step 3"></button>
+            <button class="pad hihat-pad b3" data-step="3" data-track="hihat" aria-label="Hihat step 4"></button>
+          </div>
+          <div class="beat-chunk beat-chunk-2">
+            <button class="pad hihat-pad b4" data-step="4" data-track="hihat" aria-label="Hihat step 5"></button>
+            <button class="pad hihat-pad b5" data-step="5" data-track="hihat" aria-label="Hihat step 6"></button>
+            <button class="pad hihat-pad b6" data-step="6" data-track="hihat" aria-label="Hihat step 7"></button>
+            <button class="pad hihat-pad b7" data-step="7" data-track="hihat" aria-label="Hihat step 8"></button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 8 UX Laws Inspector Modal -->
-    <div class="modal-overlay" id="ux-laws-modal" role="dialog" aria-modal="true" aria-labelledby="ux-modal-title">
-      <div class="modal-content ux-modal-content glass-card">
-        <div class="ux-modal-header">
-          <div class="ux-header-title">
-            <i class="fa-solid fa-brain ux-accent-icon"></i>
-            <h2 id="ux-modal-title">8 Laws of UX in Beatmaker Studio</h2>
-          </div>
-          <button class="modal-close-btn" id="close-ux-modal" aria-label="Close modal">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <div class="ux-laws-grid">
-          
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">01</span>
-              <h3>Fitts's Law</h3>
-            </div>
-            <p>Touch and click targets are ergonomically proportioned: the primary <strong>START</strong> button is generously sized and centered, drum pads have minimum 54px hit targets, and ±5/±1 BPM stepper buttons prevent tedious slider hunting.</p>
-          </div>
+    </section>
 
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">02</span>
-              <h3>Hick's Law</h3>
-            </div>
-            <p>Reduced cognitive overload through progressive disclosure: instant <strong>Groove Presets</strong> let users make music immediately without deciding on 24 blank steps, while Solo/Mute toggles require just one click.</p>
-          </div>
+    <!-- Active Track Base Audio Elements (Updated with Categorized Paths) -->
+    <audio class="kick-pad-audio" src="./sounds/kick/base/kick-classic.wav" preload="auto"></audio>
+    <audio class="snare-pad-audio" src="./sounds/snare/base/snare-acoustic01.wav" preload="auto"></audio>
+    <audio class="hihat-pad-audio" src="./sounds/hihat/base/hihat-808.wav" preload="auto"></audio>
 
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">03</span>
-              <h3>Jakob's Law</h3>
-            </div>
-            <p>Adheres strictly to industry-standard DAW and drum machine conventions (Roland TR-808, MPC, Ableton): vertical track lanes, left-to-right playhead motion, standard <strong>Mute (M)</strong> and <strong>Solo (S)</strong>, and Spacebar trigger.</p>
-          </div>
+    <!-- Footer Info Bar -->
+    <footer class="studio-footer">
+      <div class="footer-stat">
+        <i class="fa-solid fa-music"></i>
+        <span>Mode: <strong>8-Step Polyphonic</strong></span>
+      </div>
+      <div class="footer-stat">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Assets: <strong>3 Families &bull; 45 Intensity Variations</strong></span>
+      </div>
+      <div class="footer-stat">
+        <i class="fa-solid fa-microchip"></i>
+        <span>DSP Engine: <strong>Low-Pass Filtering &bull; Dynamic Scaling &bull; Saturation</strong></span>
+      </div>
+    </footer>
+  </main>
 
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">04</span>
-              <h3>Law of Proximity</h3>
-            </div>
-            <p>Related controls are placed directly within their functional context: channel sample selector, Mute, Solo, and volume faders are docked immediately adjacent to that track's step sequence.</p>
-          </div>
-
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">05</span>
-              <h3>Law of Common Region</h3>
-            </div>
-            <p>Frosted glass hardware chassis clearly separate distinct functional zones: Studio Header, Master Transport Deck, Track Channel Strips, and Sequencer Pad Grid.</p>
-          </div>
-
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">06</span>
-              <h3>Miller's Law (Chunking)</h3>
-            </div>
-            <p>Working memory capacity is protected by chunking the 8-step sequencer into two distinct 4-step musical beats (Beat 1: 1–4, Beat 2: 5–8) with alternating shading and numbered rulers.</p>
-          </div>
-
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">07</span>
-              <h3>Von Restorff Effect</h3>
-            </div>
-            <p>Key states stand out unmistakably: active pads ignite in neon cyan, amber, or magenta against deep obsidian surfaces; the sweeping playhead beam isolates the active beat column in real time.</p>
-          </div>
-
-          <div class="ux-law-card">
-            <div class="ux-card-top">
-              <span class="ux-num">08</span>
-              <h3>Doherty Threshold</h3>
-            </div>
-            <p>All micro-interactions respond in under 50ms: clicking any pad or sample immediately auditions the sound, smooth tactile press physics, animated live audio visualizer, and instant hotkey responses.</p>
-          </div>
-
-        </div>
-        <div class="ux-modal-footer">
-          <button class="modal-confirm" id="dismiss-ux-modal">Back to Studio</button>
-        </div>
+  <!-- Confirmation Modal (Clear Grid) -->
+  <div class="modal-overlay" id="clear-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content glass-card">
+      <div class="modal-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h2 id="modal-title">Clear Active Pattern?</h2>
+      <p>This will erase all active drum pads across all tracks. This operation cannot be reversed.</p>
+      <div class="modal-buttons">
+        <button class="modal-cancel" id="modal-cancel-btn">Keep Pattern</button>
+        <button class="modal-confirm" id="modal-confirm-btn">Yes, Clear All</button>
       </div>
     </div>
+  </div>
 
-    <script src="app.js"></script>
-  </body>
+  <!-- 8 UX Laws Inspector Modal -->
+  <div class="modal-overlay" id="ux-laws-modal" role="dialog" aria-modal="true" aria-labelledby="ux-modal-title">
+    <div class="modal-content ux-modal-content glass-card">
+      <div class="ux-modal-header">
+        <div class="ux-header-title">
+          <i class="fa-solid fa-brain ux-accent-icon"></i>
+          <h2 id="ux-modal-title">8 Laws of UX in Beatmaker Studio</h2>
+        </div>
+        <button class="modal-close-btn" id="close-ux-modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="ux-laws-grid">
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">01</span>
+            <h3>Fitts's Law</h3>
+          </div>
+          <p>Touch and click targets are ergonomically proportioned: the primary <strong>START</strong> button is
+            generously sized and centered, drum pads have minimum 54px hit targets, and ±5/±1 BPM stepper buttons
+            prevent tedious slider hunting.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">02</span>
+            <h3>Hick's Law</h3>
+          </div>
+          <p>Reduced cognitive overload through progressive disclosure: instant <strong>Groove Presets</strong> and
+            5-tier intensity variations let users make music immediately without deciding on 24 blank steps.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">03</span>
+            <h3>Jakob's Law</h3>
+          </div>
+          <p>Adheres strictly to industry-standard DAW and drum machine conventions (Roland TR-808, MPC, Ableton):
+            vertical track lanes, left-to-right playhead motion, standard <strong>Mute (M)</strong> and <strong>Solo
+              (S)</strong>, and Spacebar trigger.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">04</span>
+            <h3>Law of Proximity</h3>
+          </div>
+          <p>Related controls are placed directly within their functional context: channel sample selector, 5-tier
+            intensity pills, Mute, Solo, and volume faders are docked immediately adjacent to that track's step
+            sequence.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">05</span>
+            <h3>Law of Common Region</h3>
+          </div>
+          <p>Frosted glass hardware chassis clearly separate distinct functional zones: Studio Header, Master Transport
+            Deck, Track Channel Strips, and Sequencer Pad Grid.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">06</span>
+            <h3>Miller's Law (Chunking)</h3>
+          </div>
+          <p>Working memory capacity is protected by chunking the 8-step sequencer into two distinct 4-step musical
+            beats (Beat 1: 1–4, Beat 2: 5–8) with alternating shading and numbered rulers.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">07</span>
+            <h3>Von Restorff Effect</h3>
+          </div>
+          <p>Key states stand out unmistakably: active pads ignite in neon cyan, amber, or magenta against deep obsidian
+            surfaces; the sweeping playhead beam isolates the active beat column in real time.</p>
+        </div>
+
+        <div class="ux-law-card">
+          <div class="ux-card-top">
+            <span class="ux-num">08</span>
+            <h3>Doherty Threshold</h3>
+          </div>
+          <p>All micro-interactions respond in under 50ms: clicking any pad, intensity pill, or sample immediately
+            auditions the sound, smooth tactile press physics, animated live audio visualizer, and instant hotkey
+            responses.</p>
+        </div>
+
+      </div>
+      <div class="ux-modal-footer">
+        <button class="modal-confirm" id="dismiss-ux-modal">Back to Studio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sound Assets & Categorized Variations Inspector Modal -->
+  <div class="modal-overlay" id="sound-assets-modal" role="dialog" aria-modal="true"
+    aria-labelledby="assets-modal-title">
+    <div class="modal-content sound-modal-content glass-card">
+      <div class="ux-modal-header">
+        <div class="ux-header-title">
+          <i class="fa-solid fa-layer-group ux-accent-icon"></i>
+          <h2 id="assets-modal-title">Sound Assets &amp; Intensity Variations</h2>
+        </div>
+        <button class="modal-close-btn" id="close-assets-modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="assets-modal-intro">
+        All audio assets are organized into 3 core instrument families with designated base sounds and 5 tailored
+        acoustic intensity variations (Low, Med-Low, Med, Med-High, High) crafted using biquad low-pass filtering,
+        transient envelope shaping, velocity gain scaling, and harmonic saturation.
+      </p>
+
+      <div class="sound-categories-list" id="sound-categories-list">
+        <!-- Populated dynamically via sound-manifest.js / app.js -->
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-confirm" id="dismiss-assets-modal">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Structured Manifest Before App Engine -->
+  <script src="./sounds/sound-manifest.js"></script>
+  <script src="app.js"></script>
+</body>
+
 </html>

@@ -1,0 +1,516 @@
+window.SOUND_MANIFEST = {
+  "version": "2.0.0",
+  "description": "Categorized Sound Assets and 5-tier Intensity Variations for Beatmaker Studio",
+  "intensityLevels": [
+    {
+      "key": "low",
+      "label": "Low",
+      "description": "Soft, subtle beat with lower intensity"
+    },
+    {
+      "key": "med-low",
+      "label": "Medium-Low",
+      "description": "Slightly stronger sound with warm character"
+    },
+    {
+      "key": "med",
+      "label": "Medium",
+      "description": "Balanced default intensity and natural timbre"
+    },
+    {
+      "key": "med-high",
+      "label": "Medium-High",
+      "description": "Stronger and more prominent beat with crisp bite"
+    },
+    {
+      "key": "high",
+      "label": "High",
+      "description": "Maximum intended intensity with fuller, saturated punch"
+    }
+  ],
+  "categories": {
+    "kick": {
+      "name": "Kick Drums",
+      "trackNumber": 1,
+      "baseTrackSound": "kick-classic",
+      "defaultVariation": "med",
+      "sounds": {
+        "kick-classic": {
+          "id": "kick-classic",
+          "name": "Kick Classic",
+          "category": "kick",
+          "type": "Punchy Acoustic/Electronic Hybrid",
+          "frequencyRange": "45Hz - 3.5kHz",
+          "description": "Versatile punchy kick drum with tight attack and warm sub body.",
+          "baseFile": "./sounds/kick/base/kick-classic.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-classic-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.458",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-classic-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.665",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-classic-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.870",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-classic-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.949",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-classic-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        },
+        "kick-808": {
+          "id": "kick-808",
+          "name": "Kick 808",
+          "category": "kick",
+          "type": "Sub-bass Sine Boom",
+          "frequencyRange": "30Hz - 900Hz",
+          "description": "Extended low-end TR-808 bass drum with prolonged pitch sweep.",
+          "baseFile": "./sounds/kick/base/kick-808.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-808-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.486",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-808-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.687",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-808-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.870",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-808-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.949",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-808-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        },
+        "kick-heavy": {
+          "id": "kick-heavy",
+          "name": "Kick Heavy",
+          "category": "kick",
+          "type": "High-Energy Compressed Club Kick",
+          "frequencyRange": "40Hz - 4.5kHz",
+          "description": "Dense, aggressive transient kick designed for heavy mixes.",
+          "baseFile": "./sounds/kick/base/kick-heavy.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-heavy-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.475",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-heavy-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.682",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-heavy-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.888",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-heavy-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.949",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-heavy-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        },
+        "kick-softy": {
+          "id": "kick-softy",
+          "name": "Kick Softy",
+          "category": "kick",
+          "type": "Mellow Low-Pass Kick",
+          "frequencyRange": "50Hz - 1.2kHz",
+          "description": "Gentle, warm, rounded kick drum perfect for lo-fi beats.",
+          "baseFile": "./sounds/kick/base/kick-softy.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-softy-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.485",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-softy-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.687",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-softy-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.866",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-softy-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.947",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-softy-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        }
+      }
+    },
+    "snare": {
+      "name": "Snare Drums",
+      "trackNumber": 2,
+      "baseTrackSound": "snare-acoustic",
+      "defaultVariation": "med",
+      "sounds": {
+        "snare-acoustic": {
+          "id": "snare-acoustic",
+          "name": "Snare Acoustic",
+          "category": "snare",
+          "type": "Wooden Acoustic Drum with Room Ambience",
+          "frequencyRange": "180Hz - 8kHz",
+          "description": "Real wooden snare hit with resonant body and natural snare wire tail.",
+          "baseFile": "./sounds/snare/base/snare-acoustic01.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-acoustic-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.382",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-acoustic-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.584",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-acoustic-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.782",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-acoustic-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.850",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-acoustic-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "snare-808": {
+          "id": "snare-808",
+          "name": "Snare 808",
+          "category": "snare",
+          "type": "Analog TR-808 Electronic Snare",
+          "frequencyRange": "220Hz - 10kHz",
+          "description": "Classic punchy 808 snare with tonal core and snappy noise decay.",
+          "baseFile": "./sounds/snare/base/snare-808.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-808-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.250",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-808-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.578",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-808-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.905",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-808-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.963",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-808-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "snare-vinyl": {
+          "id": "snare-vinyl",
+          "name": "Snare Vinyl",
+          "category": "snare",
+          "type": "Sampled Lo-Fi Vinyl Snare",
+          "frequencyRange": "200Hz - 6.5kHz",
+          "description": "Gritty, compressed boom-bap snare with vintage crackle character.",
+          "baseFile": "./sounds/snare/base/snare-vinyl02.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-vinyl-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.445",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-vinyl-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.668",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-vinyl-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.881",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-vinyl-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.965",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-vinyl-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        }
+      }
+    },
+    "hihat": {
+      "name": "Hi-Hats",
+      "trackNumber": 3,
+      "baseTrackSound": "hihat-808",
+      "defaultVariation": "med",
+      "sounds": {
+        "hihat-808": {
+          "id": "hihat-808",
+          "name": "Hi-Hat 808",
+          "category": "hihat",
+          "type": "Analog Closed Hat",
+          "frequencyRange": "5kHz - 18kHz",
+          "description": "Ultra-tight, crisp transistor closed cymbal for rapid trap/hip-hop sequencing.",
+          "baseFile": "./sounds/hihat/base/hihat-808.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/hihat/variations/hihat-808-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.106",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/hihat/variations/hihat-808-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.327",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/hihat/variations/hihat-808-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.856",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/hihat/variations/hihat-808-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.927",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/hihat/variations/hihat-808-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "hihat-acoustic": {
+          "id": "hihat-acoustic",
+          "name": "Hi-Hat Acoustic",
+          "category": "hihat",
+          "type": "Natural Brass Cymbal Strike",
+          "frequencyRange": "3kHz - 16kHz",
+          "description": "Organic cymbal hit with shimmering natural acoustic decay.",
+          "baseFile": "./sounds/hihat/base/hihat-acoustic01.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/hihat/variations/hihat-acoustic-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.163",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/hihat/variations/hihat-acoustic-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.535",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/hihat/variations/hihat-acoustic-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.878",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/hihat/variations/hihat-acoustic-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.855",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/hihat/variations/hihat-acoustic-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        }
+      }
+    }
+  }
+};
