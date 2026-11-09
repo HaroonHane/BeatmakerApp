@@ -340,11 +340,11 @@ body {
 
 /* Right Header Panel: Visualizer (Top) and Keyboard Shortcuts (Exact Beneath, Exact Width) */
 .header-right-panel {
-  flex: 1;
+  flex: 1/2;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.65rem;
+  /* justify-content: space-around; */
+  gap: 0.1rem;
   min-width: 0;
 }
 
@@ -352,10 +352,11 @@ body {
 .visualizer-container {
   width: 100%;
   box-sizing: border-box;
-  height: 34px;
+  height: 40px;
   padding: 4px 10px;
   background: var(--bg-inset);
-  border-radius: 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
   border: 1px solid var(--border-subtle);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 0 #ffffff;
   display: flex;
@@ -409,7 +410,8 @@ body {
   padding: 0.22rem 0.65rem 0.22rem 0.4rem;
   background: #edf1f7;
   border: 1px solid #dbe2ed;
-  border-radius: 10px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 0 #ffffff;
   transition: all 0.2s ease;
 }
