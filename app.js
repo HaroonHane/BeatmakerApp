@@ -132,6 +132,16 @@ document.addEventListener('DOMContentLoaded', () => {
         hihat: document.querySelector('#hihat-meter .meter-bar')
       }
 
+      // Dynamic Unlimited Beat Expansion & Horizontal Scrolling
+      this.numBeats = 2
+      this.totalSteps = 8
+      this.sequencerViewport = document.getElementById('sequencer-viewport')
+      this.stepRuler = document.getElementById('step-ruler')
+      this.addBeatBtn = document.getElementById('add-beat-btn')
+      this.addBeatBottomBtn = document.getElementById('add-beat-bottom-btn')
+      this.beatCountVal = document.getElementById('beat-count-val')
+      this.stepCountVal = document.getElementById('step-count-val')
+
       this.init()
     }
 
@@ -143,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindPrimaryTrackControls()
       this.bindPrimaryIntensityEvents()
       this.bindLayerCreationButtons()
+      this.bindBeatExpansionEvents()
       this.bindPadPopoverEvents()
       this.bindPresetEvents()
       this.bindModalEvents()
@@ -447,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 3. Multi-Layer Creation & Management
+    // 3. Multi-Layer Creation & Dynamic Beat Expansion Architecture
     // ------------------------------------------------------------------------
     bindLayerCreationButtons() {
       // 1. "Add Layer to [Track]" beneath each track group
@@ -474,6 +485,190 @@ document.addEventListener('DOMContentLoaded', () => {
           this.addLayer('custom')
         })
       }
+    }
+
+    // ------------------------------------------------------------------------
+    // 3b. Dynamic Unlimited Beat Expansion & Horizontal Scrolling
+    // ------------------------------------------------------------------------
+    bindBeatExpansionEvents() {
+      if (this.addBeatBtn) {
+        this.addBeatBtn.addEventListener('click', () => {
+          this.addBeat()
+        })
+      }
+
+      if (this.addBeatBottomBtn) {
+        this.addBeatBottomBtn.addEventListener('click', () => {
+          this.addBeat()
+        })
+      }
+
+      // Bind remove buttons on existing beat headers if present
+      document.querySelectorAll('.remove-beat-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const b = parseInt(btn.dataset.beat, 10)
+          this.removeBeat(b)
+        })
+      })
+    }
+
+    addBeat() {
+      this.ensureAudioContextRunning()
+      this.numBeats++
+      const newBeatNum = this.numBeats
+      const startStep = (newBeatNum - 1) * 4
+      const endStep = startStep + 4
+      this.totalSteps = this.numBeats * 4
+
+      // 1. Extend steps data array for all layers (primary & dynamic sublayers)
+      this.layers.forEach(layer => {
+        for (let s = startStep; s < endStep; s++) {
+          const pad = {
+            id: `pad-${layer.id}-${s}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            category: layer.category,
+            soundFamily: layer.soundFamily,
+            intensity: layer.intensity,
+            volume: 1.0,
+            repeat: 1,
+            active: false
+          }
+          layer.steps[s] = [pad]
+        }
+      })
+
+      // 2. Add Beat Header in Step Ruler before the Add Beat button column
+      if (this.stepRuler) {
+        const addBeatCol = document.getElementById('add-beat-col')
+        const headerEl = document.createElement('div')
+        headerEl.className = `beat-group-header beat-${newBeatNum}-header`
+        headerEl.dataset.beat = newBeatNum
+        headerEl.innerHTML = `
+          <div class="beat-header-top">
+            <span class="beat-label">BEAT ${String(newBeatNum).padStart(2, '0')}</span>
+            <button class="remove-beat-btn" data-beat="${newBeatNum}" title="Remove Beat ${newBeatNum}">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="step-numbers">
+            ${[startStep, startStep + 1, startStep + 2, startStep + 3].map(s => `
+              <div class="step-col-head" data-step="${s}">
+                <span class="step-idx">${s + 1}</span>
+                <div class="step-dot" data-step="${s}"></div>
+              </div>
+            `).join('')}
+          </div>
+        `
+        if (addBeatCol) {
+          this.stepRuler.insertBefore(headerEl, addBeatCol)
+        } else {
+          this.stepRuler.appendChild(headerEl)
+        }
+
+        const removeBtn = headerEl.querySelector('.remove-beat-btn')
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.removeBeat(newBeatNum)
+          })
+        }
+      }
+
+      // 3. Add Beat Chunk into every layer's .pads-grid
+      this.layers.forEach(layer => {
+        const parentSelector = layer.isPrimary
+          ? `.primary-layer[data-track="${layer.category}"]`
+          : `.track-channel.sublayer[data-layer-id="${layer.id}"]`
+
+        const padsGrid = document.querySelector(`${parentSelector} .pads-grid`)
+        if (!padsGrid) return
+
+        const chunkEl = document.createElement('div')
+        chunkEl.className = `beat-chunk beat-chunk-${newBeatNum} ${newBeatNum % 2 === 0 ? 'even-chunk' : ''}`
+        chunkEl.dataset.beat = newBeatNum
+        chunkEl.innerHTML = `
+          ${[startStep, startStep + 1, startStep + 2, startStep + 3].map(s => this.renderStepCellHTML(layer, s)).join('')}
+          <button class="chunk-add-layer-btn" data-track="${layer.category}" data-beat="${newBeatNum}" title="Add Layer to Beat ${newBeatNum}">
+            <i class="fa-solid fa-plus"></i> Add Layer
+          </button>
+        `
+        padsGrid.appendChild(chunkEl)
+
+        // Bind events for the 4 newly created cells
+        for (let s = startStep; s < endStep; s++) {
+          const cellEl = chunkEl.querySelector(`.beat-step-cell[data-step="${s}"]`)
+          if (cellEl) {
+            this.bindStepCellEvents(cellEl, layer, s)
+          }
+        }
+
+        // Bind Add Layer button on this new chunk
+        const chunkAddLayerBtn = chunkEl.querySelector('.chunk-add-layer-btn')
+        if (chunkAddLayerBtn) {
+          chunkAddLayerBtn.addEventListener('click', () => {
+            this.addLayer(layer.category, { focusedBeat: newBeatNum })
+          })
+        }
+      })
+
+      // 4. Update UI readouts
+      this.updateBeatCounterUI()
+
+      // 5. Tactile audio feedback & smooth auto-scroll to the new beat
+      this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
+      if (this.sequencerViewport) {
+        setTimeout(() => {
+          this.sequencerViewport.scrollTo({
+            left: this.sequencerViewport.scrollWidth,
+            behavior: 'smooth'
+          })
+        }, 50)
+      }
+    }
+
+    removeBeat(beatNum) {
+      if (this.numBeats <= 1) return // Keep at least 1 beat
+
+      const lastBeatIndex = this.numBeats
+      const startStep = (lastBeatIndex - 1) * 4
+
+      // 1. Remove from layers data model
+      this.layers.forEach(layer => {
+        layer.steps.splice(startStep, 4)
+      })
+
+      // 2. Remove DOM elements
+      document.querySelectorAll(`.beat-group-header[data-beat="${lastBeatIndex}"]`).forEach(el => el.remove())
+      document.querySelectorAll(`.beat-chunk[data-beat="${lastBeatIndex}"]`).forEach(el => el.remove())
+
+      // 3. Update counter & playhead
+      this.numBeats--
+      this.totalSteps = this.numBeats * 4
+      this.index = this.index % this.totalSteps
+      this.updateBeatCounterUI()
+    }
+
+    updateBeatCounterUI() {
+      if (this.beatCountVal) this.beatCountVal.textContent = this.numBeats
+      if (this.stepCountVal) this.stepCountVal.textContent = this.totalSteps
+      const footerStat = document.querySelector('.studio-footer .footer-stat strong')
+      if (footerStat) footerStat.textContent = `${this.totalSteps}-Step Polyphonic`
+    }
+
+    renderAllBeatChunksHTML(layer) {
+      let chunksHTML = ''
+      for (let b = 1; b <= this.numBeats; b++) {
+        const startStep = (b - 1) * 4
+        chunksHTML += `
+          <div class="beat-chunk beat-chunk-${b} ${b % 2 === 0 ? 'even-chunk' : ''}" data-beat="${b}">
+            ${[startStep, startStep + 1, startStep + 2, startStep + 3].map(s => this.renderStepCellHTML(layer, s)).join('')}
+            <button class="chunk-add-layer-btn" data-track="${layer.category}" data-beat="${b}" title="Add Layer to Beat ${b}">
+              <i class="fa-solid fa-plus"></i> Add Layer
+            </button>
+          </div>
+        `
+      }
+      return chunksHTML
     }
 
     addLayer(parentTrack = 'kick', options = {}) {
@@ -507,8 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
         steps: []
       }
 
-      // Initialize 8 steps (Beat 1: steps 0-3, Beat 2: steps 4-7)
-      for (let s = 0; s < 8; s++) {
+      // Initialize steps matching current totalSteps
+      for (let s = 0; s < this.totalSteps; s++) {
         const pad = {
           id: `pad-${layerId}-${s}`,
           category: newLayer.category,
@@ -594,14 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
-        <!-- 8-Step Sequencer Pad Grid Chunked in 4+4 -->
+        <!-- Dynamic Sequencer Pad Grid Chunked in 4-Pad Beats -->
         <div class="pads-grid">
-          <div class="beat-chunk beat-chunk-1">
-            ${[0, 1, 2, 3].map(s => this.renderStepCellHTML(layer, s)).join('')}
-          </div>
-          <div class="beat-chunk beat-chunk-2">
-            ${[4, 5, 6, 7].map(s => this.renderStepCellHTML(layer, s)).join('')}
-          </div>
+          ${this.renderAllBeatChunksHTML(layer)}
         </div>
       `
 
@@ -699,13 +889,22 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       })
 
-      // 8. Bind all 8 step cells using the unified bindStepCellEvents method
-      for (let s = 0; s < 8; s++) {
+      // 8. Bind all step cells using the unified bindStepCellEvents method
+      for (let s = 0; s < this.totalSteps; s++) {
         const cellEl = layerEl.querySelector(`.beat-step-cell[data-step="${s}"]`)
         if (cellEl) {
           this.bindStepCellEvents(cellEl, layer, s)
         }
       }
+
+      // 9. Bind chunk add layer buttons inside this sublayer
+      layerEl.querySelectorAll('.chunk-add-layer-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const track = btn.dataset.track || layer.category
+          const beat = parseInt(btn.dataset.beat, 10) || 1
+          this.addLayer(track, { focusedBeat: beat })
+        })
+      })
     }
 
     removeLayer(layerId) {
@@ -1122,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Sequencer Playback Engine (Multi-Layer & Multi-Pad Polyphony)
     // ------------------------------------------------------------------------
     repeatAnimation() {
-      const currentStep = this.index % 8
+      const currentStep = this.index % this.totalSteps
       this.index++
 
       // 1. Update Playhead Rulers and Step Dots
@@ -1131,6 +1330,27 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       const activeStepDots = document.querySelectorAll(`.step-dot[data-step="${currentStep}"]`)
       activeStepDots.forEach(dot => dot.classList.add('active'))
+
+      // Auto-follow playhead in scrollable viewport if past visible threshold
+      if (this.sequencerViewport && this.isPlaying) {
+        if (currentStep === 0) {
+          this.sequencerViewport.scrollTo({ left: 0, behavior: 'smooth' })
+        } else {
+          const stepColHead = document.querySelector(`.step-col-head[data-step="${currentStep}"]`)
+          if (stepColHead) {
+            const stepLeft = stepColHead.offsetLeft
+            const spacerWidth = 440
+            const scrollLeft = this.sequencerViewport.scrollLeft
+            const viewportWidth = this.sequencerViewport.clientWidth
+            if (stepLeft > scrollLeft + viewportWidth - 80) {
+              this.sequencerViewport.scrollTo({
+                left: stepLeft - spacerWidth - 40,
+                behavior: 'smooth'
+              })
+            }
+          }
+        }
+      }
 
       // 2. Playback Multi-Layer Engine
       const hasAnySolo = this.layers.some(l => l.solo)
@@ -1503,7 +1723,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------------------------------------
     clearAllPads() {
       this.layers.forEach(layer => {
-        for (let s = 0; s < 8; s++) {
+        for (let s = 0; s < this.totalSteps; s++) {
+          if (!layer.steps[s]) continue
           // If layer has multiple pads on a step, remove stacked pads and keep 1 inactive pad
           if (layer.steps[s].length > 1) {
             layer.steps[s] = [layer.steps[s][0]]
@@ -1692,6 +1913,10 @@ document.addEventListener('DOMContentLoaded', () => {
           case 'KeyT':
             e.preventDefault()
             if (this.tapTempoBtn) this.tapTempoBtn.click()
+            break
+          case 'KeyB':
+            e.preventDefault()
+            this.addBeat()
             break
           case 'Digit1':
             this.playPadSound(this.resolveSoundFile('kick', 'kick-classic', 'med'), 1.0)

@@ -128,6 +128,8 @@
             <div class="hotkey-item"><kbd>⚙</kbd><span>Pad Config</span></div>
             <div class="hotkey-sep"></div>
             <div class="hotkey-item"><kbd>+</kbd><span>Add Layer</span></div>
+            <div class="hotkey-sep"></div>
+            <div class="hotkey-item"><kbd>B</kbd><span>Add Beat</span></div>
           </div>
         </div>
       </div>
@@ -207,51 +209,73 @@
     <!-- Sequencer Matrix (Jakob's Law, Miller's Law Chunking, Common Region) -->
     <section class="sequencer-matrix" aria-label="Drum Sequencer Matrix">
 
-      <!-- Step Column Header (Miller's Law 4-beat chunking & Playhead Beam) -->
-      <div class="step-header-bar">
-        <div class="step-header-spacer">
-          <span class="tracks-title"><i class="fa-solid fa-layer-group"></i> INSTRUMENTS &amp; INTENSITY
-            VARIATIONS</span>
-        </div>
-        <div class="step-ruler">
-          <!-- Beat 1 (Steps 1-4) -->
-          <div class="beat-group-header beat-1-header">
-            <span class="beat-label">BEAT 01</span>
-            <div class="step-numbers">
-              <div class="step-col-head" data-step="0"><span class="step-idx">1</span>
-                <div class="step-dot" data-step="0"></div>
+      <!-- Horizontally Scrollable Sequencer Viewport with Sticky Channel Strips -->
+      <div class="sequencer-viewport" id="sequencer-viewport">
+        <div class="sequencer-canvas">
+
+          <!-- Step Column Header (Miller's Law 4-beat chunking & Playhead Beam) -->
+          <div class="step-header-bar">
+            <div class="step-header-spacer">
+              <div class="tracks-title-row">
+                <span class="tracks-title"><i class="fa-solid fa-layer-group"></i> INSTRUMENTS</span>
+                <span class="beat-counter-pill" id="beat-counter-pill" title="Current Sequence Length">
+                  <i class="fa-solid fa-music"></i> <span id="beat-count-val">2</span> BEATS (<span id="step-count-val">8</span> STEPS)
+                </span>
               </div>
-              <div class="step-col-head" data-step="1"><span class="step-idx">2</span>
-                <div class="step-dot" data-step="1"></div>
+            </div>
+            <div class="step-ruler" id="step-ruler">
+              <!-- Beat 1 (Steps 1-4) -->
+              <div class="beat-group-header beat-1-header" data-beat="1">
+                <div class="beat-header-top">
+                  <span class="beat-label">BEAT 01</span>
+                </div>
+                <div class="step-numbers">
+                  <div class="step-col-head" data-step="0"><span class="step-idx">1</span>
+                    <div class="step-dot" data-step="0"></div>
+                  </div>
+                  <div class="step-col-head" data-step="1"><span class="step-idx">2</span>
+                    <div class="step-dot" data-step="1"></div>
+                  </div>
+                  <div class="step-col-head" data-step="2"><span class="step-idx">3</span>
+                    <div class="step-dot" data-step="2"></div>
+                  </div>
+                  <div class="step-col-head" data-step="3"><span class="step-idx">4</span>
+                    <div class="step-dot" data-step="3"></div>
+                  </div>
+                </div>
               </div>
-              <div class="step-col-head" data-step="2"><span class="step-idx">3</span>
-                <div class="step-dot" data-step="2"></div>
+              <!-- Beat 2 (Steps 5-8) -->
+              <div class="beat-group-header beat-2-header" data-beat="2">
+                <div class="beat-header-top">
+                  <span class="beat-label">BEAT 02</span>
+                </div>
+                <div class="step-numbers">
+                  <div class="step-col-head" data-step="4"><span class="step-idx">5</span>
+                    <div class="step-dot" data-step="4"></div>
+                  </div>
+                  <div class="step-col-head" data-step="5"><span class="step-idx">6</span>
+                    <div class="step-dot" data-step="5"></div>
+                  </div>
+                  <div class="step-col-head" data-step="6"><span class="step-idx">7</span>
+                    <div class="step-dot" data-step="6"></div>
+                  </div>
+                  <div class="step-col-head" data-step="7"><span class="step-idx">8</span>
+                    <div class="step-dot" data-step="7"></div>
+                  </div>
+                </div>
               </div>
-              <div class="step-col-head" data-step="3"><span class="step-idx">4</span>
-                <div class="step-dot" data-step="3"></div>
+
+              <!-- Add Beat Column / Action -->
+              <div class="add-beat-col" id="add-beat-col">
+                <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
+                  <div class="add-beat-icon-wrap">
+                    <i class="fa-solid fa-plus"></i>
+                  </div>
+                  <span class="add-beat-text">ADD BEAT</span>
+                </button>
               </div>
             </div>
           </div>
-          <!-- Beat 2 (Steps 5-8) -->
-          <div class="beat-group-header beat-2-header">
-            <span class="beat-label">BEAT 02</span>
-            <div class="step-numbers">
-              <div class="step-col-head" data-step="4"><span class="step-idx">5</span>
-                <div class="step-dot" data-step="4"></div>
-              </div>
-              <div class="step-col-head" data-step="5"><span class="step-idx">6</span>
-                <div class="step-dot" data-step="5"></div>
-              </div>
-              <div class="step-col-head" data-step="6"><span class="step-idx">7</span>
-                <div class="step-dot" data-step="6"></div>
-              </div>
-              <div class="step-col-head" data-step="7"><span class="step-idx">8</span>
-                <div class="step-dot" data-step="7"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- TRACK 01: KICK DRUM (Cyan Glow Accent) -->
       <div class="track-channel-group" data-track="kick">
@@ -841,10 +865,16 @@
       <!-- Custom Master Instrument Layers Container -->
       <div class="custom-layers-container" id="custom-layers-container"></div>
 
-      <!-- Add Master Layer Action -->
+        </div><!-- /.sequencer-canvas -->
+      </div><!-- /.sequencer-viewport -->
+
+      <!-- Matrix Bottom Actions (Add Instrument Layer & Add Beat Measure) -->
       <div class="matrix-bottom-actions">
         <button class="add-master-layer-btn" id="add-master-layer-btn" title="Add a new independent instrument layer">
           <i class="fa-solid fa-plus"></i> Add New Instrument Layer
+        </button>
+        <button class="add-beat-bottom-btn" id="add-beat-bottom-btn" title="Add another 4-pad beat measure to the sequence">
+          <i class="fa-solid fa-plus"></i> Add Beat (+4 Pads)
         </button>
       </div>
 
