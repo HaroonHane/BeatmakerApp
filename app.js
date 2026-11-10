@@ -202,12 +202,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hydrate local IndexedDB audio library & custom tracks
       await this.initAudioLibrary()
-      await this.renderStoredCustomTracks()
+
+      // Restore session or load default preset
+      const sessionRestored = this.restoreActiveSession()
+      if (!sessionRestored) {
+        await this.renderStoredCustomTracks()
+        this.loadPreset('trap')
+      } else {
+        await this.renderStoredCustomTracks()
+      }
+
       this.refreshTrackSoundSelectors('kick')
       this.refreshTrackSoundSelectors('snare')
       this.refreshTrackSoundSelectors('hihat')
       this.renderSoundAssetsModal()
       this.populatePopoverCategories()
+
+      // Safety net: persist active session on window beforeunload
+      window.addEventListener('beforeunload', () => {
+        this.saveActiveSession()
+      })
     }
 
     // Initialize Web Audio Context for low latency & sample-accurate scheduling
@@ -221,6 +235,216 @@ document.addEventListener('DOMContentLoaded', () => {
     ensureAudioContextRunning() {
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume()
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // Session Persistence Engine (Local Storage + IndexedDB Sync)
+    // ------------------------------------------------------------------------
+    saveActiveSession() {
+      try {
+        const sessionData = {
+          version: 1,
+          bpm: this.bpm,
+          numBeats: this.numBeats,
+          totalSteps: this.totalSteps,
+          sublayerCounters: this.sublayerCounters || { kick: 1, snare: 1, hihat: 1, custom: 0 },
+          layers: this.layers.map(layer => ({
+            id: layer.id,
+            badge: layer.badge,
+            name: layer.name,
+            category: layer.category,
+            soundFamily: layer.soundFamily || '',
+            intensity: layer.intensity || 'med',
+            volume: layer.volume !== undefined ? layer.volume : 1.0,
+            muted: !!layer.muted,
+            solo: !!layer.solo,
+            isPrimary: !!layer.isPrimary,
+            parentTrack: layer.parentTrack || layer.category,
+            steps: (layer.steps || []).map(stepPads => (stepPads || []).map(pad => ({
+              id: pad.id,
+              category: pad.category,
+              soundFamily: pad.soundFamily || '',
+              intensity: pad.intensity || 'med',
+              volume: pad.volume !== undefined ? pad.volume : 1.0,
+              repeat: pad.repeat || 1,
+              active: !!pad.active
+            })))
+          }))
+        }
+        localStorage.setItem('beatmaker_active_session', JSON.stringify(sessionData))
+      } catch (err) {
+        console.warn('Could not save active session:', err)
+      }
+    }
+
+    restoreActiveSession() {
+      try {
+        const raw = localStorage.getItem('beatmaker_active_session')
+        if (!raw) return false
+
+        const session = JSON.parse(raw)
+        if (!session || !Array.isArray(session.layers) || session.layers.length === 0) {
+          return false
+        }
+
+        // 1. Restore Tempo
+        if (session.bpm) {
+          this.setTempo(session.bpm)
+        }
+
+        // 2. Synchronize Beats count
+        const targetBeats = session.numBeats || 2
+        while (this.numBeats < targetBeats) {
+          this.addBeat(false)
+        }
+        while (this.numBeats > targetBeats) {
+          this.removeBeat(this.numBeats)
+        }
+
+        // 3. Clear existing dynamic sublayers in DOM
+        const sublayerContainers = ['kick-sublayers', 'snare-sublayers', 'hihat-sublayers', 'custom-layers-container']
+        sublayerContainers.forEach(id => {
+          const el = document.getElementById(id)
+          if (el) el.innerHTML = ''
+        })
+
+        // 4. Restore sublayer counters
+        if (session.sublayerCounters) {
+          this.sublayerCounters = { ...session.sublayerCounters }
+        }
+
+        // 5. Separate primary layers and sublayers
+        const primaryLayersData = session.layers.filter(l => l.isPrimary)
+        const subLayersData = session.layers.filter(l => !l.isPrimary)
+
+        // Reset this.layers
+        this.layers = []
+
+        // 6. Restore primary layers (Kick, Snare, Hi-Hat + Custom tracks)
+        primaryLayersData.forEach(lData => {
+          const restoredLayer = {
+            id: lData.id,
+            badge: lData.badge,
+            name: lData.name,
+            category: lData.category,
+            soundFamily: lData.soundFamily || '',
+            intensity: lData.intensity || 'med',
+            volume: lData.volume !== undefined ? lData.volume : 1.0,
+            muted: !!lData.muted,
+            solo: !!lData.solo,
+            isPrimary: true,
+            parentTrack: lData.parentTrack || lData.category,
+            steps: (lData.steps || []).map(stepPads => (stepPads || []).map(p => ({
+              id: p.id,
+              category: p.category,
+              soundFamily: p.soundFamily || '',
+              intensity: p.intensity || 'med',
+              volume: p.volume !== undefined ? p.volume : 1.0,
+              repeat: p.repeat || 1,
+              active: !!p.active
+            })))
+          }
+
+          // Pad missing steps if needed
+          while (restoredLayer.steps.length < this.totalSteps) {
+            const s = restoredLayer.steps.length
+            restoredLayer.steps.push([{
+              id: `pad-${restoredLayer.id}-${s}`,
+              category: restoredLayer.category,
+              soundFamily: restoredLayer.soundFamily || '',
+              intensity: restoredLayer.intensity,
+              volume: 1.0,
+              repeat: 1,
+              active: false
+            }])
+          }
+
+          this.layers.push(restoredLayer)
+
+          const isBuiltIn = ['kick', 'snare', 'hihat'].includes(restoredLayer.category)
+          if (isBuiltIn) {
+            // Re-render DOM cells
+            for (let s = 0; s < this.totalSteps; s++) {
+              this.reRenderStepCell(restoredLayer, s)
+            }
+            this.setTrackSoundFamily(restoredLayer.category, restoredLayer.soundFamily)
+            this.setTrackIntensity(restoredLayer.category, restoredLayer.intensity)
+
+            const volSlider = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-vol-slider`)
+            if (volSlider) volSlider.value = Math.round(restoredLayer.volume * 100)
+            const volVal = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .vol-readout`)
+            if (volVal) volVal.textContent = `${Math.round(restoredLayer.volume * 100)}%`
+            const muteBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-mute-btn`)
+            if (muteBtn) muteBtn.classList.toggle('active', restoredLayer.muted)
+            const soloBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-solo-btn`)
+            if (soloBtn) soloBtn.classList.toggle('active', restoredLayer.solo)
+          } else {
+            // Custom primary track -> render its full track channel group DOM
+            const trackObj = {
+              id: restoredLayer.category,
+              name: restoredLayer.name,
+              trackNumber: parseInt(restoredLayer.badge, 10) || 4,
+              baseTrackSound: restoredLayer.soundFamily,
+              type: 'custom'
+            }
+            this.createCustomTrackDOM(trackObj)
+          }
+        })
+
+        // 7. Restore sublayers (both under built-ins and custom tracks)
+        subLayersData.forEach(lData => {
+          const restoredSub = {
+            id: lData.id,
+            badge: lData.badge,
+            name: lData.name,
+            category: lData.category,
+            soundFamily: lData.soundFamily || '',
+            intensity: lData.intensity || 'med',
+            volume: lData.volume !== undefined ? lData.volume : 1.0,
+            muted: !!lData.muted,
+            solo: !!lData.solo,
+            isPrimary: false,
+            parentTrack: lData.parentTrack || lData.category,
+            steps: (lData.steps || []).map(stepPads => (stepPads || []).map(p => ({
+              id: p.id,
+              category: p.category,
+              soundFamily: p.soundFamily || '',
+              intensity: p.intensity || 'med',
+              volume: p.volume !== undefined ? p.volume : 1.0,
+              repeat: p.repeat || 1,
+              active: !!p.active
+            })))
+          }
+
+          while (restoredSub.steps.length < this.totalSteps) {
+            const s = restoredSub.steps.length
+            restoredSub.steps.push([{
+              id: `pad-${restoredSub.id}-${s}`,
+              category: restoredSub.category,
+              soundFamily: restoredSub.soundFamily || '',
+              intensity: restoredSub.intensity,
+              volume: 1.0,
+              repeat: 1,
+              active: false
+            }])
+          }
+
+          this.layers.push(restoredSub)
+          this.renderLayerDOM(restoredSub)
+        })
+
+        // 8. Synchronize timeline & UI states
+        if (this.renderTrackpadRuler) this.renderTrackpadRuler()
+        if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+        if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+        this.updateAllSoloStates()
+        this.populatePopoverCategories()
+
+        return true
+      } catch (err) {
+        console.warn('Could not restore active session:', err)
+        return false
       }
     }
 
@@ -311,6 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isAccent = pad.intensity === 'high'
       const intensityClass = isAccent ? 'accent' : isGhost ? 'ghost' : ''
       const activeClass = pad.active ? 'active' : ''
+      const soundLabel = pad.soundFamily || 'No Sound'
 
       return `
         <div class="pad-wrapper" data-pad-id="${pad.id}" data-layer-id="${layer.id}" data-step="${step}">
@@ -318,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data-pad-id="${pad.id}"
             data-layer-id="${layer.id}"
             data-step="${step}"
-            title="${layer.name} Step ${step + 1} (${pad.soundFamily} - ${pad.intensity}) - Click to toggle"
+            title="${layer.name} Step ${step + 1} (${soundLabel} - ${pad.intensity}) - Click to toggle"
             aria-label="${layer.name} Step ${step + 1}">
             ${pad.repeat > 1 ? `<span class="pad-repeat-badge">${pad.repeat}x</span>` : ''}
             ${isAccent ? `<span class="pad-intensity-badge badge-high">H</span>` : ''}
@@ -374,13 +599,21 @@ document.addEventListener('DOMContentLoaded', () => {
             padObj.active = !padObj.active
             padBtn.classList.toggle('active', padObj.active)
             if (padObj.active) {
-              const fileSrc = this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity)
-              this.playPadSound(fileSrc, padObj.volume * layer.volume)
-              this.pulseMeter(layer.category)
+              if (!padObj.soundFamily) {
+                this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
+                this.triggerBaseSoundImport(layer.category, layer.id)
+              } else {
+                const fileSrc = this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity)
+                if (fileSrc) {
+                  this.playPadSound(fileSrc, padObj.volume * layer.volume)
+                  this.pulseMeter(layer.category)
+                }
+              }
             }
             if (this.renderTrackpadLanes) {
               this.renderTrackpadLanes()
             }
+            this.saveActiveSession()
           }
 
           // Right-Click: Open Pad Configuration Popover
@@ -441,9 +674,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Sound Asset Resolution & Low-Latency Audio Playback
     // ------------------------------------------------------------------------
     resolveSoundFile(category, soundFamily, intensity = 'med') {
+      if (!soundFamily) return null
+
       if (this.manifest && this.manifest.categories && this.manifest.categories[category]) {
         const cat = this.manifest.categories[category]
-        const soundData = cat.sounds[soundFamily] || Object.values(cat.sounds)[0]
+        if (!cat.sounds || Object.keys(cat.sounds).length === 0) {
+          return null
+        }
+        const soundData = cat.sounds[soundFamily]
         if (soundData) {
           if (soundData.variations && soundData.variations[intensity]) {
             return soundData.variations[intensity].file
@@ -452,12 +690,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return soundData.baseFile
           }
         }
+        return null
       }
 
-      // Safe static fallbacks
+      // Safe static fallbacks for built-in tracks only
       if (category === 'kick') return './sounds/kick/base/kick-classic.wav'
       if (category === 'snare') return './sounds/snare/base/snare-acoustic01.wav'
-      return './sounds/hihat/base/hihat-808.wav'
+      if (category === 'hihat') return './sounds/hihat/base/hihat-808.wav'
+      return null
     }
 
     playPadSound(fileSrc, volume = 1.0) {
@@ -539,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const masterAddBtn = document.getElementById('add-master-layer-btn')
       if (masterAddBtn) {
         masterAddBtn.addEventListener('click', () => {
-          this.addLayer('custom')
+          this.openAddTrackModal()
         })
       }
     }
@@ -570,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     }
 
-    addBeat() {
+    addBeat(playFeedback = true) {
       this.ensureAudioContextRunning()
       this.numBeats++
       const newBeatNum = this.numBeats
@@ -584,8 +824,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const pad = {
             id: `pad-${layer.id}-${s}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
             category: layer.category,
-            soundFamily: layer.soundFamily,
-            intensity: layer.intensity,
+            soundFamily: layer.soundFamily || '',
+            intensity: layer.intensity || 'med',
             volume: 1.0,
             repeat: 1,
             active: false
@@ -676,17 +916,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
 
       // 5. Tactile audio feedback & smooth auto-scroll to the new beat (only if content overflows)
-      this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
-      if (this.sequencerViewport) {
-        setTimeout(() => {
-          if (this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10) {
-            this.sequencerViewport.scrollTo({
-              left: this.sequencerViewport.scrollWidth,
-              behavior: 'smooth'
-            })
-          }
-        }, 50)
+      if (playFeedback) {
+        this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
+        if (this.sequencerViewport) {
+          setTimeout(() => {
+            if (this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10) {
+              this.sequencerViewport.scrollTo({
+                left: this.sequencerViewport.scrollWidth,
+                behavior: 'smooth'
+              })
+            }
+          }, 50)
+        }
       }
+
+      this.saveActiveSession()
     }
 
     removeBeat(beatNum) {
@@ -712,6 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.renderTrackpadRuler) this.renderTrackpadRuler()
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+      this.saveActiveSession()
     }
 
     updateBeatCounterUI() {
@@ -738,8 +983,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     addLayer(parentTrack = 'kick', options = {}) {
-      const isCustom = parentTrack === 'custom'
-      const baseCategory = isCustom ? 'kick' : parentTrack
+      if (parentTrack === 'custom') {
+        this.openAddTrackModal()
+        return null
+      }
+      const baseCategory = parentTrack
       if (!this.sublayerCounters[parentTrack]) {
         this.sublayerCounters[parentTrack] = 0
       }
@@ -755,16 +1003,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const trackManifest = this.manifest?.categories?.[baseCategory]
       const defaultFamily = defaultFamilies[baseCategory] ||
         trackManifest?.baseTrackSound ||
-        (trackManifest?.sounds ? Object.keys(trackManifest.sounds)[0] : null) || 'kick-classic'
+        (trackManifest?.sounds && Object.keys(trackManifest.sounds).length > 0 ? Object.keys(trackManifest.sounds)[0] : '') || ''
 
       const trackDisplayName = trackManifest?.name || (parentTrack.charAt(0).toUpperCase() + parentTrack.slice(1))
-      const layerName = isCustom
-        ? `Layer ${layerNum}`
-        : `${trackDisplayName} L${layerNum}`
+      const layerName = `${trackDisplayName} L${layerNum}`
 
       const newLayer = {
         id: layerId,
-        badge: isCustom ? `0${Math.min(9, 3 + layerNum)}` : `L${layerNum}`,
+        badge: `L${layerNum}`,
         name: layerName,
         category: baseCategory,
         soundFamily: defaultFamily,
@@ -782,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pad = {
           id: `pad-${layerId}-${s}`,
           category: newLayer.category,
-          soundFamily: newLayer.soundFamily,
+          soundFamily: newLayer.soundFamily || '',
           intensity: newLayer.intensity,
           volume: 1.0,
           repeat: 1,
@@ -796,9 +1042,15 @@ document.addEventListener('DOMContentLoaded', () => {
       // Render the sublayer DOM element
       this.renderLayerDOM(newLayer)
 
-      // Audio feedback when adding layer
-      this.playPadSound(this.resolveSoundFile(newLayer.category, newLayer.soundFamily, 'med'), 0.8)
+      // Audio feedback when adding layer (only if sound is available)
+      if (newLayer.soundFamily) {
+        this.playPadSound(this.resolveSoundFile(newLayer.category, newLayer.soundFamily, 'med'), 0.8)
+      } else {
+        this.showToast(`Added ${layerName}. Import a base sound to use it.`, 'info')
+      }
 
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
       return newLayer
     }
 
@@ -889,15 +1141,17 @@ document.addEventListener('DOMContentLoaded', () => {
             </option>
           `).join('')
         } else {
-          optionsHTML = `<option value="" disabled selected>No sounds imported yet</option>`
+          optionsHTML = `<option value="" disabled ${!selectedSoundFamily ? 'selected' : ''}>No Base Sound (Import Required)</option>`
         }
       } else if (selectedSoundFamily && selectedSoundFamily !== '__import__') {
         optionsHTML = `<option value="${selectedSoundFamily}" selected>${selectedSoundFamily}</option>`
+      } else {
+        optionsHTML = `<option value="" disabled selected>No Base Sound (Import Required)</option>`
       }
 
       optionsHTML += `
         <option value="__import__" class="import-sound-opt" data-track="${category}">
-          + Import New Base Sound...
+          + Import Base Sound...
         </option>
       `
       return optionsHTML
@@ -909,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (nameInput) {
         nameInput.addEventListener('change', (e) => {
           layer.name = e.target.value.trim() || layer.name
+          this.saveActiveSession()
         })
       }
 
@@ -916,6 +1171,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const auditionBtn = layerEl.querySelector('.sublayer-audition-btn')
       if (auditionBtn) {
         auditionBtn.addEventListener('click', () => {
+          if (!layer.soundFamily) {
+            this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
+            this.triggerBaseSoundImport(layer.category, layer.id)
+            return
+          }
           this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
         })
       }
@@ -931,6 +1191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
           }
           layerEl.classList.toggle('is-muted', layer.muted)
+          this.saveActiveSession()
         })
       }
 
@@ -941,6 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.solo = !layer.solo
           soloBtn.classList.toggle('active', layer.solo)
           this.updateAllSoloStates()
+          this.saveActiveSession()
         })
       }
 
@@ -958,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         familySelect.addEventListener('change', (e) => {
           const val = e.target.value
           if (val === '__import__') {
-            familySelect.value = layer.soundFamily
+            familySelect.value = layer.soundFamily || ''
             this.triggerBaseSoundImport(layer.category, layer.id)
             return
           }
@@ -966,7 +1228,10 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = layer.soundFamily })
           })
-          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          if (layer.soundFamily) {
+            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          }
+          this.saveActiveSession()
         })
       }
 
@@ -978,6 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.volume = val / 100
           const display = volumeSlider.nextElementSibling
           if (display) display.textContent = `${val}%`
+          this.saveActiveSession()
         })
       }
 
@@ -992,7 +1258,10 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.intensity = intensity })
           })
-          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          if (layer.soundFamily) {
+            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          }
+          this.saveActiveSession()
         })
       })
 
@@ -1032,6 +1301,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       this.updateAllSoloStates()
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
     }
 
     // ------------------------------------------------------------------------
@@ -1053,8 +1324,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const newPad = {
           id: newPadId,
           category: layer.category,
-          soundFamily: layer.soundFamily,
-          intensity: layer.intensity,
+          soundFamily: layer.soundFamily || '',
+          intensity: layer.intensity || 'med',
           volume: 1.0,
           repeat: 1,
           active: true
@@ -1066,8 +1337,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Audition preview hit
-      this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), 0.8)
-      this.pulseMeter(layer.category)
+      if (layer.soundFamily) {
+        this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), 0.8)
+        this.pulseMeter(layer.category)
+      } else {
+        this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
+        this.triggerBaseSoundImport(layer.category, layer.id)
+      }
+
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
     }
 
     addPadToStep(layerId, step, config = {}) {
@@ -1078,7 +1357,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newPad = {
         id: newPadId,
         category: config.category || layer.category,
-        soundFamily: config.soundFamily || layer.soundFamily,
+        soundFamily: config.soundFamily !== undefined ? config.soundFamily : (layer.soundFamily || ''),
         intensity: config.intensity || layer.intensity,
         volume: config.volume !== undefined ? config.volume : 1.0,
         repeat: config.repeat || 1,
@@ -1091,8 +1370,15 @@ document.addEventListener('DOMContentLoaded', () => {
       this.reRenderStepCell(layer, step)
 
       // Audition preview
-      this.playPadSound(this.resolveSoundFile(newPad.category, newPad.soundFamily, newPad.intensity), newPad.volume * layer.volume)
+      if (newPad.soundFamily) {
+        this.playPadSound(this.resolveSoundFile(newPad.category, newPad.soundFamily, newPad.intensity), newPad.volume * layer.volume)
+      } else {
+        this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
+        this.triggerBaseSoundImport(newPad.category, layer.id)
+      }
 
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
       return newPad
     }
 
@@ -1110,6 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pads[0].repeat = 1
         pads[0].intensity = layer.intensity
         this.reRenderStepCell(layer, step)
+        this.saveActiveSession()
         return
       }
 
@@ -1121,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pads.push({
           id: `pad-${layer.id}-${step}-${Date.now()}`,
           category: layer.category,
-          soundFamily: layer.soundFamily,
+          soundFamily: layer.soundFamily || '',
           intensity: layer.intensity,
           volume: 1.0,
           repeat: 1,
@@ -1130,6 +1417,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       this.reRenderStepCell(layer, step)
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
     }
 
     // ------------------------------------------------------------------------
@@ -1145,13 +1434,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       this.activePopoverPad = { layerId, step, padId: pad.id }
 
-      // 1. Sound Category
-      this.populatePopoverCategories()
-      if (this.popoverSoundCat) {
-        this.popoverSoundCat.value = pad.category
-      }
+      // 1. Sound Category: dynamically populate with all categories & select pad's current category
+      this.populatePopoverCategories(pad.category)
 
-      // 2. Sound Family options based on Category
+      // 2. Sound Family options based on Category & select pad's current sound family
       this.populatePopoverSoundFamilies(pad.category, pad.soundFamily)
 
       // 3. Intensity Variation Pills
@@ -1183,19 +1469,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    populatePopoverCategories() {
+    populatePopoverCategories(selectedCategory = null) {
       if (!this.popoverSoundCat || !this.manifest || !this.manifest.categories) return
-      const currentVal = this.popoverSoundCat.value
+      const targetCategory = selectedCategory || this.popoverSoundCat.value
       this.popoverSoundCat.innerHTML = Object.entries(this.manifest.categories).map(([catKey, cat]) => `
-        <option value="${catKey}">${cat.name}</option>
+        <option value="${catKey}" ${catKey === targetCategory ? 'selected' : ''}>${cat.name}</option>
       `).join('')
-      if (this.manifest.categories[currentVal]) {
-        this.popoverSoundCat.value = currentVal
+      if (this.manifest.categories[targetCategory]) {
+        this.popoverSoundCat.value = targetCategory
       }
     }
 
-    populatePopoverSoundFamilies(category, selectedFamily) {
-      if (!this.popoverSoundFamily || !this.manifest || !this.manifest.categories[category]) return
+    populatePopoverSoundFamilies(category, selectedFamily = null) {
+      if (!this.popoverSoundFamily) return
+      if (!this.manifest || !this.manifest.categories || !this.manifest.categories[category]) {
+        this.popoverSoundFamily.innerHTML = `
+          <option value="" disabled selected>No Base Sound (Import Required)</option>
+          <option value="__import__" class="import-sound-opt" data-track="${category}">+ Import Base Sound...</option>
+        `
+        return
+      }
       const sounds = this.manifest.categories[category].sounds || {}
       const entries = Object.entries(sounds)
       let optionsHTML = ''
@@ -1204,12 +1497,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <option value="${id}" ${id === selectedFamily ? 'selected' : ''}>${sound.name}${sound.isCustom ? ' (User)' : ''}</option>
         `).join('')
       } else {
-        optionsHTML = `<option value="" disabled selected>No sounds imported yet</option>`
+        optionsHTML = `<option value="" disabled ${!selectedFamily ? 'selected' : ''}>No Base Sound (Import Required)</option>`
       }
-      optionsHTML += `<option value="__import__" class="import-sound-opt">+ Import New Base Sound...</option>`
+      optionsHTML += `<option value="__import__" class="import-sound-opt" data-track="${category}">+ Import Base Sound...</option>`
       this.popoverSoundFamily.innerHTML = optionsHTML
-      if (sounds[selectedFamily]) {
+      if (selectedFamily && sounds[selectedFamily]) {
         this.popoverSoundFamily.value = selectedFamily
+      } else if (entries.length > 0) {
+        this.popoverSoundFamily.value = entries[0][0]
+      } else {
+        this.popoverSoundFamily.value = ''
       }
     }
 
@@ -1226,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Category change -> update family options
+      // Category change -> update family options & active pad category
       if (this.popoverSoundCat) {
         this.popoverSoundCat.onchange = (e) => {
           if (!this.activePopoverPad) return
@@ -1235,15 +1532,21 @@ document.addEventListener('DOMContentLoaded', () => {
           const pad = layer ? layer.steps[step].find(p => p.id === padId) : null
           if (!pad) return
 
-          pad.category = e.target.value
-          const defaultFam = this.manifest.categories[pad.category]?.baseTrackSound ||
-            Object.keys(this.manifest.categories[pad.category]?.sounds || {})[0] || ''
-          this.populatePopoverSoundFamilies(pad.category, defaultFam)
-          pad.soundFamily = this.popoverSoundFamily.value
+          const newCategory = e.target.value
+          pad.category = newCategory
+          const catSounds = this.manifest?.categories?.[newCategory]?.sounds || {}
+          const soundKeys = Object.keys(catSounds)
+          const defaultFam = this.manifest?.categories?.[newCategory]?.baseTrackSound ||
+            (soundKeys.length > 0 ? soundKeys[0] : '')
+
+          this.populatePopoverSoundFamilies(newCategory, defaultFam)
+          pad.soundFamily = defaultFam
+
           this.reRenderStepCell(layer, step)
-          if (pad.soundFamily && pad.soundFamily !== '__import__') {
+          if (pad.soundFamily) {
             this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
           }
+          this.saveActiveSession()
         }
       }
 
@@ -1258,14 +1561,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const val = e.target.value
           if (val === '__import__') {
-            this.popoverSoundFamily.value = pad.soundFamily
+            this.popoverSoundFamily.value = pad.soundFamily || ''
             this.triggerBaseSoundImport(pad.category, layer.id)
             return
           }
 
           pad.soundFamily = val
           this.reRenderStepCell(layer, step)
-          this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+          if (pad.soundFamily) {
+            this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+          }
+          this.saveActiveSession()
         }
       }
 
@@ -1283,7 +1589,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.popoverIntensityPills.querySelectorAll('.popover-pill').forEach(p => p.classList.remove('active'))
             pill.classList.add('active')
             this.reRenderStepCell(layer, step)
-            this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+            if (pad.soundFamily) {
+              this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+            }
+            this.saveActiveSession()
           }
         })
       }
@@ -1300,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const val = parseInt(e.target.value, 10)
           pad.volume = val / 100
           if (this.popoverVolumeVal) this.popoverVolumeVal.textContent = `${val}%`
+          this.saveActiveSession()
         }
       }
 
@@ -1318,6 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.popoverRepeatPills.querySelectorAll('.repeat-pill').forEach(p => p.classList.remove('active'))
             pill.classList.add('active')
             this.reRenderStepCell(layer, step)
+            this.saveActiveSession()
           }
         })
       }
@@ -1331,6 +1642,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const pad = layer.steps[step].find(p => p.id === padId)
           if (!pad) return
 
+          if (!pad.soundFamily) {
+            this.showToast('Please import a base sound first', 'info')
+            this.triggerBaseSoundImport(pad.category, layer.id)
+            return
+          }
           this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
         }
       }
@@ -1387,6 +1703,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const trackRow = document.querySelector(`.primary-layer[data-track="${track}"]`)
             if (trackRow) trackRow.classList.toggle('is-muted', layer.muted)
+            this.saveActiveSession()
           })
         }
 
@@ -1397,6 +1714,7 @@ document.addEventListener('DOMContentLoaded', () => {
             layer.solo = !layer.solo
             soloBtn.classList.toggle('active', layer.solo)
             this.updateAllSoloStates()
+            this.saveActiveSession()
           })
         }
 
@@ -1418,6 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (display && display.classList.contains('volume-value')) {
               display.textContent = `${val}%`
             }
+            this.saveActiveSession()
           })
         }
 
@@ -1442,6 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
               stepPads.forEach(pad => { pad.soundFamily = soundId })
             })
             this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.saveActiveSession()
           })
         }
       })
@@ -1467,6 +1787,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
 
             this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.saveActiveSession()
           })
         })
       })
@@ -1759,6 +2080,7 @@ document.addEventListener('DOMContentLoaded', () => {
           this.repeatAnimation()
         }, interval)
       }
+      this.saveActiveSession()
     }
 
     bindTempoEvents() {
@@ -1856,6 +2178,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.playPadSound(this.resolveSoundFile('kick', 'kick-808', 'high'), 0.9)
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+      this.saveActiveSession()
     }
 
     bindPresetEvents() {
@@ -1927,6 +2250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.playPadSound(this.resolveSoundFile('kick', 'kick-classic', 'high'), 0.9)
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+      this.saveActiveSession()
     }
 
     setTrackIntensity(track, intensity) {
@@ -1943,6 +2267,7 @@ document.addEventListener('DOMContentLoaded', () => {
       layer.steps.forEach(stepPads => {
         stepPads.forEach(pad => { pad.intensity = intensity })
       })
+      this.saveActiveSession()
     }
 
     setTrackSoundFamily(track, soundId) {
@@ -1963,6 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       layer.steps.forEach(stepPads => {
         stepPads.forEach(pad => { pad.soundFamily = soundId })
       })
+      this.saveActiveSession()
     }
 
     // ------------------------------------------------------------------------
@@ -1987,6 +2313,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
+      this.saveActiveSession()
     }
 
     bindTransportEvents() {
@@ -2096,8 +2423,12 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const allTracks = await window.AudioLibrary.getAllTracks()
         const customTracks = allTracks.filter(t => t.type === 'custom')
+        const container = document.getElementById('custom-layers-container')
         for (const track of customTracks) {
-          this.createCustomTrackDOM(track)
+          const alreadyInDOM = container && container.querySelector(`.track-channel-group[data-track="${track.id}"]`)
+          if (!alreadyInDOM) {
+            this.createCustomTrackDOM(track)
+          }
         }
       } catch (err) {
         console.warn('Could not render stored custom tracks:', err)
@@ -2109,7 +2440,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let layer = this.layers.find(l => l.id === `${track.id}-primary`)
       const customSounds = this.manifest?.categories?.[track.id]?.sounds || {}
-      const soundFamily = track.baseTrackSound || Object.keys(customSounds)[0] || ''
+      const soundFamily = track.baseTrackSound || (Object.keys(customSounds).length > 0 ? Object.keys(customSounds)[0] : '') || ''
 
       if (!layer) {
         layer = {
@@ -2229,6 +2560,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindCustomTrackDOMEvents(groupEl, layer, track)
 
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+      this.saveActiveSession()
     }
 
     bindCustomTrackDOMEvents(groupEl, layer, track) {
@@ -2237,7 +2569,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (auditionBtn) {
         auditionBtn.addEventListener('click', () => {
           if (!layer.soundFamily) {
-            this.showToast('Please import a base sound for this track first', 'info')
+            this.showToast(`Please import a base sound for "${track.name}" first`, 'info')
+            this.triggerBaseSoundImport(track.id, layer.id)
             return
           }
           this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
@@ -2256,6 +2589,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           const row = groupEl.querySelector('.primary-layer')
           if (row) row.classList.toggle('is-muted', layer.muted)
+          this.saveActiveSession()
         })
       }
 
@@ -2266,6 +2600,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.solo = !layer.solo
           soloBtn.classList.toggle('active', layer.solo)
           this.updateAllSoloStates()
+          this.saveActiveSession()
         })
       }
 
@@ -2283,7 +2618,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sampleSelect.addEventListener('change', (e) => {
           const val = e.target.value
           if (val === '__import__') {
-            sampleSelect.value = layer.soundFamily
+            sampleSelect.value = layer.soundFamily || ''
             this.triggerBaseSoundImport(track.id, layer.id)
             return
           }
@@ -2291,7 +2626,10 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = val })
           })
-          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          if (layer.soundFamily) {
+            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          }
+          this.saveActiveSession()
         })
       }
 
@@ -2305,6 +2643,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (display && display.classList.contains('volume-value')) {
             display.textContent = `${val}%`
           }
+          this.saveActiveSession()
         })
       }
 
@@ -2322,6 +2661,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (layer.soundFamily) {
             this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
           }
+          this.saveActiveSession()
         })
       })
 
@@ -2373,7 +2713,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.className = 'var-chip'
       })
 
-      if (this.importProgressModal) this.importProgressModal.style.display = 'flex'
+      if (this.importProgressModal) {
+        this.importProgressModal.style.display = 'flex'
+        void this.importProgressModal.offsetWidth
+        this.importProgressModal.classList.add('active')
+      }
     }
 
     updateImportProgressUI(progress) {
@@ -2417,19 +2761,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     closeImportProgressModal() {
-      if (this.importProgressModal) this.importProgressModal.style.display = 'none'
+      if (this.importProgressModal) {
+        this.importProgressModal.classList.remove('active')
+        setTimeout(() => {
+          if (this.importProgressModal && !this.importProgressModal.classList.contains('active')) {
+            this.importProgressModal.style.display = ''
+          }
+        }, 250)
+      }
     }
 
     openAddTrackModal() {
       if (this.customTrackNameInput) this.customTrackNameInput.value = ''
-      if (this.addTrackModal) this.addTrackModal.style.display = 'flex'
+      if (this.addTrackModal) {
+        this.addTrackModal.style.display = 'flex'
+        void this.addTrackModal.offsetWidth
+        this.addTrackModal.classList.add('active')
+      }
       if (this.customTrackNameInput) {
         setTimeout(() => this.customTrackNameInput.focus(), 60)
       }
     }
 
     closeAddTrackModal() {
-      if (this.addTrackModal) this.addTrackModal.style.display = 'none'
+      if (this.addTrackModal) {
+        this.addTrackModal.classList.remove('active')
+        setTimeout(() => {
+          if (this.addTrackModal && !this.addTrackModal.classList.contains('active')) {
+            this.addTrackModal.style.display = ''
+          }
+        }, 250)
+      }
     }
 
     async executeAddTrack() {
@@ -2448,6 +2810,7 @@ document.addEventListener('DOMContentLoaded', () => {
         this.renderSoundAssetsModal()
         this.closeAddTrackModal()
         this.showToast(`Track "${name}" created!`, 'success')
+        this.saveActiveSession()
 
         // Prompt to import base sound
         setTimeout(() => {
@@ -2466,11 +2829,22 @@ document.addEventListener('DOMContentLoaded', () => {
         this.confirmActionBtn.innerHTML = `<i class="fa-solid fa-trash-can"></i> ${confirmBtnText}`
       }
       this.confirmActionCallback = onConfirm
-      if (this.confirmActionModal) this.confirmActionModal.style.display = 'flex'
+      if (this.confirmActionModal) {
+        this.confirmActionModal.style.display = 'flex'
+        void this.confirmActionModal.offsetWidth
+        this.confirmActionModal.classList.add('active')
+      }
     }
 
     closeConfirmActionModal() {
-      if (this.confirmActionModal) this.confirmActionModal.style.display = 'none'
+      if (this.confirmActionModal) {
+        this.confirmActionModal.classList.remove('active')
+        setTimeout(() => {
+          if (this.confirmActionModal && !this.confirmActionModal.classList.contains('active')) {
+            this.confirmActionModal.style.display = ''
+          }
+        }, 250)
+      }
       this.confirmActionCallback = null
     }
 
@@ -2496,6 +2870,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.renderTrackpadLanes) this.renderTrackpadLanes()
             this.renderSoundAssetsModal()
             this.showToast(`Custom track "${trackName}" deleted.`, 'success')
+            this.saveActiveSession()
           } catch (err) {
             this.showToast(`Error deleting track: ${err.message}`, 'error')
           }
@@ -2529,6 +2904,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.refreshTrackSoundSelectors(trackId)
             this.renderSoundAssetsModal()
             this.showToast(`Sound "${soundName}" deleted.`, 'success')
+            this.saveActiveSession()
           } catch (err) {
             this.showToast(`Error deleting sound: ${err.message}`, 'error')
           }
@@ -2539,14 +2915,25 @@ document.addEventListener('DOMContentLoaded', () => {
     openRenameTrackModal(trackId, currentName) {
       this.activeRenameTrackId = trackId
       if (this.renameTrackInput) this.renameTrackInput.value = currentName || ''
-      if (this.renameTrackModal) this.renameTrackModal.style.display = 'flex'
+      if (this.renameTrackModal) {
+        this.renameTrackModal.style.display = 'flex'
+        void this.renameTrackModal.offsetWidth
+        this.renameTrackModal.classList.add('active')
+      }
       if (this.renameTrackInput) {
         setTimeout(() => this.renameTrackInput.focus(), 60)
       }
     }
 
     closeRenameTrackModal() {
-      if (this.renameTrackModal) this.renameTrackModal.style.display = 'none'
+      if (this.renameTrackModal) {
+        this.renameTrackModal.classList.remove('active')
+        setTimeout(() => {
+          if (this.renameTrackModal && !this.renameTrackModal.classList.contains('active')) {
+            this.renameTrackModal.style.display = ''
+          }
+        }, 250)
+      }
       this.activeRenameTrackId = null
     }
 
@@ -2582,6 +2969,7 @@ document.addEventListener('DOMContentLoaded', () => {
         this.renderSoundAssetsModal()
         this.closeRenameTrackModal()
         this.showToast(`Track renamed to "${newName}"`, 'success')
+        this.saveActiveSession()
       } catch (err) {
         this.showToast(`Error renaming track: ${err.message}`, 'error')
       }
@@ -2710,6 +3098,23 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
 
+            // If Pad Popover is currently open, refresh its categories and sound families
+            if (this.activePopoverPad) {
+              const { layerId, step, padId } = this.activePopoverPad
+              const layer = this.getLayer(layerId)
+              const pad = layer ? layer.steps[step].find(p => p.id === padId) : null
+              if (pad) {
+                if (pad.category === trackId) {
+                  pad.soundFamily = importedSound.id
+                  this.reRenderStepCell(layer, step)
+                }
+                this.populatePopoverCategories(pad.category)
+                this.populatePopoverSoundFamilies(pad.category, pad.soundFamily)
+              }
+            }
+
+            this.saveActiveSession()
+
             setTimeout(() => {
               this.closeImportProgressModal()
               this.showToast(`Imported "${importedSound.name}" with 5 studio variations!`, 'success')
@@ -2771,6 +3176,23 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault()
             this.executeTrackRename()
           }
+        })
+      }
+
+      // Backdrop overlay click handlers
+      if (this.addTrackModal) {
+        this.addTrackModal.addEventListener('click', (e) => {
+          if (e.target === this.addTrackModal) this.closeAddTrackModal()
+        })
+      }
+      if (this.confirmActionModal) {
+        this.confirmActionModal.addEventListener('click', (e) => {
+          if (e.target === this.confirmActionModal) this.closeConfirmActionModal()
+        })
+      }
+      if (this.renameTrackModal) {
+        this.renameTrackModal.addEventListener('click', (e) => {
+          if (e.target === this.renameTrackModal) this.closeRenameTrackModal()
         })
       }
     }
@@ -2995,6 +3417,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.saveModal) this.closeSaveModal()
             if (this.exportModal) this.closeExportModal()
             if (this.libDrawer) this.closeLibrary()
+            if (this.addTrackModal) this.closeAddTrackModal()
+            if (this.confirmActionModal) this.closeConfirmActionModal()
+            if (this.renameTrackModal) this.closeRenameTrackModal()
             break
         }
       })
@@ -3900,6 +4325,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.closeLibrary()
       this.showToast(`Sequence loaded: "${seq.name}"`, 'success')
       this.playPadSound(this.resolveSoundFile('kick', 'kick-808', 'high'), 0.9)
+      this.saveActiveSession()
     }
 
     deleteSequence(seqId) {
@@ -4142,9 +4568,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Studio Kit
   const kit = new DrumKit()
-
-  // Load a default energetic Trap 808 preset pattern on launch
-  kit.loadPreset('trap')
 
   // Expose kit on window for programmatic testing & inspection
   window.__drumKit = kit
