@@ -1359,50 +1359,143 @@
     </div>
   </div>
 
-  <!-- Sequence Library Slide-in Side Drawer -->
-  <aside class="library-drawer" id="library-drawer" aria-label="Sequence Library Drawer">
-    <div class="lib-drawer-header">
-      <div class="lib-title-row">
-        <div class="lib-icon-badge">
-          <i class="fa-solid fa-bookmark"></i>
-        </div>
-        <div>
-          <h2 class="lib-drawer-title">Sequence Library</h2>
-          <p class="lib-drawer-sub">Saved grooves, patterns, and configurations</p>
-        </div>
-      </div>
-      <button class="lib-close-btn" id="close-library-drawer" aria-label="Close Library">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
+  <!-- Full-Screen Sequence Library Experience -->
+  <aside class="library-drawer" id="library-drawer" role="dialog" aria-modal="true" aria-label="Sequence Library">
+    <div class="lib-ambient-bg" aria-hidden="true"></div>
 
-    <!-- Library Toolbar: Search & Save Current -->
-    <div class="lib-toolbar">
-      <div class="lib-search-wrap">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="lib-search-input" placeholder="Search saved sequences by name..."
-          aria-label="Search sequences" />
-        <button class="lib-search-clear-btn" id="lib-search-clear-btn" style="display: none;" title="Clear search">
-          <i class="fa-solid fa-circle-xmark"></i>
+    <div class="lib-shell">
+      <header class="lib-drawer-header">
+        <div class="lib-title-row">
+          <div class="lib-icon-badge">
+            <i class="fa-solid fa-bookmark"></i>
+          </div>
+          <div>
+            <h2 class="lib-drawer-title">Sequence Library</h2>
+            <p class="lib-drawer-sub">Saved grooves, patterns, and configurations</p>
+          </div>
+        </div>
+
+        <div class="lib-header-controls">
+          <div class="lib-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="lib-search-input" placeholder="Search presets..."
+              aria-label="Search sequences" />
+            <button type="button" class="lib-search-clear-btn" id="lib-search-clear-btn" style="display: none;"
+              title="Clear search" aria-label="Clear search">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <button type="button" class="lib-close-btn" id="close-library-drawer" aria-label="Close Library"
+            title="Close Library (Esc)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Library Toolbar: Save Current -->
+      <div class="lib-toolbar">
+        <button type="button" class="lib-save-now-btn" id="lib-save-now-btn" title="Save current sequence directly">
+          <i class="fa-solid fa-plus"></i>
+          <span>Save Current Beat</span>
         </button>
       </div>
-      <button class="lib-save-now-btn" id="lib-save-now-btn" title="Save current sequence directly">
-        <i class="fa-solid fa-plus"></i> Save Current Beat
-      </button>
-    </div>
 
-    <!-- Sequences Cards List Container -->
-    <div class="lib-sequences-list" id="lib-sequences-list" role="list">
-      <!-- Dynamically rendered sequence cards -->
-    </div>
+      <!-- Horizontal Sequence Cards Carousel -->
+      <div class="lib-carousel-stage">
+        <button type="button" class="lib-scroll-nav-btn lib-scroll-prev" id="lib-scroll-prev-btn"
+          aria-label="Scroll presets left" title="Scroll left">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
 
-    <!-- Drawer Footer -->
-    <div class="lib-drawer-footer">
-      <div class="lib-storage-info">
-        <i class="fa-solid fa-hard-drive"></i>
-        <span id="lib-storage-count-text">3 Sequences Stored</span>
+        <div class="lib-sequences-list" id="lib-sequences-list" role="list" tabindex="0">
+          <!-- Dynamically rendered sequence cards -->
+        </div>
+
+        <button type="button" class="lib-scroll-nav-btn lib-scroll-next" id="lib-scroll-next-btn"
+          aria-label="Scroll presets right" title="Scroll right">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
       </div>
-      <button class="lib-dismiss-btn" id="lib-dismiss-btn">Close Drawer</button>
+
+      <!-- Bottom Embedded Library Audio Player -->
+      <section class="lib-preview-player" id="lib-preview-player" aria-label="Library Preview Player">
+        <div class="lib-player-track" id="lib-player-track">
+          <div class="lib-player-thumb theme-purple" id="lib-player-thumb" aria-hidden="true"></div>
+          <div class="lib-player-info">
+            <div class="lib-player-kicker-row">
+              <span class="lib-player-kicker">Now Previewing:</span>
+              <span class="lib-player-status-pill" id="lib-player-status" style="display: none;">
+                <span class="status-dot"></span> Playing
+              </span>
+            </div>
+            <h3 class="lib-player-title" id="lib-player-title">Midnight Trap 808</h3>
+            <p class="lib-player-meta" id="lib-player-meta">140 BPM • 2B • 3 Tracks • 13 Pads</p>
+          </div>
+        </div>
+
+        <div class="lib-player-controls">
+          <button type="button" class="lib-player-skip-btn" id="lib-player-prev-btn" aria-label="Previous preset"
+            title="Previous preset (Left Arrow)">
+            <i class="fa-solid fa-backward"></i>
+          </button>
+          <button type="button" class="lib-player-play-btn theme-purple" id="lib-player-toggle-btn"
+            aria-label="Play or pause preview" title="Play / Pause Preview (Space)">
+            <i class="fa-solid fa-play" id="lib-player-play-icon"></i>
+          </button>
+          <button type="button" class="lib-player-skip-btn" id="lib-player-next-btn" aria-label="Next preset"
+            title="Next preset (Right Arrow)">
+            <i class="fa-solid fa-forward"></i>
+          </button>
+        </div>
+
+        <div class="lib-player-actions">
+          <div class="lib-volume-control">
+            <button type="button" class="lib-player-icon-btn" id="lib-player-mute-btn"
+              aria-label="Mute or unmute preview" title="Mute / Unmute">
+              <i class="fa-solid fa-volume-high" id="lib-player-vol-icon"></i>
+            </button>
+            <input type="range" class="lib-volume-slider" id="lib-player-volume" min="0" max="100" value="85"
+              aria-label="Preview volume" />
+          </div>
+
+          <div class="lib-more-wrap">
+            <button type="button" class="lib-player-icon-btn" id="lib-player-more-btn"
+              aria-label="More options for active preset" title="More options" aria-expanded="false">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div class="lib-player-more-menu" id="lib-player-more-menu" role="menu">
+              <button type="button" class="lib-more-item" id="lib-more-load-btn" role="menuitem">
+                <i class="fa-solid fa-play"></i> Load into Sequencer
+              </button>
+              <button type="button" class="lib-more-item" id="lib-more-rename-btn" role="menuitem">
+                <i class="fa-solid fa-pen"></i> Rename Preset
+              </button>
+              <button type="button" class="lib-more-item" id="lib-more-duplicate-btn" role="menuitem">
+                <i class="fa-solid fa-copy"></i> Duplicate Preset
+              </button>
+              <button type="button" class="lib-more-item is-danger" id="lib-more-delete-btn" role="menuitem">
+                <i class="fa-solid fa-trash-can"></i> Delete Preset
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drawer Footer -->
+      <footer class="lib-drawer-footer">
+        <div class="lib-footer-left">
+          <div class="lib-storage-info">
+            <i class="fa-solid fa-layer-group"></i>
+            <span id="lib-storage-count-text">3 Presets</span>
+          </div>
+          <span class="lib-footer-sep">•</span>
+          <button type="button" class="lib-swipe-btn" id="lib-swipe-next-btn">
+            <span>Swipe to explore</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+        <button type="button" class="lib-dismiss-btn" id="lib-dismiss-btn">ESC • Close Library</button>
+      </footer>
     </div>
   </aside>
 

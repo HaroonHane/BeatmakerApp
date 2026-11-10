@@ -2362,6 +2362,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const interval = (60 / this.bpm) * 1000 / 2 // 8-step resolution (8th notes)
 
       if (!this.isPlaying) {
+        if (this.libPreviewTimer) {
+          this.stopLibraryPreview()
+        }
         if (this.playBtn) {
           this.playBtn.innerHTML = `
             <div class="play-icon-wrap">
@@ -3861,6 +3864,35 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        const isLibOpen = !!(this.libDrawer && this.libDrawer.classList.contains('active'))
+        const isSaveModalOpen = !!(this.saveModal && this.saveModal.classList.contains('active'))
+
+        if (isLibOpen && !isSaveModalOpen) {
+          if (e.code === 'Space') {
+            e.preventDefault()
+            this.toggleLibraryPreview()
+            return
+          }
+          if (e.code === 'ArrowLeft') {
+            e.preventDefault()
+            this.stepLibraryTrack(-1, true)
+            return
+          }
+          if (e.code === 'ArrowRight') {
+            e.preventDefault()
+            this.stepLibraryTrack(1, true)
+            return
+          }
+          if (e.code === 'Escape') {
+            if (this.libMoreMenu && this.libMoreMenu.classList.contains('open')) {
+              this.closeLibraryMoreMenu()
+              return
+            }
+            this.closeLibrary()
+            return
+          }
+        }
+
         switch (e.code) {
           case 'Space':
             e.preventDefault()
@@ -4506,10 +4538,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 16. Sequence Library & Slide-in Drawer System
+    // 16. Full-Screen Sequence Library & Preview Player Engine
     // ------------------------------------------------------------------------
+    escapeHTML(str) {
+      return String(str ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[ch])
+    }
+
     initSequenceLibrary() {
       this.library = this.loadStoredLibrary()
+      this.previewSeqId = null
+      this.libPreviewTimer = null
+      this.libPreviewStep = 0
+      this.libPreviewSubTimeouts = []
+      this.libPreviewVolume = 0.85
+      this.libPreviewMuted = false
+      this.libCardDragMoved = false
 
       this.saveSeqBtn = document.getElementById('save-seq-btn')
       this.openLibBtn = document.getElementById('open-library-btn')
@@ -4529,7 +4578,30 @@ document.addEventListener('DOMContentLoaded', () => {
       this.libSearchClearBtn = document.getElementById('lib-search-clear-btn')
       this.libSaveNowBtn = document.getElementById('lib-save-now-btn')
       this.libList = document.getElementById('lib-sequences-list')
+      this.libScrollPrevBtn = document.getElementById('lib-scroll-prev-btn')
+      this.libScrollNextBtn = document.getElementById('lib-scroll-next-btn')
+      this.libSwipeNextBtn = document.getElementById('lib-swipe-next-btn')
       this.libStorageCountText = document.getElementById('lib-storage-count-text')
+
+      // Bottom Preview Player DOM
+      this.libPlayerEl = document.getElementById('lib-preview-player')
+      this.libPlayerThumb = document.getElementById('lib-player-thumb')
+      this.libPlayerTitle = document.getElementById('lib-player-title')
+      this.libPlayerMeta = document.getElementById('lib-player-meta')
+      this.libPlayerStatus = document.getElementById('lib-player-status')
+      this.libPlayerPrevBtn = document.getElementById('lib-player-prev-btn')
+      this.libPlayerToggleBtn = document.getElementById('lib-player-toggle-btn')
+      this.libPlayerPlayIcon = document.getElementById('lib-player-play-icon')
+      this.libPlayerNextBtn = document.getElementById('lib-player-next-btn')
+      this.libPlayerMuteBtn = document.getElementById('lib-player-mute-btn')
+      this.libPlayerVolIcon = document.getElementById('lib-player-vol-icon')
+      this.libPlayerVolumeInput = document.getElementById('lib-player-volume')
+      this.libMoreBtn = document.getElementById('lib-player-more-btn')
+      this.libMoreMenu = document.getElementById('lib-player-more-menu')
+      this.libMoreLoadBtn = document.getElementById('lib-more-load-btn')
+      this.libMoreRenameBtn = document.getElementById('lib-more-rename-btn')
+      this.libMoreDuplicateBtn = document.getElementById('lib-more-duplicate-btn')
+      this.libMoreDeleteBtn = document.getElementById('lib-more-delete-btn')
 
       // Save modal bindings
       if (this.saveSeqBtn) {
@@ -4553,7 +4625,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
-      // Drawer bindings
+      // Library Overlay bindings
       if (this.openLibBtn) {
         this.openLibBtn.addEventListener('click', () => this.openLibrary())
       }
@@ -4568,7 +4640,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (this.libSaveNowBtn) {
         this.libSaveNowBtn.addEventListener('click', () => {
-          this.closeLibrary()
+          this.stopLibraryPreview()
           this.openSaveModal()
         })
       }
@@ -4591,8 +4663,183 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
+      this.bindLibraryCarouselScroll()
+      this.bindLibraryPlayerEvents()
+
       this.updateLibraryBadge()
       this.renderLibraryList('')
+    }
+
+    bindLibraryCarouselScroll() {
+      if (!this.libList) return
+
+      const scrollByCard = (direction) => {
+        const delta = Math.max(320, Math.round(this.libList.clientWidth * 0.72)) * direction
+        this.libList.scrollBy({ left: delta, behavior: 'smooth' })
+      }
+
+      if (this.libScrollPrevBtn) {
+        this.libScrollPrevBtn.addEventListener('click', () => scrollByCard(-1))
+      }
+      if (this.libScrollNextBtn) {
+        this.libScrollNextBtn.addEventListener('click', () => scrollByCard(1))
+      }
+      if (this.libSwipeNextBtn) {
+        this.libSwipeNextBtn.addEventListener('click', () => scrollByCard(1))
+      }
+
+      // Map vertical mouse wheel over carousel stage into smooth horizontal scrolling
+      this.libList.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault()
+          this.libList.scrollLeft += e.deltaY * 1.15
+          this.updateLibraryScrollNav()
+        }
+      }, { passive: false })
+
+      // Click-and-drag horizontal panning without hijacking buttons/clicks
+      let isPointerDown = false
+      let startX = 0
+      let startScrollLeft = 0
+
+      this.libList.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || e.target.closest('button, input, a')) return
+        isPointerDown = true
+        this.libCardDragMoved = false
+        startX = e.pageX - this.libList.offsetLeft
+        startScrollLeft = this.libList.scrollLeft
+        this.libList.classList.add('is-dragging')
+      })
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPointerDown) return
+        const x = e.pageX - this.libList.offsetLeft
+        const walk = x - startX
+        if (Math.abs(walk) > 6) {
+          this.libCardDragMoved = true
+        }
+        if (this.libCardDragMoved) {
+          this.libList.scrollLeft = startScrollLeft - walk
+        }
+      })
+
+      const endDrag = () => {
+        if (!isPointerDown) return
+        isPointerDown = false
+        this.libList.classList.remove('is-dragging')
+        setTimeout(() => {
+          this.libCardDragMoved = false
+        }, 40)
+      }
+
+      window.addEventListener('mouseup', endDrag)
+      this.libList.addEventListener('scroll', () => this.updateLibraryScrollNav(), { passive: true })
+      window.addEventListener('resize', () => this.updateLibraryScrollNav())
+    }
+
+    updateLibraryScrollNav() {
+      if (!this.libList) return
+      const maxScroll = Math.max(0, this.libList.scrollWidth - this.libList.clientWidth)
+      const current = this.libList.scrollLeft
+      if (this.libScrollPrevBtn) {
+        this.libScrollPrevBtn.disabled = current <= 6
+      }
+      if (this.libScrollNextBtn) {
+        this.libScrollNextBtn.disabled = current >= maxScroll - 6
+      }
+      if (this.libSwipeNextBtn) {
+        this.libSwipeNextBtn.style.display = maxScroll > 12 ? 'inline-flex' : 'none'
+      }
+    }
+
+    bindLibraryPlayerEvents() {
+      if (this.libPlayerToggleBtn) {
+        this.libPlayerToggleBtn.addEventListener('click', () => this.toggleLibraryPreview())
+      }
+      if (this.libPlayerPrevBtn) {
+        this.libPlayerPrevBtn.addEventListener('click', () => this.stepLibraryTrack(-1, true))
+      }
+      if (this.libPlayerNextBtn) {
+        this.libPlayerNextBtn.addEventListener('click', () => this.stepLibraryTrack(1, true))
+      }
+      if (this.libPlayerMuteBtn) {
+        this.libPlayerMuteBtn.addEventListener('click', () => {
+          this.libPreviewMuted = !this.libPreviewMuted
+          this.syncLibraryVolumeUI()
+        })
+      }
+      if (this.libPlayerVolumeInput) {
+        this.libPlayerVolumeInput.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value, 10)
+          this.libPreviewVolume = isNaN(val) ? 0.85 : Math.max(0, Math.min(1, val / 100))
+          if (this.libPreviewVolume > 0 && this.libPreviewMuted) {
+            this.libPreviewMuted = false
+          }
+          this.syncLibraryVolumeUI()
+        })
+      }
+      if (this.libMoreBtn) {
+        this.libMoreBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          if (!this.libMoreMenu) return
+          const willOpen = !this.libMoreMenu.classList.contains('open')
+          this.libMoreMenu.classList.toggle('open', willOpen)
+          this.libMoreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false')
+        })
+      }
+      if (this.libMoreLoadBtn) {
+        this.libMoreLoadBtn.addEventListener('click', () => {
+          this.closeLibraryMoreMenu()
+          if (this.previewSeqId) this.loadSequence(this.previewSeqId)
+        })
+      }
+      if (this.libMoreRenameBtn) {
+        this.libMoreRenameBtn.addEventListener('click', () => {
+          this.closeLibraryMoreMenu()
+          if (this.previewSeqId) this.renameSequence(this.previewSeqId)
+        })
+      }
+      if (this.libMoreDuplicateBtn) {
+        this.libMoreDuplicateBtn.addEventListener('click', () => {
+          this.closeLibraryMoreMenu()
+          if (this.previewSeqId) this.duplicateSequence(this.previewSeqId)
+        })
+      }
+      if (this.libMoreDeleteBtn) {
+        this.libMoreDeleteBtn.addEventListener('click', () => {
+          this.closeLibraryMoreMenu()
+          if (this.previewSeqId) this.deleteSequence(this.previewSeqId)
+        })
+      }
+      document.addEventListener('click', (e) => {
+        if (this.libMoreMenu && this.libMoreMenu.classList.contains('open')) {
+          if (!e.target.closest('.lib-more-wrap')) {
+            this.closeLibraryMoreMenu()
+          }
+        }
+      })
+      this.syncLibraryVolumeUI()
+    }
+
+    closeLibraryMoreMenu() {
+      if (this.libMoreMenu) this.libMoreMenu.classList.remove('open')
+      if (this.libMoreBtn) this.libMoreBtn.setAttribute('aria-expanded', 'false')
+    }
+
+    syncLibraryVolumeUI() {
+      const effectivePct = this.libPreviewMuted ? 0 : Math.round(this.libPreviewVolume * 100)
+      if (this.libPlayerVolumeInput) {
+        this.libPlayerVolumeInput.value = effectivePct
+      }
+      if (this.libPlayerVolIcon) {
+        let iconClass = 'fa-solid fa-volume-high'
+        if (this.libPreviewMuted || effectivePct === 0) {
+          iconClass = 'fa-solid fa-volume-xmark'
+        } else if (effectivePct < 45) {
+          iconClass = 'fa-solid fa-volume-low'
+        }
+        this.libPlayerVolIcon.className = iconClass
+      }
     }
 
     loadStoredLibrary() {
@@ -4624,10 +4871,90 @@ document.addEventListener('DOMContentLoaded', () => {
       this.updateLibraryBadge()
     }
 
-    updateLibraryBadge() {
-      const count = this.library ? this.library.length : 0
-      if (this.libBadge) this.libBadge.textContent = count
-      if (this.libStorageCountText) this.libStorageCountText.textContent = `${count} Sequences Stored`
+    getSequenceThemeMeta(seq, index = 0) {
+      const id = seq.id || ''
+      const lower = (seq.name || '').toLowerCase()
+      if (id === 'seq-factory-trap' || lower.includes('trap')) {
+        return { themeClass: 'theme-purple', genreLabel: 'TRAP • DARK' }
+      }
+      if (id === 'seq-factory-boombap' || lower.includes('boom') || lower.includes('hip')) {
+        return { themeClass: 'theme-amber', genreLabel: 'HIP-HOP • BOOM BAP' }
+      }
+      if (id === 'seq-factory-techno' || lower.includes('techno') || lower.includes('house')) {
+        return { themeClass: 'theme-teal', genreLabel: 'TECHNO • UNDERGROUND' }
+      }
+      const themes = ['theme-purple', 'theme-amber', 'theme-teal', 'theme-pink', 'theme-blue']
+      return {
+        themeClass: themes[index % themes.length],
+        genreLabel: seq.genre || 'CUSTOM • STUDIO'
+      }
+    }
+
+    countSequenceActivePads(seq) {
+      let activePadCount = 0
+      ;(seq.layers || []).forEach(l => {
+        ;(l.steps || []).forEach(pads => {
+          pads.forEach(p => { if (p.active) activePadCount++ })
+        })
+      })
+      return activePadCount
+    }
+
+    buildSequenceWaveHeights(seq, barCount = 34) {
+      const totalSteps = Math.max(1, seq.totalSteps || 8)
+      const stepEnergy = new Array(totalSteps).fill(0)
+      ;(seq.layers || []).forEach(layer => {
+        for (let s = 0; s < totalSteps; s++) {
+          const pads = (layer.steps && layer.steps[s]) || []
+          pads.forEach(p => {
+            if (!p.active) return
+            const weight = (p.repeat && p.repeat > 1 ? 1.35 : 1) * (layer.category === 'kick' ? 1.45 : 1)
+            stepEnergy[s] += weight
+          })
+        }
+      })
+
+      const maxEnergy = Math.max(1, ...stepEnergy)
+      const heights = []
+      for (let i = 0; i < barCount; i++) {
+        const pos = i / Math.max(1, barCount - 1)
+        const stepIdx = Math.min(totalSteps - 1, Math.floor(pos * totalSteps))
+        const hitNorm = stepEnergy[stepIdx] / maxEnergy
+        // Asymmetric studio envelope peaking around first third & tapering cleanly under title
+        const envelope = pos < 0.45
+          ? 0.45 + 0.55 * Math.sin((pos / 0.45) * Math.PI * 0.65)
+          : Math.max(0.14, 1 - (pos - 0.45) * 1.45)
+        const ripple = 0.72 + 0.28 * Math.abs(Math.sin(i * 1.47 + totalSteps))
+        const pct = Math.round(Math.max(14, Math.min(96, (22 + hitNorm * 58) * envelope * ripple)))
+        heights.push(pct)
+      }
+      return heights
+    }
+
+    buildWaveformBarsHTML(heights, className = 'seq-wave-bar') {
+      return heights.map((h, idx) =>
+        `<span class="${className}" data-bar-index="${idx}" style="--bar-h:${h}%;--bar-idx:${idx};"></span>`
+      ).join('')
+    }
+
+    getFilteredLibrary(filterText = '') {
+      const query = (filterText || '').trim().toLowerCase()
+      if (!query) return [...this.library]
+      return this.library.filter((seq, idx) => {
+        const meta = this.getSequenceThemeMeta(seq, idx)
+        return (seq.name || '').toLowerCase().includes(query) ||
+          String(seq.bpm || '').includes(query) ||
+          meta.genreLabel.toLowerCase().includes(query)
+      })
+    }
+
+    updateLibraryBadge(visibleCount = null) {
+      const total = this.library ? this.library.length : 0
+      const displayCount = visibleCount !== null ? visibleCount : total
+      if (this.libBadge) this.libBadge.textContent = total
+      if (this.libStorageCountText) {
+        this.libStorageCountText.textContent = `${displayCount} ${displayCount === 1 ? 'Preset' : 'Presets'}`
+      }
     }
 
     openSaveModal() {
@@ -4668,14 +4995,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     openLibrary() {
       if (!this.libDrawer || !this.libBackdrop) return
-      this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
+      const query = this.libSearchInput ? this.libSearchInput.value : ''
+      if (!this.previewSeqId || !this.library.some(s => s.id === this.previewSeqId)) {
+        const preferred = this.library.find(s => s.id === this.currentSeqId) || this.library[0]
+        this.previewSeqId = preferred ? preferred.id : null
+      }
+      this.renderLibraryList(query)
       this.libDrawer.classList.add('active')
       this.libBackdrop.classList.add('active')
+      document.body.classList.add('library-open')
+      requestAnimationFrame(() => this.updateLibraryScrollNav())
     }
 
     closeLibrary() {
+      this.stopLibraryPreview()
+      this.closeLibraryMoreMenu()
       if (this.libDrawer) this.libDrawer.classList.remove('active')
       if (this.libBackdrop) this.libBackdrop.classList.remove('active')
+      document.body.classList.remove('library-open')
     }
 
     toggleLibrary() {
@@ -4683,6 +5020,231 @@ document.addEventListener('DOMContentLoaded', () => {
         this.closeLibrary()
       } else {
         this.openLibrary()
+      }
+    }
+
+    isLibraryPreviewPlaying() {
+      return !!this.libPreviewTimer
+    }
+
+    selectLibraryPreview(seqId, scrollIntoView = true) {
+      const idx = this.library.findIndex(s => s.id === seqId)
+      const seq = idx !== -1 ? this.library[idx] : null
+      this.previewSeqId = seq ? seq.id : null
+
+      if (this.libList) {
+        this.libList.querySelectorAll('.lib-seq-card').forEach(cardEl => {
+          const isMatch = cardEl.dataset.seqId === this.previewSeqId
+          cardEl.classList.toggle('is-previewing', isMatch)
+          cardEl.classList.toggle('is-playing', isMatch && this.isLibraryPreviewPlaying())
+          if (isMatch && scrollIntoView) {
+            cardEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+          }
+        })
+      }
+
+      this.syncLibraryPlayerUI(seq, idx)
+    }
+
+    syncLibraryPlayerUI(seq, indexInLib = 0) {
+      const hasSeq = !!seq
+      const themeClasses = ['theme-purple', 'theme-amber', 'theme-teal', 'theme-pink', 'theme-blue']
+      const themeMeta = hasSeq
+        ? this.getSequenceThemeMeta(seq, Math.max(0, indexInLib))
+        : { themeClass: 'theme-purple', genreLabel: 'NO PRESETS' }
+
+      if (this.libPlayerThumb) {
+        themeClasses.forEach(tc => this.libPlayerThumb.classList.remove(tc))
+        this.libPlayerThumb.classList.add(themeMeta.themeClass)
+        const heights = hasSeq
+          ? this.buildSequenceWaveHeights(seq, 16)
+          : [28, 46, 62, 40, 74, 52, 84, 58, 44, 68, 36, 54, 30, 42, 26, 20]
+        this.libPlayerThumb.innerHTML = this.buildWaveformBarsHTML(heights, 'lib-thumb-bar')
+      }
+
+      if (this.libPlayerToggleBtn) {
+        themeClasses.forEach(tc => this.libPlayerToggleBtn.classList.remove(tc))
+        this.libPlayerToggleBtn.classList.add(themeMeta.themeClass)
+        this.libPlayerToggleBtn.disabled = !hasSeq
+      }
+
+      const filteredCount = this.getFilteredLibrary(this.libSearchInput ? this.libSearchInput.value : '').length
+      if (this.libPlayerPrevBtn) this.libPlayerPrevBtn.disabled = filteredCount <= 1
+      if (this.libPlayerNextBtn) this.libPlayerNextBtn.disabled = filteredCount <= 1
+      if (this.libMoreBtn) this.libMoreBtn.disabled = !hasSeq
+
+      if (this.libPlayerTitle) {
+        this.libPlayerTitle.textContent = hasSeq ? seq.name : 'No preset selected'
+      }
+      if (this.libPlayerMeta) {
+        if (hasSeq) {
+          const pads = this.countSequenceActivePads(seq)
+          this.libPlayerMeta.textContent = `${seq.bpm || 120} BPM • ${seq.numBeats || 2}B • ${(seq.layers || []).length} Tracks • ${pads} Pads`
+        } else {
+          this.libPlayerMeta.textContent = 'Save or search a preset to preview'
+        }
+      }
+
+      this.syncLibraryPlayingStateUI()
+    }
+
+    syncLibraryPlayingStateUI() {
+      const playing = this.isLibraryPreviewPlaying()
+      if (this.libPlayerEl) {
+        this.libPlayerEl.classList.toggle('is-playing', playing)
+      }
+      if (this.libPlayerStatus) {
+        this.libPlayerStatus.style.display = playing ? 'inline-flex' : 'none'
+      }
+      if (this.libPlayerPlayIcon) {
+        this.libPlayerPlayIcon.className = playing ? 'fa-solid fa-pause' : 'fa-solid fa-play'
+      }
+      if (this.libList) {
+        this.libList.querySelectorAll('.lib-seq-card').forEach(cardEl => {
+          const isTarget = cardEl.dataset.seqId === this.previewSeqId
+          cardEl.classList.toggle('is-playing', playing && isTarget)
+          if (!playing) {
+            cardEl.querySelectorAll('.seq-wave-bar.is-step-active').forEach(b => b.classList.remove('is-step-active'))
+          }
+        })
+      }
+    }
+
+    stepLibraryTrack(offset, autoPlay = true) {
+      const filtered = this.getFilteredLibrary(this.libSearchInput ? this.libSearchInput.value : '')
+      if (filtered.length === 0) return
+
+      const currentIdx = filtered.findIndex(s => s.id === this.previewSeqId)
+      const nextIdx = currentIdx === -1
+        ? 0
+        : (currentIdx + offset + filtered.length) % filtered.length
+      const nextSeq = filtered[nextIdx]
+      const shouldPlay = autoPlay || this.isLibraryPreviewPlaying()
+
+      this.stopLibraryPreview()
+      this.selectLibraryPreview(nextSeq.id, true)
+      if (shouldPlay) {
+        this.startLibraryPreview()
+      }
+    }
+
+    toggleLibraryPreview(targetSeqId = null) {
+      if (targetSeqId && targetSeqId !== this.previewSeqId) {
+        this.stopLibraryPreview()
+        this.selectLibraryPreview(targetSeqId, true)
+        this.startLibraryPreview()
+        return
+      }
+      if (this.isLibraryPreviewPlaying()) {
+        this.stopLibraryPreview()
+      } else {
+        this.startLibraryPreview()
+      }
+    }
+
+    startLibraryPreview() {
+      this.ensureAudioContextRunning()
+      const filtered = this.getFilteredLibrary(this.libSearchInput ? this.libSearchInput.value : '')
+      if (filtered.length === 0) return
+
+      let seq = filtered.find(s => s.id === this.previewSeqId)
+      if (!seq) {
+        seq = filtered[0]
+        this.selectLibraryPreview(seq.id, true)
+      }
+
+      // Pause main deck if running so workspace audio never clashes with library preview
+      if (this.isPlaying) {
+        this.stop(false)
+      }
+
+      this.stopLibraryPreview()
+      this.libPreviewStep = 0
+      const intervalMs = (60 / (seq.bpm || 120)) * 1000 / 2
+
+      this.stepLibraryPreview()
+      this.libPreviewTimer = setInterval(() => {
+        this.stepLibraryPreview()
+      }, intervalMs)
+      this.syncLibraryPlayingStateUI()
+    }
+
+    stopLibraryPreview() {
+      if (this.libPreviewTimer) {
+        clearInterval(this.libPreviewTimer)
+        this.libPreviewTimer = null
+      }
+      if (this.libPreviewSubTimeouts && this.libPreviewSubTimeouts.length > 0) {
+        this.libPreviewSubTimeouts.forEach(t => clearTimeout(t))
+        this.libPreviewSubTimeouts = []
+      }
+      this.libPreviewStep = 0
+      this.syncLibraryPlayingStateUI()
+    }
+
+    stepLibraryPreview() {
+      const seq = this.library.find(s => s.id === this.previewSeqId)
+      if (!seq) {
+        this.stopLibraryPreview()
+        return
+      }
+
+      const totalSteps = Math.max(1, seq.totalSteps || 8)
+      const currentStep = this.libPreviewStep % totalSteps
+      this.libPreviewStep = (currentStep + 1) % totalSteps
+
+      const layers = seq.layers || []
+      const hasAnySolo = layers.some(l => l.solo)
+      const stepIntervalMs = (60 / (seq.bpm || 120)) * 1000 / 2
+      const masterGain = this.libPreviewMuted ? 0 : this.libPreviewVolume
+
+      if (masterGain > 0) {
+        layers.forEach(layer => {
+          if (hasAnySolo && !layer.solo) return
+          if (layer.muted) return
+          const padsAtStep = (layer.steps && layer.steps[currentStep]) || []
+          padsAtStep.forEach(pad => {
+            if (!pad.active) return
+            const soundFile = this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity)
+            const vol = Math.max(0, Math.min(1, (pad.volume !== undefined ? pad.volume : 1) * (layer.volume !== undefined ? layer.volume : 1) * masterGain))
+            const repeatCount = pad.repeat || 1
+            if (repeatCount === 1) {
+              this.playPadSound(soundFile, vol)
+            } else {
+              for (let r = 0; r < repeatCount; r++) {
+                const delay = (r * stepIntervalMs) / repeatCount
+                if (delay === 0) {
+                  this.playPadSound(soundFile, vol)
+                } else {
+                  const tId = setTimeout(() => {
+                    if (this.isLibraryPreviewPlaying() && this.previewSeqId === seq.id) {
+                      this.playPadSound(soundFile, vol)
+                    }
+                  }, delay)
+                  this.libPreviewSubTimeouts.push(tId)
+                }
+              }
+            }
+          })
+        })
+      }
+
+      // Sweep bar highlight across the playing card's waveform
+      if (this.libList) {
+        const activeCard = Array.from(this.libList.querySelectorAll('.lib-seq-card'))
+          .find(el => el.dataset.seqId === seq.id)
+        if (activeCard) {
+          const bars = activeCard.querySelectorAll('.seq-wave-bar')
+          const totalBars = bars.length
+          if (totalBars > 0) {
+            const bandSize = Math.max(2, Math.ceil(totalBars / totalSteps))
+            const bandStart = Math.floor((currentStep / totalSteps) * totalBars)
+            bars.forEach((bar, bIdx) => {
+              const inBand = bIdx >= bandStart && bIdx < bandStart + bandSize
+              bar.classList.toggle('is-step-active', inBand)
+            })
+          }
+        }
       }
     }
 
@@ -4737,7 +5299,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       this.library.unshift(newSeq)
       this.currentSeqId = newSeq.id
+      this.previewSeqId = newSeq.id
       this.saveStoredLibrary()
+      this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
       this.closeSaveModal()
       this.showToast(`Saved sequence: "${seqName}"`, 'success')
       this.playPadSound(this.resolveSoundFile('snare', 'snare-808', 'high'), 0.8)
@@ -4747,7 +5311,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const seq = this.library.find(s => s.id === seqId)
       if (!seq) return
 
-      // Stop playback if running
+      // Stop playback if running (both main transport and library preview)
+      this.stopLibraryPreview()
       this.stop()
 
       // 1. Restore Tempo
@@ -4859,9 +5424,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (idx === -1) return
       const removedName = this.library[idx].name
       if (!confirm(`Are you sure you want to delete sequence "${removedName}"?`)) return
+      if (this.previewSeqId === seqId) {
+        this.stopLibraryPreview()
+      }
       this.library.splice(idx, 1)
       if (this.currentSeqId === seqId) {
         this.currentSeqId = null
+      }
+      if (this.previewSeqId === seqId) {
+        const fallback = this.library[Math.min(idx, this.library.length - 1)] || null
+        this.previewSeqId = fallback ? fallback.id : null
       }
       this.saveStoredLibrary()
       this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
@@ -4880,106 +5452,115 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    duplicateSequence(seqId) {
+      const idx = this.library.findIndex(s => s.id === seqId)
+      if (idx === -1) return
+      const source = this.library[idx]
+      const copy = JSON.parse(JSON.stringify(source))
+      copy.id = `seq-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      copy.name = `${source.name} (Copy)`
+      copy.createdAt = 'Duplicated Preset'
+      this.library.splice(idx + 1, 0, copy)
+      this.previewSeqId = copy.id
+      this.saveStoredLibrary()
+      this.renderLibraryList(this.libSearchInput ? this.libSearchInput.value : '')
+      this.selectLibraryPreview(copy.id, true)
+      this.showToast(`Duplicated "${source.name}"`, 'success')
+    }
+
     renderLibraryList(filterText = '') {
       if (!this.libList) return
       this.libList.innerHTML = ''
 
       const query = (filterText || '').trim().toLowerCase()
-      const filtered = this.library.filter(s => s.name.toLowerCase().includes(query))
+      const filtered = this.getFilteredLibrary(filterText)
+      this.updateLibraryBadge(filtered.length)
+      this.libList.classList.toggle('is-single-result', filtered.length === 1)
 
       if (filtered.length === 0) {
+        if (this.isLibraryPreviewPlaying()) {
+          this.stopLibraryPreview()
+        }
+        this.syncLibraryPlayerUI(null, -1)
         this.libList.innerHTML = `
           <div class="lib-empty-state">
             <div class="empty-icon-wrap">
               <i class="fa-solid fa-folder-open"></i>
             </div>
-            <h3 class="empty-title">${query ? 'No matching sequences' : 'Your Library is empty'}</h3>
-            <p class="empty-desc">${query ? 'Try searching for a different name.' : 'Save your first custom beat pattern to keep it here.'}</p>
+            <h3 class="empty-title">${query ? 'No matching presets' : 'Your Library is empty'}</h3>
+            <p class="empty-desc">${query ? 'Try searching by preset name, genre, or BPM.' : 'Save your first custom beat pattern to keep it here.'}</p>
           </div>
         `
+        this.updateLibraryScrollNav()
         return
       }
 
-      filtered.forEach(seq => {
-        let activePadCount = 0
-        seq.layers.forEach(l => {
-          l.steps.forEach(pads => {
-            pads.forEach(p => { if (p.active) activePadCount++ })
-          })
-        })
-
-        const kickLayer = seq.layers.find(l => l.category === 'kick')
-        const snareLayer = seq.layers.find(l => l.category === 'snare')
-        const hihatLayer = seq.layers.find(l => l.category === 'hihat')
-        const customLayers = seq.layers.filter(l => !this.isBuiltinTrack(l.category))
-        const previewSteps = seq.totalSteps || 8
-        const maxPreviewSteps = Math.min(24, previewSteps)
-        let previewDotsHTML = ''
-        for (let s = 0; s < maxPreviewSteps; s++) {
-          const hasKick = kickLayer && kickLayer.steps[s] && kickLayer.steps[s].some(p => p.active)
-          const hasSnare = snareLayer && snareLayer.steps[s] && snareLayer.steps[s].some(p => p.active)
-          const hasHihat = hihatLayer && hihatLayer.steps[s] && hihatLayer.steps[s].some(p => p.active)
-          const activeCustomLayer = customLayers.find(l => l.steps[s] && l.steps[s].some(p => p.active))
-          const isHit = hasKick || hasSnare || hasHihat || !!activeCustomLayer
-          const isBeatBoundary = (s + 1) % 4 === 0 && s < maxPreviewSteps - 1
-
-          let hitClass = 'dot-off'
-          let customStyle = ''
-          if (hasSnare) hitClass = 'hit-snare'
-          else if (hasKick) hitClass = 'hit-kick'
-          else if (hasHihat) hitClass = 'hit-hihat'
-          else if (activeCustomLayer) {
-            const theme = this.getTrackColorTheme(activeCustomLayer.category, activeCustomLayer.color)
-            customStyle = `style="background: ${theme.color};"`
-          }
-
-          previewDotsHTML += `<span class="seq-mini-pip ${hitClass} ${isHit ? 'active-dot' : ''} ${isBeatBoundary ? 'beat-divider' : ''}" ${customStyle}></span>`
+      // Ensure preview selection stays valid inside filtered items
+      if (!this.previewSeqId || !filtered.some(s => s.id === this.previewSeqId)) {
+        if (this.isLibraryPreviewPlaying()) {
+          this.stopLibraryPreview()
         }
+        const preferred = filtered.find(s => s.id === this.currentSeqId) || filtered[0]
+        this.previewSeqId = preferred ? preferred.id : null
+      }
 
+      filtered.forEach(seq => {
+        const libIdx = this.library.findIndex(s => s.id === seq.id)
+        const themeMeta = this.getSequenceThemeMeta(seq, Math.max(0, libIdx))
+        const activePadCount = this.countSequenceActivePads(seq)
+        const waveHeights = this.buildSequenceWaveHeights(seq, 34)
+        const waveHTML = this.buildWaveformBarsHTML(waveHeights, 'seq-wave-bar')
         const isCurrentActive = this.currentSeqId === seq.id
-        const card = document.createElement('div')
-        card.className = `lib-seq-card ${isCurrentActive ? 'is-active-seq' : ''}`
-        card.dataset.seqId = seq.id
+        const isPreviewTarget = this.previewSeqId === seq.id
+        const isPlayingThis = isPreviewTarget && this.isLibraryPreviewPlaying()
+        const safeName = this.escapeHTML(seq.name)
+        const safeMetaLine = this.escapeHTML(`${themeMeta.genreLabel} • ${seq.bpm || 120} BPM`)
+        const safeDate = this.escapeHTML(seq.createdAt || 'Saved Beat')
 
-        const padsSparkleSVG = `
-          <svg viewBox="0 0 16 16" width="9" height="9" fill="currentColor" aria-hidden="true">
-            <path d="M6.5 1.5L7.7 4.8L11 6L7.7 7.2L6.5 10.5L5.3 7.2L2 6L5.3 4.8L6.5 1.5Z"/>
-            <path d="M12.2 9.2L12.8 10.9L14.5 11.5L12.8 12.1L12.2 13.8L11.6 12.1L9.9 11.5L11.6 10.9L12.2 9.2Z"/>
-          </svg>
-        `
+        const card = document.createElement('div')
+        card.className = `lib-seq-card ${themeMeta.themeClass} ${isCurrentActive ? 'is-active-seq' : ''} ${isPreviewTarget ? 'is-previewing' : ''} ${isPlayingThis ? 'is-playing' : ''}`
+        card.dataset.seqId = seq.id
+        card.setAttribute('role', 'listitem')
 
         card.innerHTML = `
-          <div class="seq-card-header">
-            <div class="seq-card-title-group">
+          <div class="seq-card-manage">
+            <button type="button" class="seq-action-btn rename-action-btn" title="Rename preset" aria-label="Rename sequence ${safeName}">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button type="button" class="seq-action-btn delete-seq delete-action-btn" title="Delete preset" aria-label="Delete sequence ${safeName}">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div class="seq-card-stage">
+            <div class="seq-card-waveform" aria-hidden="true">
+              ${waveHTML}
+            </div>
+
+            <div class="seq-card-headline">
               <div class="seq-card-title-line">
-                <h4 class="seq-card-title" title="${seq.name}">${seq.name}</h4>
                 ${isCurrentActive ? '<span class="seq-active-badge"><i class="fa-solid fa-circle-check"></i> ACTIVE</span>' : ''}
+                <h4 class="seq-card-title" title="${safeName}">${safeName}</h4>
               </div>
-              <span class="seq-card-date"><i class="fa-regular fa-clock"></i> ${seq.createdAt || 'Saved Beat'}</span>
-            </div>
-            <div class="seq-card-actions">
-              <button class="card-action-btn seq-load-btn load-action-btn" title="Load this sequence into sequencer" aria-label="Load sequence ${seq.name}">
-                <i class="fa-solid fa-play"></i>
-                <span>LOAD</span>
-              </button>
-              <div class="seq-secondary-actions">
-                <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence" aria-label="Rename sequence ${seq.name}">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence" aria-label="Delete sequence ${seq.name}">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+              <div class="seq-genre-pill">
+                <i class="fa-solid fa-music"></i>
+                <span>${safeMetaLine}</span>
               </div>
             </div>
           </div>
+
           <div class="seq-card-badges seq-card-tags">
-            <span class="seq-badge seq-tag tag-bpm" title="Tempo"><span class="tag-icon-circle tag-icon-bpm"><i class="fa-solid fa-fire"></i></span> ${seq.bpm} BPM</span>
             <span class="seq-badge seq-tag tag-length" title="Sequence Length"><i class="fa-solid fa-music"></i> ${seq.numBeats || 2}B (${seq.totalSteps || 8}S)</span>
-            <span class="seq-badge seq-tag tag-tracks" title="Active Instrument Tracks"><i class="fa-solid fa-layer-group"></i> ${seq.layers.length} Tracks</span>
-            <span class="seq-badge seq-tag tag-pads" title="Active Trigger Pads"><span class="tag-icon-circle tag-icon-pads">${padsSparkleSVG}</span> ${activePadCount} Pads</span>
+            <span class="seq-badge seq-tag tag-tracks" title="Active Instrument Tracks"><i class="fa-solid fa-layer-group"></i> ${(seq.layers || []).length} Tracks</span>
+            <span class="seq-badge seq-tag tag-pads" title="Active Trigger Pads"><i class="fa-solid fa-table-cells"></i> ${activePadCount} Pads</span>
           </div>
-          <div class="seq-rhythm-preview seq-mini-rhythm" title="Rhythm Pattern Footprint (${previewSteps} Steps)">
-            ${previewDotsHTML}
+
+          <div class="seq-card-footer">
+            <span class="seq-card-date"><i class="fa-regular fa-clock"></i> ${safeDate}</span>
+            <button type="button" class="card-action-btn seq-load-btn load-action-btn" title="Load this sequence into sequencer" aria-label="Load sequence ${safeName}">
+              <i class="fa-solid fa-play"></i>
+              <span>LOAD</span>
+            </button>
           </div>
         `
 
@@ -4999,11 +5580,17 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         card.addEventListener('click', () => {
-          this.loadSequence(seq.id)
+          if (this.libCardDragMoved) return
+          this.toggleLibraryPreview(seq.id)
         })
 
         this.libList.appendChild(card)
       })
+
+      const activePreviewSeq = filtered.find(s => s.id === this.previewSeqId) || filtered[0]
+      const activeIdx = this.library.findIndex(s => s.id === activePreviewSeq.id)
+      this.syncLibraryPlayerUI(activePreviewSeq, activeIdx)
+      requestAnimationFrame(() => this.updateLibraryScrollNav())
     }
 
     getFactorySequences() {
