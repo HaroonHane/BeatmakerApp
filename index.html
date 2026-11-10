@@ -1059,11 +1059,18 @@
       </p>
 
       <div class="sound-categories-list" id="sound-categories-list">
-        <!-- Populated dynamically via sound-manifest.js / app.js -->
+        <!-- Populated dynamically via sound-manifest.js / app.js / audio-library.js -->
+      </div>
+
+      <!-- Add Your Own Sound Track Section -->
+      <div class="sound-library-actions-bar">
+        <button class="add-custom-track-btn" id="open-add-track-modal-btn">
+          <i class="fa-solid fa-plus"></i> Add Your Own Sound Track
+        </button>
       </div>
 
       <div class="ux-modal-footer">
-        <button class="modal-confirm" id="dismiss-assets-modal">Close Inspector</button>
+        <button class="modal-confirm" id="dismiss-assets-modal">Close Library</button>
       </div>
     </div>
   </div>
@@ -1358,8 +1365,183 @@
     <span class="toast-message" id="toast-message">Notification message</span>
   </div>
 
+  <!-- Hidden File Input for Importing Audio Samples -->
+  <input type="file" id="audio-file-importer" accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac,.aac" style="display: none;" />
+
+  <!-- Add Custom Track Modal -->
+  <div class="modal-overlay" id="add-track-modal" role="dialog" aria-modal="true" aria-labelledby="add-track-title" style="display: none;">
+    <div class="add-track-modal-card glass-card">
+      <div class="modal-card-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-circle-plus modal-icon text-accent"></i>
+          <div>
+            <h3 id="add-track-title">Add Your Own Sound Track</h3>
+            <p class="modal-subtitle">Create a brand new instrument category for your beats</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-add-track-modal" aria-label="Close track creation">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="add-track-body">
+        <div class="track-input-group">
+          <label class="track-input-label" for="custom-track-name-input">
+            <i class="fa-solid fa-tag"></i> Track Name
+          </label>
+          <div class="track-input-wrap">
+            <i class="fa-solid fa-music"></i>
+            <input type="text" id="custom-track-name-input" placeholder="e.g. Clap, 808 Bass, Shaker, Vocals..." maxlength="30" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="track-suggestions-wrap">
+          <span class="track-suggestions-label"><i class="fa-solid fa-lightbulb"></i> Quick Suggestions:</span>
+          <div class="track-name-suggestions" id="track-name-suggestions">
+            <button type="button" class="track-suggestion-pill" data-name="Clap">Clap</button>
+            <button type="button" class="track-suggestion-pill" data-name="808 Bass">808 Bass</button>
+            <button type="button" class="track-suggestion-pill" data-name="Crash Cymbal">Crash Cymbal</button>
+            <button type="button" class="track-suggestion-pill" data-name="Open Hat">Open Hat</button>
+            <button type="button" class="track-suggestion-pill" data-name="Rimshot">Rimshot</button>
+            <button type="button" class="track-suggestion-pill" data-name="Tom">Tom</button>
+            <button type="button" class="track-suggestion-pill" data-name="Cowbell">Cowbell</button>
+            <button type="button" class="track-suggestion-pill" data-name="Shaker">Shaker</button>
+          </div>
+        </div>
+
+        <div class="track-info-notice">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Once created, this track will appear in your sequencer. You can import your own base audio files into it, and the audio engine will automatically synthesize 5 studio intensity variations for it.</span>
+        </div>
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-cancel" id="cancel-add-track-modal">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button class="modal-confirm add-track-confirm-btn" id="confirm-add-track-modal">
+          <i class="fa-solid fa-plus"></i> Create Track
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import & Variation Generation Progress Modal -->
+  <div class="modal-overlay" id="import-progress-modal" role="dialog" aria-modal="true" aria-labelledby="import-progress-title" style="display: none;">
+    <div class="import-progress-card glass-card">
+      <div class="modal-card-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-wand-magic-sparkles modal-icon text-accent"></i>
+          <div>
+            <h3 id="import-progress-title">Importing Base Sound</h3>
+            <p class="modal-subtitle" id="import-progress-subtitle">Synthesizing audio variations &amp; caching to IndexedDB</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="import-progress-body">
+        <div class="import-file-badge" id="import-file-badge">
+          <i class="fa-solid fa-file-audio"></i>
+          <span id="import-filename-text">sample.wav</span>
+          <span class="import-target-tag" id="import-target-tag">Target: Kick</span>
+        </div>
+
+        <div class="import-progress-bar-wrap">
+          <div class="import-progress-bar-track">
+            <div class="import-progress-bar-fill" id="import-progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="import-progress-pct" id="import-progress-pct">0%</div>
+        </div>
+
+        <div class="import-status-text" id="import-status-text">Decoding audio file...</div>
+
+        <!-- Variation Generation Steps Checklist / Chips -->
+        <div class="import-variation-chips">
+          <div class="var-chip" id="chip-base"><i class="fa-solid fa-circle-dot"></i> Base Master</div>
+          <div class="var-chip" id="chip-low"><i class="fa-solid fa-circle-dot"></i> Low</div>
+          <div class="var-chip" id="chip-med-low"><i class="fa-solid fa-circle-dot"></i> M-Low</div>
+          <div class="var-chip" id="chip-med"><i class="fa-solid fa-circle-dot"></i> Med</div>
+          <div class="var-chip" id="chip-med-high"><i class="fa-solid fa-circle-dot"></i> M-High</div>
+          <div class="var-chip" id="chip-high"><i class="fa-solid fa-circle-dot"></i> High</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic Confirmation Modal for Deletions & Renames -->
+  <div class="modal-overlay" id="confirm-action-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-action-title" style="display: none;">
+    <div class="confirm-action-card glass-card">
+      <div class="modal-card-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-triangle-exclamation modal-icon text-danger" id="confirm-action-icon"></i>
+          <div>
+            <h3 id="confirm-action-title">Confirm Action</h3>
+            <p class="modal-subtitle" id="confirm-action-subtitle">Please confirm to proceed</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-confirm-action-modal" aria-label="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="confirm-action-body">
+        <p class="confirm-action-msg" id="confirm-action-msg">Are you sure you want to proceed?</p>
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-cancel" id="cancel-confirm-action-btn">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button class="modal-confirm confirm-action-btn-danger" id="execute-confirm-action-btn">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Track Modal -->
+  <div class="modal-overlay" id="rename-track-modal" role="dialog" aria-modal="true" aria-labelledby="rename-track-title" style="display: none;">
+    <div class="rename-track-card glass-card">
+      <div class="modal-card-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-pen-to-square modal-icon text-accent"></i>
+          <div>
+            <h3 id="rename-track-title">Rename Track</h3>
+            <p class="modal-subtitle">Update the display name of this custom sound track</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-rename-track-modal" aria-label="Close rename dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="rename-track-body">
+        <div class="track-input-group">
+          <label class="track-input-label" for="rename-track-input">
+            <i class="fa-solid fa-tag"></i> New Track Name
+          </label>
+          <div class="track-input-wrap">
+            <i class="fa-solid fa-music"></i>
+            <input type="text" id="rename-track-input" placeholder="Enter new track name..." maxlength="30" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <div class="ux-modal-footer">
+        <button class="modal-cancel" id="cancel-rename-track-modal">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button class="modal-confirm" id="confirm-rename-track-modal">
+          <i class="fa-solid fa-check"></i> Save Name
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Load Structured Manifest Before App Engine -->
   <script src="./sounds/sound-manifest.js"></script>
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <script src="audio-library.js"></script>
   <script src="app.js"></script>
 </body>
 

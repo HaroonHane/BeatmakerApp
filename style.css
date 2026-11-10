@@ -4187,3 +4187,449 @@ kbd {
     min-height: 44px;
   }
 }
+
+/* ==========================================================================
+   Sound Library Management & Custom Track Creation Styles
+   ========================================================================== */
+
+.sound-library-actions-bar {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.add-custom-track-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.6rem;
+  background: linear-gradient(135deg, var(--color-primary), #ff7a3d);
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 94, 30, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.add-custom-track-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 94, 30, 0.48);
+}
+
+.add-custom-track-btn:active {
+  transform: translateY(0);
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.modal-track-action-btn {
+  height: 32px;
+  padding: 0 0.85rem;
+  border-radius: 8px;
+  font-family: var(--font-main);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-import-btn {
+  background: #fff7ed;
+  border: 1px solid rgba(255, 94, 30, 0.35);
+  color: var(--color-primary);
+}
+
+.track-import-btn:hover {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.track-rename-btn {
+  background: #f1f5f9;
+  border: 1px solid #dce2ed;
+  color: #475569;
+  padding: 0 0.65rem;
+}
+
+.track-rename-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.track-delete-btn,
+.sound-delete-btn {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #e11d48;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-delete-btn {
+  height: 32px;
+  padding: 0 0.65rem;
+  border-radius: 8px;
+}
+
+.track-delete-btn:hover,
+.sound-delete-btn:hover {
+  background: #e11d48;
+  color: #ffffff;
+  border-color: #e11d48;
+}
+
+.sound-delete-btn {
+  height: 24px;
+  width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  margin-left: 0.25rem;
+}
+
+.custom-sound-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+}
+
+.custom-track-badge {
+  background: #f5f3ff !important;
+  color: #7c3aed !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+}
+
+.empty-track-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  gap: 0.75rem;
+}
+
+.empty-track-state i.empty-icon {
+  font-size: 1.8rem;
+  color: #94a3b8;
+}
+
+.empty-track-state h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.2rem;
+}
+
+.empty-track-state p {
+  font-size: 0.75rem;
+  color: #64748b;
+  max-width: 380px;
+}
+
+/* Modals */
+.add-track-modal-card,
+.import-progress-card,
+.confirm-action-card,
+.rename-track-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+  width: 90%;
+  max-width: 520px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  animation: modalSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirm-action-card {
+  max-width: 440px;
+}
+
+.rename-track-card {
+  max-width: 460px;
+}
+
+.track-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.track-input-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.track-input-wrap {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 0.85rem;
+  height: 44px;
+  transition: all 0.15s ease;
+}
+
+.track-input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(255, 94, 30, 0.15);
+  background: #ffffff;
+}
+
+.track-input-wrap i {
+  color: #94a3b8;
+  margin-right: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.track-input-wrap input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-title);
+}
+
+.track-suggestions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.track-suggestions-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.track-name-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.track-suggestion-pill {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-suggestion-pill:hover {
+  background: #ffede6;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.track-info-notice {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.74rem;
+  color: #166534;
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.track-info-notice i {
+  font-size: 0.9rem;
+  color: #16a34a;
+  margin-top: 1px;
+}
+
+/* Import Progress Modal */
+.import-file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.import-target-tag {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.import-progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0.85rem 0 0.4rem;
+}
+
+.import-progress-bar-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.import-progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-primary), #10b981);
+  transition: width 0.25s ease-out;
+}
+
+.import-progress-pct {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  min-width: 40px;
+  text-align: right;
+}
+
+.import-status-text {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+
+.import-variation-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+}
+
+.var-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.var-chip.active {
+  background: #fff7ed;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(255, 94, 30, 0.2);
+}
+
+.var-chip.done {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+
+.confirm-action-msg {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.confirm-action-btn-danger {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border-color: #e11d48 !important;
+}
+
+.confirm-action-btn-danger:hover {
+  background: #be123c !important;
+}
+
+/* Custom Track in Sequencer */
+.custom-beat {
+  border-left: 4px solid #8b5cf6;
+}
+
+.custom-beat .track-badge {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.delete-custom-track-btn {
+  color: #94a3b8;
+}
+
+.delete-custom-track-btn:hover {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+  border-color: #fca5a5 !important;
+}
+
+.import-sound-opt {
+  font-weight: 700;
+  color: var(--color-primary);
+  background: #fff7ed;
+}
+
+.import-first-btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.8rem;
+}

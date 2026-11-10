@@ -142,10 +142,45 @@ document.addEventListener('DOMContentLoaded', () => {
       this.beatCountVal = document.getElementById('beat-count-val')
       this.stepCountVal = document.getElementById('step-count-val')
 
+      // Audio Library & Custom Track Elements
+      this.pendingImport = null
+      this.confirmActionCallback = null
+      this.activeRenameTrackId = null
+
+      this.audioFileImporter = document.getElementById('audio-file-importer')
+      this.addTrackModal = document.getElementById('add-track-modal')
+      this.openAddTrackBtn = document.getElementById('open-add-track-modal-btn')
+      this.closeAddTrackBtn = document.getElementById('close-add-track-modal')
+      this.cancelAddTrackBtn = document.getElementById('cancel-add-track-modal')
+      this.confirmAddTrackBtn = document.getElementById('confirm-add-track-modal')
+      this.customTrackNameInput = document.getElementById('custom-track-name-input')
+      this.trackNameSuggestions = document.getElementById('track-name-suggestions')
+
+      this.importProgressModal = document.getElementById('import-progress-modal')
+      this.importFilenameText = document.getElementById('import-filename-text')
+      this.importTargetTag = document.getElementById('import-target-tag')
+      this.importProgressBarFill = document.getElementById('import-progress-bar-fill')
+      this.importProgressPct = document.getElementById('import-progress-pct')
+      this.importStatusText = document.getElementById('import-status-text')
+
+      this.confirmActionModal = document.getElementById('confirm-action-modal')
+      this.confirmActionTitle = document.getElementById('confirm-action-title')
+      this.confirmActionSubtitle = document.getElementById('confirm-action-subtitle')
+      this.confirmActionMsg = document.getElementById('confirm-action-msg')
+      this.confirmActionBtn = document.getElementById('execute-confirm-action-btn')
+      this.cancelConfirmActionBtn = document.getElementById('cancel-confirm-action-btn')
+      this.closeConfirmActionBtn = document.getElementById('close-confirm-action-modal')
+
+      this.renameTrackModal = document.getElementById('rename-track-modal')
+      this.renameTrackInput = document.getElementById('rename-track-input')
+      this.confirmRenameBtn = document.getElementById('confirm-rename-track-modal')
+      this.cancelRenameBtn = document.getElementById('cancel-rename-track-modal')
+      this.closeRenameBtn = document.getElementById('close-rename-track-modal')
+
       this.init()
     }
 
-    init() {
+    async init() {
       this.initAudioContext()
       this.initPrimaryLayers()
       this.bindTransportEvents()
@@ -157,11 +192,22 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindPadPopoverEvents()
       this.bindPresetEvents()
       this.bindModalEvents()
+      this.bindAudioLibraryEvents()
       this.bindKeyboardShortcuts()
       this.renderSoundAssetsModal()
+      this.populatePopoverCategories()
       this.initTimeline()
       this.initExportEngine()
       this.initSequenceLibrary()
+
+      // Hydrate local IndexedDB audio library & custom tracks
+      await this.initAudioLibrary()
+      await this.renderStoredCustomTracks()
+      this.refreshTrackSoundSelectors('kick')
+      this.refreshTrackSoundSelectors('snare')
+      this.refreshTrackSoundSelectors('hihat')
+      this.renderSoundAssetsModal()
+      this.populatePopoverCategories()
     }
 
     // Initialize Web Audio Context for low latency & sample-accurate scheduling
@@ -694,6 +740,9 @@ document.addEventListener('DOMContentLoaded', () => {
     addLayer(parentTrack = 'kick', options = {}) {
       const isCustom = parentTrack === 'custom'
       const baseCategory = isCustom ? 'kick' : parentTrack
+      if (!this.sublayerCounters[parentTrack]) {
+        this.sublayerCounters[parentTrack] = 0
+      }
       const layerNum = ++this.sublayerCounters[parentTrack]
       const layerId = `layer-${parentTrack}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
@@ -703,16 +752,22 @@ document.addEventListener('DOMContentLoaded', () => {
         hihat: 'hihat-acoustic'
       }
 
+      const trackManifest = this.manifest?.categories?.[baseCategory]
+      const defaultFamily = defaultFamilies[baseCategory] ||
+        trackManifest?.baseTrackSound ||
+        (trackManifest?.sounds ? Object.keys(trackManifest.sounds)[0] : null) || 'kick-classic'
+
+      const trackDisplayName = trackManifest?.name || (parentTrack.charAt(0).toUpperCase() + parentTrack.slice(1))
       const layerName = isCustom
         ? `Layer ${layerNum}`
-        : `${parentTrack.charAt(0).toUpperCase() + parentTrack.slice(1)} L${layerNum}`
+        : `${trackDisplayName} L${layerNum}`
 
       const newLayer = {
         id: layerId,
         badge: isCustom ? `0${Math.min(9, 3 + layerNum)}` : `L${layerNum}`,
         name: layerName,
         category: baseCategory,
-        soundFamily: defaultFamilies[baseCategory] || 'kick-classic',
+        soundFamily: defaultFamily,
         intensity: 'med',
         volume: 1.0,
         muted: false,
@@ -823,14 +878,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     getSoundFamilyOptionsHTML(category, selectedSoundFamily) {
+      let optionsHTML = ''
       if (this.manifest && this.manifest.categories && this.manifest.categories[category]) {
-        return Object.entries(this.manifest.categories[category].sounds).map(([soundId, sound]) => `
-          <option value="${soundId}" ${soundId === selectedSoundFamily ? 'selected' : ''}>
-            ${sound.name}
-          </option>
-        `).join('')
+        const sounds = this.manifest.categories[category].sounds || {}
+        const entries = Object.entries(sounds)
+        if (entries.length > 0) {
+          optionsHTML = entries.map(([soundId, sound]) => `
+            <option value="${soundId}" data-sound-id="${soundId}" ${soundId === selectedSoundFamily ? 'selected' : ''}>
+              ${sound.name}${sound.isCustom ? ' (User)' : ''}
+            </option>
+          `).join('')
+        } else {
+          optionsHTML = `<option value="" disabled selected>No sounds imported yet</option>`
+        }
+      } else if (selectedSoundFamily && selectedSoundFamily !== '__import__') {
+        optionsHTML = `<option value="${selectedSoundFamily}" selected>${selectedSoundFamily}</option>`
       }
-      return `<option value="${selectedSoundFamily}" selected>${selectedSoundFamily}</option>`
+
+      optionsHTML += `
+        <option value="__import__" class="import-sound-opt" data-track="${category}">
+          + Import New Base Sound...
+        </option>
+      `
+      return optionsHTML
     }
 
     bindLayerDOMEvents(layerEl, layer) {
@@ -886,7 +956,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const familySelect = layerEl.querySelector('.layer-family-select')
       if (familySelect) {
         familySelect.addEventListener('change', (e) => {
-          layer.soundFamily = e.target.value
+          const val = e.target.value
+          if (val === '__import__') {
+            familySelect.value = layer.soundFamily
+            this.triggerBaseSoundImport(layer.category, layer.id)
+            return
+          }
+          layer.soundFamily = val
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = layer.soundFamily })
           })
@@ -1070,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.activePopoverPad = { layerId, step, padId: pad.id }
 
       // 1. Sound Category
+      this.populatePopoverCategories()
       if (this.popoverSoundCat) {
         this.popoverSoundCat.value = pad.category
       }
@@ -1106,12 +1183,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    populatePopoverCategories() {
+      if (!this.popoverSoundCat || !this.manifest || !this.manifest.categories) return
+      const currentVal = this.popoverSoundCat.value
+      this.popoverSoundCat.innerHTML = Object.entries(this.manifest.categories).map(([catKey, cat]) => `
+        <option value="${catKey}">${cat.name}</option>
+      `).join('')
+      if (this.manifest.categories[currentVal]) {
+        this.popoverSoundCat.value = currentVal
+      }
+    }
+
     populatePopoverSoundFamilies(category, selectedFamily) {
       if (!this.popoverSoundFamily || !this.manifest || !this.manifest.categories[category]) return
-      const sounds = this.manifest.categories[category].sounds
-      this.popoverSoundFamily.innerHTML = Object.entries(sounds).map(([id, sound]) => `
-        <option value="${id}" ${id === selectedFamily ? 'selected' : ''}>${sound.name}</option>
-      `).join('')
+      const sounds = this.manifest.categories[category].sounds || {}
+      const entries = Object.entries(sounds)
+      let optionsHTML = ''
+      if (entries.length > 0) {
+        optionsHTML = entries.map(([id, sound]) => `
+          <option value="${id}" ${id === selectedFamily ? 'selected' : ''}>${sound.name}${sound.isCustom ? ' (User)' : ''}</option>
+        `).join('')
+      } else {
+        optionsHTML = `<option value="" disabled selected>No sounds imported yet</option>`
+      }
+      optionsHTML += `<option value="__import__" class="import-sound-opt">+ Import New Base Sound...</option>`
+      this.popoverSoundFamily.innerHTML = optionsHTML
+      if (sounds[selectedFamily]) {
+        this.popoverSoundFamily.value = selectedFamily
+      }
     }
 
     bindPadPopoverEvents() {
@@ -1133,14 +1232,18 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!this.activePopoverPad) return
           const { layerId, step, padId } = this.activePopoverPad
           const layer = this.getLayer(layerId)
-          const pad = layer.steps[step].find(p => p.id === padId)
+          const pad = layer ? layer.steps[step].find(p => p.id === padId) : null
           if (!pad) return
 
           pad.category = e.target.value
-          this.populatePopoverSoundFamilies(pad.category)
+          const defaultFam = this.manifest.categories[pad.category]?.baseTrackSound ||
+            Object.keys(this.manifest.categories[pad.category]?.sounds || {})[0] || ''
+          this.populatePopoverSoundFamilies(pad.category, defaultFam)
           pad.soundFamily = this.popoverSoundFamily.value
           this.reRenderStepCell(layer, step)
-          this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+          if (pad.soundFamily && pad.soundFamily !== '__import__') {
+            this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+          }
         }
       }
 
@@ -1150,10 +1253,17 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!this.activePopoverPad) return
           const { layerId, step, padId } = this.activePopoverPad
           const layer = this.getLayer(layerId)
-          const pad = layer.steps[step].find(p => p.id === padId)
+          const pad = layer ? layer.steps[step].find(p => p.id === padId) : null
           if (!pad) return
 
-          pad.soundFamily = e.target.value
+          const val = e.target.value
+          if (val === '__import__') {
+            this.popoverSoundFamily.value = pad.soundFamily
+            this.triggerBaseSoundImport(pad.category, layer.id)
+            return
+          }
+
+          pad.soundFamily = val
           this.reRenderStepCell(layer, step)
           this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
         }
@@ -1314,9 +1424,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Categorized Sound Family Selector
         const sampleSelect = document.getElementById(`${track}-beat-audio`)
         if (sampleSelect) {
+          sampleSelect.innerHTML = this.getSoundFamilyOptionsHTML(track, layer.soundFamily)
+          if (sampleSelect.querySelector(`option[value="${layer.soundFamily}"]`)) {
+            sampleSelect.value = layer.soundFamily
+          }
+
           sampleSelect.addEventListener('change', (e) => {
-            const selectedOption = sampleSelect.options[sampleSelect.selectedIndex]
-            const soundId = selectedOption.dataset.soundId || this.fallbackExtractSoundId(track, e.target.value)
+            const val = e.target.value
+            if (val === '__import__') {
+              sampleSelect.value = layer.soundFamily
+              this.triggerBaseSoundImport(track, layer.id)
+              return
+            }
+            const soundId = val
             layer.soundFamily = soundId
             layer.steps.forEach(stepPads => {
               stepPads.forEach(pad => { pad.soundFamily = soundId })
@@ -1956,52 +2076,792 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
-    // 12. Sound Assets Inspector Modal Renderer
+    // 12. Complete Audio Library Management & Custom Sound Tracks Architecture
     // ------------------------------------------------------------------------
+    async initAudioLibrary() {
+      if (window.AudioLibrary) {
+        try {
+          await window.AudioLibrary.init()
+          if (this.manifest) {
+            await window.AudioLibrary.syncManifestWithDB(this.manifest)
+          }
+        } catch (err) {
+          console.warn('AudioLibrary init failed:', err)
+        }
+      }
+    }
+
+    async renderStoredCustomTracks() {
+      if (!window.AudioLibrary) return
+      try {
+        const allTracks = await window.AudioLibrary.getAllTracks()
+        const customTracks = allTracks.filter(t => t.type === 'custom')
+        for (const track of customTracks) {
+          this.createCustomTrackDOM(track)
+        }
+      } catch (err) {
+        console.warn('Could not render stored custom tracks:', err)
+      }
+    }
+
+    createCustomTrackDOM(track) {
+      if (!track || !track.id) return
+
+      let layer = this.layers.find(l => l.id === `${track.id}-primary`)
+      const customSounds = this.manifest?.categories?.[track.id]?.sounds || {}
+      const soundFamily = track.baseTrackSound || Object.keys(customSounds)[0] || ''
+
+      if (!layer) {
+        layer = {
+          id: `${track.id}-primary`,
+          badge: `0${Math.min(9, track.trackNumber || (this.layers.length + 1))}`,
+          name: track.name,
+          category: track.id,
+          soundFamily: soundFamily,
+          intensity: 'med',
+          volume: 1.0,
+          muted: false,
+          solo: false,
+          isPrimary: true,
+          parentTrack: track.id,
+          steps: []
+        }
+
+        for (let s = 0; s < this.totalSteps; s++) {
+          const pad = {
+            id: `pad-${track.id}-primary-${s}`,
+            category: track.id,
+            soundFamily: soundFamily,
+            intensity: 'med',
+            volume: 1.0,
+            repeat: 1,
+            active: false
+          }
+          layer.steps.push([pad])
+        }
+
+        this.layers.push(layer)
+      }
+
+      const container = document.getElementById('custom-layers-container')
+      if (!container) return
+
+      // Remove any existing DOM for this track (e.g. on re-render)
+      const existing = container.querySelector(`.track-channel-group[data-track="${track.id}"]`)
+      if (existing) existing.remove()
+
+      const groupEl = document.createElement('div')
+      groupEl.className = 'track-channel-group custom-track-group'
+      groupEl.dataset.track = track.id
+
+      const optionsHTML = this.getSoundFamilyOptionsHTML(track.id, layer.soundFamily)
+
+      groupEl.innerHTML = `
+        <div class="track-channel custom-beat primary-layer" data-track="${track.id}" data-layer-id="${layer.id}">
+          <div class="channel-strip">
+            <div class="channel-main-row">
+              <div class="channel-identity">
+                <div class="track-badge">${layer.badge}</div>
+                <div class="channel-name-wrap">
+                  <div class="title-mute">
+                    <h2 class="channel-name">${track.name}</h2>
+                    <button class="track-btn audition-btn" data-layer-id="${layer.id}" title="Preview Sound" aria-label="Audition ${track.name}">
+                      <i class="fa-solid fa-play"></i>
+                    </button>
+                    <button class="track-btn mute-btn" data-layer-id="${layer.id}" title="Mute Track (M)">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button class="track-btn solo-btn" data-layer-id="${layer.id}" title="Solo Track (S)">
+                      <span>S</span>
+                    </button>
+                    <button class="track-btn delete-custom-track-btn" data-track-id="${track.id}" title="Delete Custom Track">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sample-picker-wrap">
+                <i class="fa-solid fa-compact-disc sample-icon"></i>
+                <select class="sample-select custom-track-sample-select" data-track="${track.id}" data-layer-id="${layer.id}" aria-label="${track.name} Sound Family">
+                  ${optionsHTML}
+                </select>
+              </div>
+
+              <div class="volume-station">
+                <i class="fa-solid fa-volume-low vol-icon"></i>
+                <input type="range" class="volume-slider custom-track-volume" data-layer-id="${layer.id}" min="0" max="100" value="${Math.round(layer.volume * 100)}" aria-label="${track.name} Volume" />
+                <span class="volume-value">${Math.round(layer.volume * 100)}%</span>
+              </div>
+            </div>
+
+            <div class="intensity-station" data-layer-id="${layer.id}" data-track="${track.id}">
+              <span class="intensity-label" title="Low-to-High Sound Variation">
+                <i class="fa-solid fa-bolt"></i> VARIATION:
+              </span>
+              <div class="intensity-pills" role="radiogroup">
+                <button class="intensity-pill ${layer.intensity === 'low' ? 'active' : ''}" data-intensity="low">LOW</button>
+                <button class="intensity-pill ${layer.intensity === 'med-low' ? 'active' : ''}" data-intensity="med-low">M-LOW</button>
+                <button class="intensity-pill ${layer.intensity === 'med' ? 'active' : ''}" data-intensity="med">MED</button>
+                <button class="intensity-pill ${layer.intensity === 'med-high' ? 'active' : ''}" data-intensity="med-high">M-HIGH</button>
+                <button class="intensity-pill ${layer.intensity === 'high' ? 'active' : ''}" data-intensity="high">HIGH</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Sequencer Pad Grid Chunked in 4-Pad Beats -->
+          <div class="pads-grid">
+            ${this.renderAllBeatChunksHTML(layer)}
+          </div>
+        </div>
+
+        <!-- Sub-Layers Container for Custom Track -->
+        <div class="track-sublayers" id="${track.id}-sublayers"></div>
+
+        <div class="add-layer-bar">
+          <button class="add-layer-btn" data-track="${track.id}" title="Add independent 4-pad layer beneath ${track.name}">
+            <i class="fa-solid fa-plus"></i> Add Layer to ${track.name}
+          </button>
+        </div>
+      `
+
+      container.appendChild(groupEl)
+      this.bindCustomTrackDOMEvents(groupEl, layer, track)
+
+      if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+    }
+
+    bindCustomTrackDOMEvents(groupEl, layer, track) {
+      // 1. Audition button
+      const auditionBtn = groupEl.querySelector('.audition-btn')
+      if (auditionBtn) {
+        auditionBtn.addEventListener('click', () => {
+          if (!layer.soundFamily) {
+            this.showToast('Please import a base sound for this track first', 'info')
+            return
+          }
+          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+        })
+      }
+
+      // 2. Mute button
+      const muteBtn = groupEl.querySelector('.mute-btn')
+      if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+          layer.muted = !layer.muted
+          muteBtn.classList.toggle('active', layer.muted)
+          const icon = muteBtn.querySelector('i')
+          if (icon) {
+            icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
+          }
+          const row = groupEl.querySelector('.primary-layer')
+          if (row) row.classList.toggle('is-muted', layer.muted)
+        })
+      }
+
+      // 3. Solo button
+      const soloBtn = groupEl.querySelector('.solo-btn')
+      if (soloBtn) {
+        soloBtn.addEventListener('click', () => {
+          layer.solo = !layer.solo
+          soloBtn.classList.toggle('active', layer.solo)
+          this.updateAllSoloStates()
+        })
+      }
+
+      // 4. Delete custom track button
+      const deleteTrackBtn = groupEl.querySelector('.delete-custom-track-btn')
+      if (deleteTrackBtn) {
+        deleteTrackBtn.addEventListener('click', () => {
+          this.confirmDeleteTrack(track.id, track.name)
+        })
+      }
+
+      // 5. Sound Family Selector
+      const sampleSelect = groupEl.querySelector('.custom-track-sample-select')
+      if (sampleSelect) {
+        sampleSelect.addEventListener('change', (e) => {
+          const val = e.target.value
+          if (val === '__import__') {
+            sampleSelect.value = layer.soundFamily
+            this.triggerBaseSoundImport(track.id, layer.id)
+            return
+          }
+          layer.soundFamily = val
+          layer.steps.forEach(stepPads => {
+            stepPads.forEach(pad => { pad.soundFamily = val })
+          })
+          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+        })
+      }
+
+      // 6. Volume Slider
+      const volumeSlider = groupEl.querySelector('.custom-track-volume')
+      if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value, 10)
+          layer.volume = val / 100
+          const display = volumeSlider.nextElementSibling
+          if (display && display.classList.contains('volume-value')) {
+            display.textContent = `${val}%`
+          }
+        })
+      }
+
+      // 7. Intensity Variation Pills
+      const pills = groupEl.querySelectorAll('.intensity-pill')
+      pills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          const intensity = pill.dataset.intensity
+          layer.intensity = intensity
+          pills.forEach(p => p.classList.remove('active'))
+          pill.classList.add('active')
+          layer.steps.forEach(stepPads => {
+            stepPads.forEach(pad => { pad.intensity = intensity })
+          })
+          if (layer.soundFamily) {
+            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          }
+        })
+      })
+
+      // 8. Bind Step Cells
+      for (let s = 0; s < this.totalSteps; s++) {
+        const cellEl = groupEl.querySelector(`.beat-step-cell[data-step="${s}"]`)
+        if (cellEl) {
+          this.bindStepCellEvents(cellEl, layer, s)
+        }
+      }
+
+      // 9. Add Layer to [Custom Track]
+      const addLayerBtn = groupEl.querySelector('.add-layer-btn')
+      if (addLayerBtn) {
+        addLayerBtn.addEventListener('click', () => {
+          this.addLayer(track.id)
+        })
+      }
+
+      // 10. Chunk Add Layer buttons
+      groupEl.querySelectorAll('.chunk-add-layer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const beatNum = btn.dataset.beat || '1'
+          this.addLayerToBeatChunk(layer.id, parseInt(beatNum, 10))
+        })
+      })
+    }
+
+    triggerBaseSoundImport(trackId, targetLayerId = null) {
+      this.ensureAudioContextRunning()
+      this.pendingImport = { trackId, targetLayerId }
+      if (this.audioFileImporter) {
+        this.audioFileImporter.value = ''
+        this.audioFileImporter.click()
+      }
+    }
+
+    openImportProgressModal(fileName, trackName) {
+      if (this.importFilenameText) this.importFilenameText.textContent = fileName
+      if (this.importTargetTag) this.importTargetTag.textContent = `Target: ${trackName}`
+      if (this.importProgressBarFill) this.importProgressBarFill.style.width = '5%'
+      if (this.importProgressPct) this.importProgressPct.textContent = '5%'
+      if (this.importStatusText) this.importStatusText.textContent = 'Preparing audio decoder...'
+
+      const chips = ['chip-base', 'chip-low', 'chip-med-low', 'chip-med', 'chip-med-high', 'chip-high']
+      chips.forEach(id => {
+        const el = document.getElementById(id)
+        if (el) el.className = 'var-chip'
+      })
+
+      if (this.importProgressModal) this.importProgressModal.style.display = 'flex'
+    }
+
+    updateImportProgressUI(progress) {
+      if (this.importProgressBarFill) {
+        this.importProgressBarFill.style.width = `${progress.percent}%`
+      }
+      if (this.importProgressPct) {
+        this.importProgressPct.textContent = `${progress.percent}%`
+      }
+      if (this.importStatusText) {
+        this.importStatusText.textContent = progress.message
+      }
+
+      if (progress.step === 'base-save') {
+        const chip = document.getElementById('chip-base')
+        if (chip) chip.className = 'var-chip done'
+      }
+
+      if (progress.level) {
+        const levelChipIdMap = {
+          'low': 'chip-low',
+          'med-low': 'chip-med-low',
+          'med': 'chip-med',
+          'med-high': 'chip-med-high',
+          'high': 'chip-high'
+        }
+        const chipId = levelChipIdMap[progress.level]
+        if (chipId) {
+          const chip = document.getElementById(chipId)
+          if (chip) chip.className = 'var-chip active'
+        }
+      }
+
+      if (progress.step === 'done') {
+        const chips = ['chip-base', 'chip-low', 'chip-med-low', 'chip-med', 'chip-med-high', 'chip-high']
+        chips.forEach(id => {
+          const el = document.getElementById(id)
+          if (el) el.className = 'var-chip done'
+        })
+      }
+    }
+
+    closeImportProgressModal() {
+      if (this.importProgressModal) this.importProgressModal.style.display = 'none'
+    }
+
+    openAddTrackModal() {
+      if (this.customTrackNameInput) this.customTrackNameInput.value = ''
+      if (this.addTrackModal) this.addTrackModal.style.display = 'flex'
+      if (this.customTrackNameInput) {
+        setTimeout(() => this.customTrackNameInput.focus(), 60)
+      }
+    }
+
+    closeAddTrackModal() {
+      if (this.addTrackModal) this.addTrackModal.style.display = 'none'
+    }
+
+    async executeAddTrack() {
+      if (!this.customTrackNameInput) return
+      const name = this.customTrackNameInput.value.trim()
+      if (!name) {
+        this.showToast('Please enter a track name', 'error')
+        return
+      }
+
+      try {
+        const newTrack = await window.AudioLibrary.addCustomTrack(name)
+        await window.AudioLibrary.syncManifestWithDB(this.manifest)
+        this.createCustomTrackDOM(newTrack)
+        this.populatePopoverCategories()
+        this.renderSoundAssetsModal()
+        this.closeAddTrackModal()
+        this.showToast(`Track "${name}" created!`, 'success')
+
+        // Prompt to import base sound
+        setTimeout(() => {
+          this.triggerBaseSoundImport(newTrack.id)
+        }, 350)
+      } catch (err) {
+        this.showToast(`Error creating track: ${err.message}`, 'error')
+      }
+    }
+
+    openConfirmActionModal({ title, subtitle, message, confirmBtnText = 'Confirm', onConfirm }) {
+      if (this.confirmActionTitle) this.confirmActionTitle.textContent = title
+      if (this.confirmActionSubtitle) this.confirmActionSubtitle.textContent = subtitle || 'Please confirm to proceed'
+      if (this.confirmActionMsg) this.confirmActionMsg.textContent = message
+      if (this.confirmActionBtn) {
+        this.confirmActionBtn.innerHTML = `<i class="fa-solid fa-trash-can"></i> ${confirmBtnText}`
+      }
+      this.confirmActionCallback = onConfirm
+      if (this.confirmActionModal) this.confirmActionModal.style.display = 'flex'
+    }
+
+    closeConfirmActionModal() {
+      if (this.confirmActionModal) this.confirmActionModal.style.display = 'none'
+      this.confirmActionCallback = null
+    }
+
+    confirmDeleteTrack(trackId, trackName) {
+      this.openConfirmActionModal({
+        title: 'Delete Custom Track',
+        subtitle: 'Remove instrument & all associated media',
+        message: `Are you sure you want to delete "${trackName}"? All its base audio samples and generated variations will be permanently removed from IndexedDB.`,
+        confirmBtnText: 'Delete Track',
+        onConfirm: async () => {
+          try {
+            await window.AudioLibrary.deleteTrack(trackId)
+            delete this.manifest.categories[trackId]
+
+            // Remove all layers for this track from this.layers
+            this.layers = this.layers.filter(l => l.category !== trackId && l.parentTrack !== trackId)
+
+            // Remove DOM group
+            const groupEl = document.querySelector(`.track-channel-group[data-track="${trackId}"]`)
+            if (groupEl) groupEl.remove()
+
+            this.populatePopoverCategories()
+            if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+            this.renderSoundAssetsModal()
+            this.showToast(`Custom track "${trackName}" deleted.`, 'success')
+          } catch (err) {
+            this.showToast(`Error deleting track: ${err.message}`, 'error')
+          }
+        }
+      })
+    }
+
+    confirmDeleteSound(trackId, soundId, soundName) {
+      this.openConfirmActionModal({
+        title: 'Delete Imported Base Sound',
+        subtitle: 'Remove audio file and variations',
+        message: `Are you sure you want to delete "${soundName}" and its 5 studio variations from IndexedDB?`,
+        confirmBtnText: 'Delete Sound',
+        onConfirm: async () => {
+          try {
+            await window.AudioLibrary.deleteBaseSound(trackId, soundId)
+            await window.AudioLibrary.syncManifestWithDB(this.manifest)
+
+            // If any layer was using this sound, switch it to default
+            const cat = this.manifest.categories[trackId]
+            const fallbackSound = cat ? (cat.baseTrackSound || Object.keys(cat.sounds || {})[0] || '') : ''
+            this.layers.forEach(layer => {
+              if (layer.category === trackId && layer.soundFamily === soundId) {
+                layer.soundFamily = fallbackSound
+                layer.steps.forEach(pads => {
+                  pads.forEach(p => { p.soundFamily = fallbackSound })
+                })
+              }
+            })
+
+            this.refreshTrackSoundSelectors(trackId)
+            this.renderSoundAssetsModal()
+            this.showToast(`Sound "${soundName}" deleted.`, 'success')
+          } catch (err) {
+            this.showToast(`Error deleting sound: ${err.message}`, 'error')
+          }
+        }
+      })
+    }
+
+    openRenameTrackModal(trackId, currentName) {
+      this.activeRenameTrackId = trackId
+      if (this.renameTrackInput) this.renameTrackInput.value = currentName || ''
+      if (this.renameTrackModal) this.renameTrackModal.style.display = 'flex'
+      if (this.renameTrackInput) {
+        setTimeout(() => this.renameTrackInput.focus(), 60)
+      }
+    }
+
+    closeRenameTrackModal() {
+      if (this.renameTrackModal) this.renameTrackModal.style.display = 'none'
+      this.activeRenameTrackId = null
+    }
+
+    async executeTrackRename() {
+      if (!this.activeRenameTrackId || !this.renameTrackInput) return
+      const newName = this.renameTrackInput.value.trim()
+      if (!newName) {
+        this.showToast('Please enter a valid track name', 'error')
+        return
+      }
+
+      try {
+        await window.AudioLibrary.renameTrack(this.activeRenameTrackId, newName)
+        await window.AudioLibrary.syncManifestWithDB(this.manifest)
+
+        // Update layer name and DOM elements
+        this.layers.forEach(layer => {
+          if (layer.category === this.activeRenameTrackId && layer.isPrimary) {
+            layer.name = newName
+          }
+        })
+
+        const groupEl = document.querySelector(`.track-channel-group[data-track="${this.activeRenameTrackId}"]`)
+        if (groupEl) {
+          const titleEl = groupEl.querySelector('.channel-name')
+          if (titleEl) titleEl.textContent = newName
+          const addBtn = groupEl.querySelector('.add-layer-btn')
+          if (addBtn) addBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add Layer to ${newName}`
+        }
+
+        this.populatePopoverCategories()
+        if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+        this.renderSoundAssetsModal()
+        this.closeRenameTrackModal()
+        this.showToast(`Track renamed to "${newName}"`, 'success')
+      } catch (err) {
+        this.showToast(`Error renaming track: ${err.message}`, 'error')
+      }
+    }
+
+    refreshTrackSoundSelectors(trackId) {
+      // 1. Primary track select (built-in or custom)
+      const primarySelect = document.getElementById(`${trackId}-beat-audio`) ||
+        document.querySelector(`.custom-track-sample-select[data-track="${trackId}"]`)
+      const primaryLayer = this.layers.find(l => l.category === trackId && l.isPrimary)
+      if (primarySelect && primaryLayer) {
+        primarySelect.innerHTML = this.getSoundFamilyOptionsHTML(trackId, primaryLayer.soundFamily)
+        if (primaryLayer.soundFamily) primarySelect.value = primaryLayer.soundFamily
+      }
+
+      // 2. Sublayer selects
+      document.querySelectorAll(`.track-channel.sublayer[data-track="${trackId}"] .layer-family-select`).forEach(sel => {
+        const layerId = sel.dataset.layerId
+        const layer = this.layers.find(l => l.id === layerId)
+        if (layer) {
+          sel.innerHTML = this.getSoundFamilyOptionsHTML(trackId, layer.soundFamily)
+          if (layer.soundFamily) sel.value = layer.soundFamily
+        }
+      })
+
+      // 3. Pad popover if open
+      if (this.popoverSoundCat && this.popoverSoundCat.value === trackId) {
+        const currentFam = this.popoverSoundFamily ? this.popoverSoundFamily.value : null
+        this.populatePopoverSoundFamilies(trackId, currentFam)
+      }
+    }
+
+    bindAudioLibraryEvents() {
+      // 1. Open Add Track Modal
+      if (this.openAddTrackBtn) {
+        this.openAddTrackBtn.addEventListener('click', () => {
+          this.openAddTrackModal()
+        })
+      }
+
+      if (this.closeAddTrackBtn) {
+        this.closeAddTrackBtn.addEventListener('click', () => {
+          this.closeAddTrackModal()
+        })
+      }
+
+      if (this.cancelAddTrackBtn) {
+        this.cancelAddTrackBtn.addEventListener('click', () => {
+          this.closeAddTrackModal()
+        })
+      }
+
+      if (this.confirmAddTrackBtn) {
+        this.confirmAddTrackBtn.addEventListener('click', () => {
+          this.executeAddTrack()
+        })
+      }
+
+      if (this.customTrackNameInput) {
+        this.customTrackNameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            this.executeAddTrack()
+          }
+        })
+      }
+
+      // Suggestion pills
+      if (this.trackNameSuggestions) {
+        this.trackNameSuggestions.querySelectorAll('.track-suggestion-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            const name = pill.dataset.name
+            if (this.customTrackNameInput && name) {
+              this.customTrackNameInput.value = name
+              this.customTrackNameInput.focus()
+            }
+          })
+        })
+      }
+
+      // 2. Audio File Importer Change Listener
+      if (this.audioFileImporter) {
+        this.audioFileImporter.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0]
+          if (!file || !this.pendingImport) return
+
+          const { trackId, targetLayerId } = this.pendingImport
+          const track = (await window.AudioLibrary.getTrack(trackId)) ||
+            (this.manifest?.categories?.[trackId] ? { id: trackId, name: this.manifest.categories[trackId].name } : { id: trackId, name: trackId })
+
+          const trackName = track ? track.name : trackId
+
+          this.openImportProgressModal(file.name, trackName)
+
+          try {
+            const importedSound = await window.AudioLibrary.importBaseSound(trackId, file, (progress) => {
+              this.updateImportProgressUI(progress)
+            })
+
+            await window.AudioLibrary.syncManifestWithDB(this.manifest)
+
+            this.refreshTrackSoundSelectors(trackId)
+            this.renderSoundAssetsModal()
+            this.populatePopoverCategories()
+
+            if (targetLayerId) {
+              const layer = this.layers.find(l => l.id === targetLayerId)
+              if (layer) {
+                layer.soundFamily = importedSound.id
+                layer.steps.forEach(pads => {
+                  pads.forEach(p => { p.soundFamily = importedSound.id })
+                })
+                const sel = document.querySelector(`.sample-select[data-layer-id="${targetLayerId}"]`)
+                if (sel) sel.value = importedSound.id
+              }
+            } else {
+              const primaryLayer = this.layers.find(l => l.category === trackId && l.isPrimary)
+              if (primaryLayer) {
+                primaryLayer.soundFamily = importedSound.id
+                primaryLayer.steps.forEach(pads => {
+                  pads.forEach(p => { p.soundFamily = importedSound.id })
+                })
+                const sel = document.getElementById(`${trackId}-beat-audio`) ||
+                  document.querySelector(`.custom-track-sample-select[data-track="${trackId}"]`)
+                if (sel) sel.value = importedSound.id
+              }
+            }
+
+            setTimeout(() => {
+              this.closeImportProgressModal()
+              this.showToast(`Imported "${importedSound.name}" with 5 studio variations!`, 'success')
+              this.playPadSound(this.resolveSoundFile(trackId, importedSound.id, 'med'), 0.85)
+            }, 500)
+
+          } catch (err) {
+            console.error('Import error:', err)
+            this.closeImportProgressModal()
+            this.showToast(`Import failed: ${err.message}`, 'error')
+          } finally {
+            this.pendingImport = null
+            if (this.audioFileImporter) this.audioFileImporter.value = ''
+          }
+        })
+      }
+
+      // 3. Confirm Action Modal
+      if (this.cancelConfirmActionBtn) {
+        this.cancelConfirmActionBtn.addEventListener('click', () => {
+          this.closeConfirmActionModal()
+        })
+      }
+      if (this.closeConfirmActionBtn) {
+        this.closeConfirmActionBtn.addEventListener('click', () => {
+          this.closeConfirmActionModal()
+        })
+      }
+      if (this.confirmActionBtn) {
+        this.confirmActionBtn.addEventListener('click', async () => {
+          if (typeof this.confirmActionCallback === 'function') {
+            const cb = this.confirmActionCallback
+            this.confirmActionCallback = null
+            this.closeConfirmActionModal()
+            await cb()
+          }
+        })
+      }
+
+      // 4. Rename Track Modal
+      if (this.cancelRenameBtn) {
+        this.cancelRenameBtn.addEventListener('click', () => {
+          this.closeRenameTrackModal()
+        })
+      }
+      if (this.closeRenameBtn) {
+        this.closeRenameBtn.addEventListener('click', () => {
+          this.closeRenameTrackModal()
+        })
+      }
+      if (this.confirmRenameBtn) {
+        this.confirmRenameBtn.addEventListener('click', () => {
+          this.executeTrackRename()
+        })
+      }
+      if (this.renameTrackInput) {
+        this.renameTrackInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            this.executeTrackRename()
+          }
+        })
+      }
+    }
+
     renderSoundAssetsModal() {
-      if (!this.soundCategoriesList || !this.manifest) return
+      if (!this.soundCategoriesList || !this.manifest || !this.manifest.categories) return
       this.soundCategoriesList.innerHTML = ''
 
       Object.entries(this.manifest.categories).forEach(([catKey, cat]) => {
+        const isBuiltin = cat.type === 'builtin' || ['kick', 'snare', 'hihat'].includes(catKey)
         const catCard = document.createElement('div')
-        catCard.className = 'category-card'
+        catCard.className = `category-card ${!isBuiltin ? 'custom-category-card' : ''}`
+        catCard.dataset.track = catKey
 
         let soundFamiliesHTML = ''
-        Object.entries(cat.sounds).forEach(([soundKey, sound]) => {
-          const isBase = soundKey === cat.baseTrackSound
-          const variationsHTML = Object.entries(sound.variations).map(([varKey, v]) => `
-            <button class="variation-preview-btn" data-src="${v.file}" title="Preview ${sound.name} (${v.label})">
-              <span class="var-name"><i class="fa-solid fa-play"></i> ${v.label}</span>
-              <span class="var-specs">${v.filterCutoffHz < 19000 ? v.filterCutoffHz + 'Hz' : 'Direct'} &bull; Peak ${v.peak}</span>
-            </button>
-          `).join('')
+        const sounds = cat.sounds || {}
+        const soundEntries = Object.entries(sounds)
 
-          soundFamiliesHTML += `
-            <div class="sound-family-item">
-              <div class="family-info-row">
-                <div class="family-name">
-                  ${sound.name} ${isBase ? '<span class="base-sound-tag">Track Base</span>' : ''}
-                </div>
-                <div class="family-meta-pills">
-                  <span class="meta-pill"><i class="fa-solid fa-wave-square"></i> ${sound.type}</span>
-                  <span class="meta-pill"><i class="fa-solid fa-ruler-horizontal"></i> ${sound.frequencyRange}</span>
-                </div>
+        if (soundEntries.length === 0) {
+          soundFamiliesHTML = `
+            <div class="empty-track-state">
+              <i class="fa-solid fa-cloud-arrow-up empty-icon"></i>
+              <div class="empty-text-wrap">
+                <h4>No Base Sounds In This Track Yet</h4>
+                <p>Import your own audio samples (.wav, .mp3, .ogg, etc.) to start sequencing with this track.</p>
               </div>
-              <p class="family-desc">${sound.description}</p>
-              <div class="variations-row">
-                ${variationsHTML}
-              </div>
+              <button class="modal-track-action-btn track-import-btn import-first-btn" data-track="${catKey}">
+                <i class="fa-solid fa-plus"></i> Import First Base Sound
+              </button>
             </div>
           `
-        })
+        } else {
+          soundEntries.forEach(([soundKey, sound]) => {
+            const isBase = soundKey === cat.baseTrackSound
+            const variationsHTML = sound.variations ? Object.entries(sound.variations).map(([varKey, v]) => `
+              <button class="variation-preview-btn" data-src="${v.file}" title="Preview ${sound.name} (${v.label})">
+                <span class="var-name"><i class="fa-solid fa-play"></i> ${v.label}</span>
+                <span class="var-specs">${v.filterCutoffHz < 19000 ? v.filterCutoffHz + 'Hz' : 'Direct'} &bull; Peak ${v.peak}</span>
+              </button>
+            `).join('') : ''
+
+            soundFamiliesHTML += `
+              <div class="sound-family-item" data-sound-id="${soundKey}">
+                <div class="family-info-row">
+                  <div class="family-name">
+                    <i class="fa-solid fa-compact-disc"></i>
+                    <span>${sound.name}</span>
+                    ${isBase ? '<span class="base-sound-tag"><i class="fa-solid fa-star"></i> Track Base</span>' : ''}
+                    ${sound.isCustom ? '<span class="custom-sound-tag"><i class="fa-solid fa-user"></i> Imported</span>' : ''}
+                  </div>
+                  <div class="family-meta-pills">
+                    <span class="meta-pill"><i class="fa-solid fa-wave-square"></i> ${sound.type || 'Percussion'}</span>
+                    <span class="meta-pill"><i class="fa-solid fa-ruler-horizontal"></i> ${sound.frequencyRange || 'Full Range'}</span>
+                    ${sound.duration ? `<span class="meta-pill"><i class="fa-solid fa-stopwatch"></i> ${sound.duration.toFixed(2)}s</span>` : ''}
+                    ${sound.isCustom ? `
+                      <button class="sound-delete-btn" data-track="${catKey}" data-sound-id="${soundKey}" data-name="${sound.name}" title="Delete imported sound and variations">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+                <p class="family-desc">${sound.description || 'Studio audio sample'}</p>
+                <div class="variations-row">
+                  ${variationsHTML}
+                </div>
+              </div>
+            `
+          })
+        }
 
         catCard.innerHTML = `
           <div class="category-header">
             <div class="category-title-wrap">
-              <span class="category-badge">Track 0${cat.trackNumber}</span>
+              <span class="category-badge ${!isBuiltin ? 'custom-track-badge' : ''}">
+                ${isBuiltin ? `Track 0${cat.trackNumber || 1}` : `Custom Track`}
+              </span>
               <h3 class="category-name">${cat.name}</h3>
             </div>
-            <span class="base-sound-tag"><i class="fa-solid fa-star"></i> Default Base: ${cat.baseTrackSound}</span>
+            <div class="category-actions">
+              <button class="modal-track-action-btn track-import-btn" data-track="${catKey}" title="Import new base sound into ${cat.name}">
+                <i class="fa-solid fa-file-arrow-up"></i> Import Base Sound
+              </button>
+              ${!isBuiltin ? `
+                <button class="modal-track-action-btn track-rename-btn" data-track="${catKey}" data-name="${cat.name}" title="Rename Track">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="modal-track-action-btn track-delete-btn" data-track="${catKey}" data-name="${cat.name}" title="Delete Custom Track">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : ''}
+            </div>
           </div>
           <div class="sound-families-container">
             ${soundFamiliesHTML}
@@ -2011,10 +2871,51 @@ document.addEventListener('DOMContentLoaded', () => {
         this.soundCategoriesList.appendChild(catCard)
       })
 
+      // Bind Preview Buttons
       this.soundCategoriesList.querySelectorAll('.variation-preview-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const src = btn.dataset.src
-          this.playDirectSound(src)
+          if (src) this.playDirectSound(src)
+        })
+      })
+
+      // Bind Import Buttons inside Sound Library modal
+      this.soundCategoriesList.querySelectorAll('.track-import-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const trackId = btn.dataset.track
+          if (trackId) this.triggerBaseSoundImport(trackId)
+        })
+      })
+
+      // Bind Track Rename Buttons
+      this.soundCategoriesList.querySelectorAll('.track-rename-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const trackId = btn.dataset.track
+          const currentName = btn.dataset.name
+          if (trackId) this.openRenameTrackModal(trackId, currentName)
+        })
+      })
+
+      // Bind Track Delete Buttons
+      this.soundCategoriesList.querySelectorAll('.track-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const trackId = btn.dataset.track
+          const trackName = btn.dataset.name
+          if (trackId) this.confirmDeleteTrack(trackId, trackName)
+        })
+      })
+
+      // Bind Sound Delete Buttons
+      this.soundCategoriesList.querySelectorAll('.sound-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const trackId = btn.dataset.track
+          const soundId = btn.dataset.soundId
+          const soundName = btn.dataset.name
+          if (trackId && soundId) this.confirmDeleteSound(trackId, soundId, soundName)
         })
       })
     }
