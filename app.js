@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
       this.audioCtx = null
       this.audioBuffers = new Map() // Cache for decoded audio buffers
       this.activeTrackPreviews = new Map() // layerId -> { token, btn, handle }
+      this.activeAssetPreviewHandles = new Set() // { handle } from Sound Assets drawer previews
+      this.activeAssetImportPreviewLayerIds = new Set() // layerIds previewed via import inside Sound Assets drawer
       this.previewTokenCounter = 0
 
       // Dynamic Multi-Layer Data Architecture
@@ -1012,8 +1014,48 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    playDirectSound(fileSrc) {
-      return this.playPadSound(fileSrc, 0.95)
+    playDirectSound(fileSrc, volume = 0.95) {
+      if (!fileSrc) return null
+      if (!this.activeAssetPreviewHandles) {
+        this.activeAssetPreviewHandles = new Set()
+      }
+
+      const entry = { handle: null }
+      let finished = false
+      this.activeAssetPreviewHandles.add(entry)
+
+      const handle = this.playPadSound(fileSrc, volume, {
+        onEnded: () => {
+          finished = true
+          this.activeAssetPreviewHandles.delete(entry)
+        }
+      })
+
+      if (!handle || finished) {
+        this.activeAssetPreviewHandles.delete(entry)
+        return handle
+      }
+
+      entry.handle = handle
+      return handle
+    }
+
+    stopSoundAssetsPreviews() {
+      if (this.activeAssetPreviewHandles && this.activeAssetPreviewHandles.size > 0) {
+        const entries = Array.from(this.activeAssetPreviewHandles)
+        this.activeAssetPreviewHandles.clear()
+        entries.forEach(entry => {
+          if (entry && entry.handle && typeof entry.handle.stop === 'function') {
+            entry.handle.stop()
+          }
+        })
+      }
+
+      if (this.activeAssetImportPreviewLayerIds && this.activeAssetImportPreviewLayerIds.size > 0) {
+        const layerIds = Array.from(this.activeAssetImportPreviewLayerIds)
+        this.activeAssetImportPreviewLayerIds.clear()
+        layerIds.forEach(layerId => this.stopTrackPreview(layerId))
+      }
     }
 
     getLayerAuditionButton(layer) {
@@ -1036,6 +1078,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     stopTrackPreview(layerId) {
+      if (this.activeAssetImportPreviewLayerIds) {
+        this.activeAssetImportPreviewLayerIds.delete(layerId)
+      }
       if (!layerId || !this.activeTrackPreviews) return false
       const entry = this.activeTrackPreviews.get(layerId)
       if (!entry) return false
@@ -1064,6 +1109,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const current = this.activeTrackPreviews.get(layer.id)
           if (current && current.token === token) {
             this.activeTrackPreviews.delete(layer.id)
+            if (this.activeAssetImportPreviewLayerIds) {
+              this.activeAssetImportPreviewLayerIds.delete(layer.id)
+            }
             this.setAuditionButtonState(current.btn || this.getLayerAuditionButton(layer), false)
           }
         }
@@ -1073,6 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const current = this.activeTrackPreviews.get(layer.id)
         if (current && current.token === token) {
           this.activeTrackPreviews.delete(layer.id)
+          if (this.activeAssetImportPreviewLayerIds) {
+            this.activeAssetImportPreviewLayerIds.delete(layer.id)
+          }
           this.setAuditionButtonState(targetBtn, false)
         }
         return null
@@ -3007,6 +3058,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (k === 'pad-config') {
             this.activePopoverPad = null
           }
+          if (k === 'sound-assets') {
+            this.stopSoundAssetsPreviews()
+          }
         }
       })
 
@@ -3036,6 +3090,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (key === 'pad-config') {
           this.activePopoverPad = null
         }
+        if (key === 'sound-assets') {
+          this.stopSoundAssetsPreviews()
+        }
         if (this.activeSideDrawer === key) {
           this.activeSideDrawer = null
         }
@@ -3050,6 +3107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             entry.toggleBtn.setAttribute('aria-expanded', 'false')
           }
         })
+        this.stopSoundAssetsPreviews()
         this.activePopoverPad = null
         this.activeSideDrawer = null
       }
@@ -3804,6 +3862,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!file || !this.pendingImport) return
 
           const { trackId, targetLayerId } = this.pendingImport
+          const initiatedFromAssetsDrawer = !targetLayerId && this.activeSideDrawer === 'sound-assets'
           const track = (await window.AudioLibrary.getTrack(trackId)) ||
             (this.manifest?.categories?.[trackId] ? { id: trackId, name: this.manifest.categories[trackId].name } : { id: trackId, name: trackId })
 
@@ -3868,14 +3927,20 @@ document.addEventListener('DOMContentLoaded', () => {
               this.closeImportProgressModal()
               this.showToast(`Imported "${importedSound.name}" with 5 studio variations!`, 'success')
               if (this.isTrackPreviewEnabled(trackId)) {
+                if (initiatedFromAssetsDrawer && this.activeSideDrawer !== 'sound-assets') {
+                  return
+                }
                 const fileSrc = this.resolveSoundFile(trackId, importedSound.id, 'med')
                 const targetLayer = targetLayerId
                   ? this.getLayer(targetLayerId)
                   : this.layers.find(l => l.category === trackId && l.isPrimary)
                 if (targetLayer && fileSrc) {
                   this.startTrackPreview(targetLayer, this.getLayerAuditionButton(targetLayer), fileSrc, targetLayer.volume)
+                  if (initiatedFromAssetsDrawer && this.activeAssetImportPreviewLayerIds) {
+                    this.activeAssetImportPreviewLayerIds.add(targetLayer.id)
+                  }
                 } else if (fileSrc) {
-                  this.playPadSound(fileSrc, 0.85)
+                  this.playDirectSound(fileSrc, 0.85)
                 }
               }
             }, 500)
