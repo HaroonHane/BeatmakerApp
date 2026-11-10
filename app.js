@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
       this.activeTrackPreviews = new Map() // layerId -> { token, btn, handle }
       this.activeAssetPreviewHandles = new Set() // { handle } from Sound Assets drawer previews
       this.activeAssetImportPreviewLayerIds = new Set() // layerIds previewed via import inside Sound Assets drawer
+      this.layerGainNodes = new Map() // layerId -> Web Audio GainNode (Mute/Solo bus)
+      this.activeLayerHandles = new Map() // layerId -> Set<{ handle, baseVolume }>
       this.previewTokenCounter = 0
 
       // Dynamic Multi-Layer Data Architecture
@@ -249,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const AudioCtx = window.AudioContext || window.webkitAudioContext
       if (AudioCtx) {
         this.audioCtx = new AudioCtx()
+        if (this.syncAudioRouting) this.syncAudioRouting()
       }
     }
 
@@ -503,7 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const primaryLayersData = session.layers.filter(l => l.isPrimary)
         const subLayersData = session.layers.filter(l => !l.isPrimary)
 
-        // Reset this.layers
+        // Clean up old audio nodes and reset this.layers
+        this.layers.forEach(l => this.cleanupLayerAudioNode(l.id))
         this.layers = []
 
         // 6. Restore primary layers (Kick, Snare, Hi-Hat + Custom tracks)
@@ -561,14 +565,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setTrackSoundFamily(restoredLayer.category, restoredLayer.soundFamily)
             this.setTrackIntensity(restoredLayer.category, restoredLayer.intensity)
 
-            const volSlider = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-vol-slider`)
-            if (volSlider) volSlider.value = Math.round(restoredLayer.volume * 100)
-            const volVal = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .vol-readout`)
-            if (volVal) volVal.textContent = `${Math.round(restoredLayer.volume * 100)}%`
-            const muteBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-mute-btn`)
-            if (muteBtn) muteBtn.classList.toggle('active', restoredLayer.muted)
-            const soloBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-solo-btn`)
-            if (soloBtn) soloBtn.classList.toggle('active', restoredLayer.solo)
+            this.syncLayerVolumeUI(restoredLayer)
+            this.syncLayerMuteSoloUI(restoredLayer)
           } else {
             // Custom primary track -> render its full track channel group DOM
             const trackObj = {
@@ -809,8 +807,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.triggerBaseSoundImport(layer.category, layer.id)
               } else {
                 const fileSrc = this.resolveSoundFile(padObj.category, padObj.soundFamily, padObj.intensity)
-                if (fileSrc) {
-                  this.playPadSound(fileSrc, padObj.volume * layer.volume)
+                if (fileSrc && this.isLayerAudible(layer)) {
+                  this.playPadSound(fileSrc, padObj.volume * layer.volume, { layerId: layer.id })
                   this.pulseMeter(layer.category)
                 }
               }
@@ -911,12 +909,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const safeVol = Math.max(0, Math.min(1, volume))
       const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null
+      const layerId = options.layerId || null
+      const layer = layerId ? this.getLayer(layerId) : null
+      const initialTrackGain = layer ? (this.isLayerAudible(layer) ? 1 : 0) : 1
 
-      // Web Audio API Polyphony with Audio Buffer caching
+      // Web Audio API Polyphony with Audio Buffer caching & Track Gain Bus
       if (this.audioCtx) {
         if (this.audioBuffers.has(fileSrc)) {
           const buffer = this.audioBuffers.get(fileSrc)
-          return this.triggerBufferSource(buffer, safeVol, onEnded)
+          return this.triggerBufferSource(buffer, safeVol, onEnded, layerId)
         }
 
         // Fetch & decode buffer asynchronously while falling back to Audio element for instant response
@@ -932,30 +933,37 @@ document.addEventListener('DOMContentLoaded', () => {
       // Fast HTML5 Audio fallback for zero configuration friction
       try {
         const audio = new Audio(fileSrc)
-        audio.volume = safeVol
+        audio.volume = safeVol * initialTrackGain
         let stopped = false
+        let trackEntry = null
+
+        const removeTrackEntry = () => {
+          if (trackEntry && layerId && this.activeLayerHandles) {
+            const set = this.activeLayerHandles.get(layerId)
+            if (set) {
+              set.delete(trackEntry)
+              if (set.size === 0) this.activeLayerHandles.delete(layerId)
+            }
+            trackEntry = null
+          }
+        }
+
         const cleanup = () => {
           audio.onended = null
           audio.onerror = null
+          removeTrackEntry()
         }
-        if (onEnded) {
-          audio.onended = () => {
-            cleanup()
-            if (!stopped) onEnded()
-          }
-          audio.onerror = () => {
-            cleanup()
-            if (!stopped) onEnded()
-          }
+
+        audio.onended = () => {
+          cleanup()
+          if (!stopped && onEnded) onEnded()
         }
-        const playPromise = audio.play()
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            cleanup()
-            if (!stopped && onEnded) onEnded()
-          })
+        audio.onerror = () => {
+          cleanup()
+          if (!stopped && onEnded) onEnded()
         }
-        return {
+
+        const handle = {
           stop: () => {
             stopped = true
             cleanup()
@@ -966,24 +974,49 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           setVolume: (newVol) => {
             try {
-              audio.volume = Math.max(0, Math.min(1, newVol))
+              const clamped = Math.max(0, Math.min(1, newVol))
+              if (trackEntry) trackEntry.baseVolume = clamped
+              const curLayer = layerId ? this.getLayer(layerId) : null
+              const trackGain = curLayer ? (this.isLayerAudible(curLayer) ? 1 : 0) : 1
+              audio.volume = clamped * trackGain
             } catch (e) {}
           }
         }
+
+        if (layerId) {
+          if (!this.activeLayerHandles) this.activeLayerHandles = new Map()
+          let set = this.activeLayerHandles.get(layerId)
+          if (!set) {
+            set = new Set()
+            this.activeLayerHandles.set(layerId, set)
+          }
+          trackEntry = { handle, baseVolume: safeVol }
+          set.add(trackEntry)
+        }
+
+        const playPromise = audio.play()
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            cleanup()
+            if (!stopped && onEnded) onEnded()
+          })
+        }
+        return handle
       } catch (e) {
         if (onEnded) onEnded()
         return null
       }
     }
 
-    triggerBufferSource(buffer, volume, onEnded = null) {
+    triggerBufferSource(buffer, volume, onEnded = null, layerId = null) {
       try {
         const source = this.audioCtx.createBufferSource()
         const gainNode = this.audioCtx.createGain()
         source.buffer = buffer
         gainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime)
+        const destNode = (layerId && this.ensureLayerGainNode(layerId)) || this.audioCtx.destination
         source.connect(gainNode)
-        gainNode.connect(this.audioCtx.destination)
+        gainNode.connect(destNode)
 
         let stopped = false
         source.onended = () => {
@@ -1105,6 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.setAuditionButtonState(targetBtn, true)
 
       const handle = this.playPadSound(fileSrc, volume, {
+        layerId: layer.id,
         onEnded: () => {
           const current = this.activeTrackPreviews.get(layer.id)
           if (current && current.token === token) {
@@ -1662,9 +1696,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Render the sublayer DOM element
       this.renderLayerDOM(newLayer)
 
-      // Audio feedback when adding layer (only if sound is available)
+      // Audio feedback when adding layer (only if sound is available & layer audible)
       if (newLayer.soundFamily) {
-        this.playPadSound(this.resolveSoundFile(newLayer.category, newLayer.soundFamily, 'med'), 0.8)
+        if (this.isLayerAudible(newLayer)) {
+          this.playPadSound(this.resolveSoundFile(newLayer.category, newLayer.soundFamily, 'med'), 0.8, { layerId: newLayer.id })
+        }
       } else {
         this.showToast(`Added ${layerName}. Import a base sound to use it.`, 'info')
       }
@@ -1704,10 +1740,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class="track-btn audition-btn sublayer-audition-btn" data-layer-id="${layer.id}" title="Preview Layer Sound" aria-label="Audition Layer">
                 <i class="fa-solid fa-play"></i>
               </button>
-              <button class="track-btn mute-btn" data-layer-id="${layer.id}" title="Mute Layer (M)">
-                <i class="fa-solid fa-volume-high"></i>
+              <button class="track-btn mute-btn ${layer.muted ? 'active' : ''}" data-layer-id="${layer.id}" title="Mute Layer (M)" aria-pressed="${layer.muted ? 'true' : 'false'}">
+                <i class="fa-solid ${layer.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>
               </button>
-              <button class="track-btn solo-btn" data-layer-id="${layer.id}" title="Solo Layer (S)">
+              <button class="track-btn solo-btn ${layer.solo ? 'active' : ''}" data-layer-id="${layer.id}" title="Solo Layer (S)" aria-pressed="${layer.solo ? 'true' : 'false'}">
                 <span>S</span>
               </button>
               <button class="layer-delete-btn" data-layer-id="${layer.id}" title="Remove this layer">
@@ -1754,6 +1790,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       container.appendChild(layerEl)
       this.bindLayerDOMEvents(layerEl, layer)
+      this.updateAllSoloStates()
       const vpEl = layerEl.querySelector('.track-pads-viewport')
       this.bindTrackScrollViewport(vpEl)
       if (vpEl && !layer.isPrimary && layer.parentTrack) {
@@ -1814,14 +1851,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const muteBtn = layerEl.querySelector('.mute-btn')
       if (muteBtn) {
         muteBtn.addEventListener('click', () => {
-          layer.muted = !layer.muted
-          muteBtn.classList.toggle('active', layer.muted)
-          const icon = muteBtn.querySelector('i')
-          if (icon) {
-            icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
-          }
-          layerEl.classList.toggle('is-muted', layer.muted)
-          this.saveActiveSession()
+          this.toggleLayerMute(layer.id)
         })
       }
 
@@ -1829,10 +1859,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const soloBtn = layerEl.querySelector('.solo-btn')
       if (soloBtn) {
         soloBtn.addEventListener('click', () => {
-          layer.solo = !layer.solo
-          soloBtn.classList.toggle('active', layer.solo)
-          this.updateAllSoloStates()
-          this.saveActiveSession()
+          this.toggleLayerSolo(layer.id)
         })
       }
 
@@ -1927,6 +1954,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.layers[idx].isPrimary) return
 
       this.stopTrackPreview(layerId)
+      this.cleanupLayerAudioNode(layerId)
       this.layers.splice(idx, 1)
 
       const layerEl = document.querySelector(`.track-channel.sublayer[data-layer-id="${layerId}"]`)
@@ -1975,8 +2003,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Audition preview hit
       if (layer.soundFamily) {
-        this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), 0.8)
-        this.pulseMeter(layer.category)
+        if (this.isLayerAudible(layer)) {
+          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), 0.8, { layerId: layer.id })
+          this.pulseMeter(layer.category)
+        }
       } else {
         this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
         this.triggerBaseSoundImport(layer.category, layer.id)
@@ -2008,7 +2038,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Audition preview
       if (newPad.soundFamily) {
-        this.playPadSound(this.resolveSoundFile(newPad.category, newPad.soundFamily, newPad.intensity), newPad.volume * layer.volume)
+        if (this.isLayerAudible(layer)) {
+          this.playPadSound(this.resolveSoundFile(newPad.category, newPad.soundFamily, newPad.intensity), newPad.volume * layer.volume, { layerId: layer.id })
+        }
       } else {
         this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
         this.triggerBaseSoundImport(newPad.category, layer.id)
@@ -2293,7 +2325,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.triggerBaseSoundImport(pad.category, layer.id)
             return
           }
-          this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume)
+          if (this.isLayerAudible(layer)) {
+            this.playPadSound(this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity), pad.volume, { layerId: layer.id })
+          }
         }
       }
 
@@ -2323,24 +2357,162 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------------------------------------
     // 6. Primary Track Channel Controls (Mute, Solo, Volume, Sample Select)
     // ------------------------------------------------------------------------
+    getPrimaryLayer(trackCategory) {
+      return this.layers.find(l => l.category === trackCategory && l.isPrimary) || null
+    }
+
+    isLayerAudible(layer) {
+      if (!layer) return false
+      if (layer.muted) return false
+      const hasAnySolo = this.layers.some(l => l.solo)
+      if (hasAnySolo && !layer.solo) return false
+      return true
+    }
+
+    ensureLayerGainNode(layerId) {
+      if (!layerId || !this.audioCtx) return null
+      if (!this.layerGainNodes) {
+        this.layerGainNodes = new Map()
+      }
+      if (this.layerGainNodes.has(layerId)) {
+        return this.layerGainNodes.get(layerId)
+      }
+      const gainNode = this.audioCtx.createGain()
+      const layer = this.getLayer(layerId)
+      const audible = layer ? this.isLayerAudible(layer) : true
+      try {
+        gainNode.gain.setValueAtTime(audible ? 1 : 0, this.audioCtx.currentTime)
+      } catch (e) {
+        gainNode.gain.value = audible ? 1 : 0
+      }
+      gainNode.connect(this.audioCtx.destination)
+      this.layerGainNodes.set(layerId, gainNode)
+      return gainNode
+    }
+
+    cleanupLayerAudioNode(layerId) {
+      if (!layerId) return
+      if (this.activeLayerHandles && this.activeLayerHandles.has(layerId)) {
+        const set = this.activeLayerHandles.get(layerId)
+        this.activeLayerHandles.delete(layerId)
+        Array.from(set).forEach(entry => {
+          if (entry && entry.handle && typeof entry.handle.stop === 'function') {
+            entry.handle.stop()
+          }
+        })
+      }
+      if (this.layerGainNodes && this.layerGainNodes.has(layerId)) {
+        const gainNode = this.layerGainNodes.get(layerId)
+        this.layerGainNodes.delete(layerId)
+        try { gainNode.disconnect() } catch (e) {}
+      }
+    }
+
+    syncAudioRouting() {
+      const now = this.audioCtx ? this.audioCtx.currentTime : 0
+      this.layers.forEach(layer => {
+        const audible = this.isLayerAudible(layer)
+        const trackGain = audible ? 1 : 0
+
+        if (this.audioCtx) {
+          const gainNode = this.ensureLayerGainNode(layer.id)
+          if (gainNode) {
+            try {
+              gainNode.gain.setValueAtTime(trackGain, now)
+            } catch (e) {
+              gainNode.gain.value = trackGain
+            }
+          }
+        }
+
+        const handles = this.activeLayerHandles && this.activeLayerHandles.get(layer.id)
+        if (handles && handles.size > 0) {
+          handles.forEach(entry => {
+            if (entry && entry.handle && typeof entry.handle.setVolume === 'function') {
+              entry.handle.setVolume(entry.baseVolume)
+            }
+          })
+        }
+      })
+    }
+
+    getLayerChannelRow(layer) {
+      if (!layer) return null
+      if (layer.isPrimary) {
+        return document.querySelector(`.track-channel.primary-layer[data-track="${layer.category}"]`) ||
+          document.querySelector(`.track-channel[data-layer-id="${layer.id}"]`)
+      }
+      return document.querySelector(`.track-channel.sublayer[data-layer-id="${layer.id}"]`)
+    }
+
+    syncLayerMuteSoloUI(layer) {
+      if (!layer) return
+      const rowEl = this.getLayerChannelRow(layer)
+      if (!rowEl) return
+
+      rowEl.classList.toggle('is-muted', !!layer.muted)
+
+      const muteBtn = rowEl.querySelector('.mute-btn')
+      if (muteBtn) {
+        muteBtn.classList.toggle('active', !!layer.muted)
+        muteBtn.setAttribute('aria-pressed', layer.muted ? 'true' : 'false')
+        const icon = muteBtn.querySelector('i')
+        if (icon) {
+          icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
+        }
+      }
+
+      const soloBtn = rowEl.querySelector('.solo-btn')
+      if (soloBtn) {
+        soloBtn.classList.toggle('active', !!layer.solo)
+        soloBtn.setAttribute('aria-pressed', layer.solo ? 'true' : 'false')
+      }
+    }
+
+    syncLayerVolumeUI(layer) {
+      if (!layer) return
+      const rowEl = this.getLayerChannelRow(layer)
+      if (!rowEl) return
+      const pct = Math.round((layer.volume !== undefined ? layer.volume : 1.0) * 100)
+      const volSlider = rowEl.querySelector('.volume-slider')
+      if (volSlider) volSlider.value = pct
+      const volVal = rowEl.querySelector('.volume-value')
+      if (volVal) volVal.textContent = `${pct}%`
+    }
+
+    toggleLayerMute(layerId) {
+      const targetLayer = this.getLayer(layerId)
+      if (!targetLayer) return
+
+      targetLayer.muted = !targetLayer.muted
+      this.syncLayerMuteSoloUI(targetLayer)
+      this.syncAudioRouting()
+      this.saveActiveSession()
+    }
+
+    toggleLayerSolo(layerId) {
+      const targetLayer = this.getLayer(layerId)
+      if (!targetLayer) return
+
+      const nextSolo = !targetLayer.solo
+      this.layers.forEach(l => {
+        l.solo = nextSolo ? (l.id === targetLayer.id) : false
+      })
+
+      this.updateAllSoloStates()
+      this.saveActiveSession()
+    }
+
     bindPrimaryTrackControls() {
       ;['kick', 'snare', 'hihat'].forEach(track => {
-        const layer = this.layers.find(l => l.category === track && l.isPrimary)
-        if (!layer) return
+        const initialLayer = this.getPrimaryLayer(track)
 
-        // Mute Button
+        // Mute Button (dynamic layer lookup avoids stale closure after session/library restore)
         const muteBtn = document.getElementById(`${track}-mute`)
         if (muteBtn) {
           muteBtn.addEventListener('click', () => {
-            layer.muted = !layer.muted
-            muteBtn.classList.toggle('active', layer.muted)
-            const icon = muteBtn.querySelector('i')
-            if (icon) {
-              icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
-            }
-            const trackRow = document.querySelector(`.primary-layer[data-track="${track}"]`)
-            if (trackRow) trackRow.classList.toggle('is-muted', layer.muted)
-            this.saveActiveSession()
+            const layer = this.getPrimaryLayer(track)
+            if (layer) this.toggleLayerMute(layer.id)
           })
         }
 
@@ -2348,10 +2520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const soloBtn = document.getElementById(`${track}-solo`)
         if (soloBtn) {
           soloBtn.addEventListener('click', () => {
-            layer.solo = !layer.solo
-            soloBtn.classList.toggle('active', layer.solo)
-            this.updateAllSoloStates()
-            this.saveActiveSession()
+            const layer = this.getPrimaryLayer(track)
+            if (layer) this.toggleLayerSolo(layer.id)
           })
         }
 
@@ -2359,7 +2529,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const auditionBtn = document.querySelector(`.audition-btn[data-audition="${track}"]`)
         if (auditionBtn) {
           auditionBtn.addEventListener('click', () => {
-            this.toggleTrackAudition(layer, auditionBtn)
+            const layer = this.getPrimaryLayer(track)
+            if (layer) this.toggleTrackAudition(layer, auditionBtn)
           })
         }
 
@@ -2367,6 +2538,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const volumeSlider = document.getElementById(`${track}-volume`)
         if (volumeSlider) {
           volumeSlider.addEventListener('input', (e) => {
+            const layer = this.getPrimaryLayer(track)
+            if (!layer) return
             const val = parseInt(e.target.value, 10)
             layer.volume = val / 100
             const activePreview = this.activeTrackPreviews.get(layer.id)
@@ -2384,13 +2557,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Categorized Sound Family Selector
         const sampleSelect = document.getElementById(`${track}-beat-audio`)
         if (sampleSelect) {
-          sampleSelect.innerHTML = this.getSoundFamilyOptionsHTML(track, layer.soundFamily)
-          if (sampleSelect.querySelector(`option[value="${layer.soundFamily}"]`)) {
-            sampleSelect.value = layer.soundFamily
+          if (initialLayer) {
+            sampleSelect.innerHTML = this.getSoundFamilyOptionsHTML(track, initialLayer.soundFamily)
+            if (sampleSelect.querySelector(`option[value="${initialLayer.soundFamily}"]`)) {
+              sampleSelect.value = initialLayer.soundFamily
+            }
+            this.syncLayerSoundRemoveButton(initialLayer)
           }
-          this.syncLayerSoundRemoveButton(layer)
 
           sampleSelect.addEventListener('change', (e) => {
+            const layer = this.getPrimaryLayer(track)
+            if (!layer) return
             const val = e.target.value
             if (val === '__import__') {
               sampleSelect.value = layer.soundFamily
@@ -2414,12 +2591,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.intensity-station').forEach(station => {
         const track = station.dataset.track
         if (!track) return
-        const layer = this.layers.find(l => l.category === track && l.isPrimary)
-        if (!layer) return
 
         const pills = station.querySelectorAll('.intensity-pill')
         pills.forEach(pill => {
           pill.addEventListener('click', () => {
+            const layer = this.getPrimaryLayer(track)
+            if (!layer) return
             const intensity = pill.dataset.intensity
             layer.intensity = intensity
             pills.forEach(p => p.classList.remove('active'))
@@ -2450,11 +2627,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const anySolo = this.layers.some(l => l.solo)
 
       this.layers.forEach(layer => {
-        const selector = layer.isPrimary
-          ? `.primary-layer[data-track="${layer.category}"]`
-          : `.track-channel.sublayer[data-layer-id="${layer.id}"]`
-
-        const rowEl = document.querySelector(selector)
+        this.syncLayerMuteSoloUI(layer)
+        const rowEl = this.getLayerChannelRow(layer)
         if (rowEl) {
           if (anySolo) {
             rowEl.classList.toggle('is-dimmed', !layer.solo)
@@ -2463,6 +2637,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       })
+
+      this.syncAudioRouting()
     }
 
     // ------------------------------------------------------------------------
@@ -2489,15 +2665,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 2. Playback Multi-Layer Engine
-      const hasAnySolo = this.layers.some(l => l.solo)
       let anySoundTriggered = false
       const stepIntervalMs = (60 / this.bpm) * 1000 / 2 // 8th note duration
 
       this.layers.forEach(layer => {
-        // Skip if solo rule applies and this layer is not soloed
-        if (hasAnySolo && !layer.solo) return
-        // Skip if layer is muted
-        if (layer.muted) return
+        // Gate at both step level and track GainNode bus level
+        if (!this.isLayerAudible(layer)) return
 
         const padsAtStep = layer.steps[currentStep] || []
 
@@ -2511,14 +2684,19 @@ document.addEventListener('DOMContentLoaded', () => {
           // Support Sub-division / Repetition (flam, triplet, roll)
           const repeatCount = pad.repeat || 1
           if (repeatCount === 1) {
-            this.playPadSound(soundFile, effectiveVolume)
+            this.playPadSound(soundFile, effectiveVolume, { layerId: layer.id })
           } else {
             // Schedule sub-beat hits evenly across this step interval
             for (let r = 0; r < repeatCount; r++) {
               const delay = (r * stepIntervalMs) / repeatCount
-              setTimeout(() => {
-                this.playPadSound(soundFile, effectiveVolume)
-              }, delay)
+              if (delay === 0) {
+                this.playPadSound(soundFile, effectiveVolume, { layerId: layer.id })
+              } else {
+                setTimeout(() => {
+                  if (!this.isPlaying || !this.isLayerAudible(layer)) return
+                  this.playPadSound(soundFile, effectiveVolume, { layerId: layer.id })
+                }, delay)
+              }
             }
           }
 
@@ -3316,6 +3494,7 @@ document.addEventListener('DOMContentLoaded', () => {
       container.appendChild(groupEl)
       this.bindCustomTrackDOMEvents(groupEl, layer, track)
       this.bindTrackScrollViewport(groupEl.querySelector('.track-pads-viewport'))
+      this.updateAllSoloStates()
 
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       this.saveActiveSession()
@@ -3326,7 +3505,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const auditionBtn = groupEl.querySelector('.audition-btn')
       if (auditionBtn) {
         auditionBtn.addEventListener('click', () => {
-          this.toggleTrackAudition(layer, auditionBtn)
+          const currentLayer = this.getLayer(layer.id) || layer
+          this.toggleTrackAudition(currentLayer, auditionBtn)
         })
       }
 
@@ -3334,15 +3514,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const muteBtn = groupEl.querySelector('.mute-btn')
       if (muteBtn) {
         muteBtn.addEventListener('click', () => {
-          layer.muted = !layer.muted
-          muteBtn.classList.toggle('active', layer.muted)
-          const icon = muteBtn.querySelector('i')
-          if (icon) {
-            icon.className = layer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'
-          }
-          const row = groupEl.querySelector('.primary-layer')
-          if (row) row.classList.toggle('is-muted', layer.muted)
-          this.saveActiveSession()
+          this.toggleLayerMute(layer.id)
         })
       }
 
@@ -3350,10 +3522,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const soloBtn = groupEl.querySelector('.solo-btn')
       if (soloBtn) {
         soloBtn.addEventListener('click', () => {
-          layer.solo = !layer.solo
-          soloBtn.classList.toggle('active', layer.solo)
-          this.updateAllSoloStates()
-          this.saveActiveSession()
+          this.toggleLayerSolo(layer.id)
         })
       }
 
@@ -3635,16 +3804,20 @@ document.addEventListener('DOMContentLoaded', () => {
               this.saveTrackPreviewPrefs()
             }
 
-            // Stop any active previews and remove all layers for this track from this.layers
+            // Stop any active previews, clean up audio nodes and remove all layers for this track
             this.layers
               .filter(l => l.category === trackId || l.parentTrack === trackId)
-              .forEach(l => this.stopTrackPreview(l.id))
+              .forEach(l => {
+                this.stopTrackPreview(l.id)
+                this.cleanupLayerAudioNode(l.id)
+              })
             this.layers = this.layers.filter(l => l.category !== trackId && l.parentTrack !== trackId)
 
             // Remove DOM group
             const groupEl = document.querySelector(`.track-channel-group[data-track="${trackId}"]`)
             if (groupEl) groupEl.remove()
 
+            this.updateAllSoloStates()
             this.populatePopoverCategories()
             if (this.renderTrackpadLanes) this.renderTrackpadLanes()
             this.renderSoundAssetsModal()
@@ -4570,14 +4743,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Auto-scroll ruler & track viewports if step is out of view
       this.scrollMatrixToStepIfNeeded(clamped, true)
 
-      // Audition preview of active pads at this step for immediate tactile response
+      // Audition preview of active pads at this step for immediate tactile response (respecting Mute/Solo)
       this.layers.forEach(layer => {
-        if (layer.muted) return
+        if (!this.isLayerAudible(layer)) return
         const pads = layer.steps[clamped] || []
         pads.forEach(pad => {
           if (pad.active) {
             const soundFile = this.resolveSoundFile(pad.category, pad.soundFamily, pad.intensity)
-            this.playPadSound(soundFile, pad.volume * layer.volume)
+            this.playPadSound(soundFile, pad.volume * layer.volume, { layerId: layer.id })
             this.pulseMeter(layer.category)
           }
         })
@@ -4703,10 +4876,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.exportProgressStatus) this.exportProgressStatus.textContent = 'Decoding studio sample buffers...'
       if (this.exportProgressFill) this.exportProgressFill.style.width = '40%'
 
-      // 1. Gather all required sample URLs
+      // 1. Gather all required sample URLs (only from audible layers)
       const urlsToLoad = new Set()
       this.layers.forEach(layer => {
-        if (layer.muted) return
+        if (!this.isLayerAudible(layer)) return
         layer.steps.forEach(pads => {
           pads.forEach(pad => {
             if (pad.active) {
@@ -4738,8 +4911,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.exportProgressFill) this.exportProgressFill.style.width = '65%'
 
       // 3. Schedule all active hits across repetitions
-      const hasAnySolo = this.layers.some(l => l.solo)
-
       for (let loop = 0; loop < loopCount; loop++) {
         const loopOffset = loop * loopDur
 
@@ -4747,8 +4918,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const stepTime = loopOffset + (step * stepDur)
 
           this.layers.forEach(layer => {
-            if (hasAnySolo && !layer.solo) return
-            if (layer.muted) return
+            if (!this.isLayerAudible(layer)) return
 
             const pads = layer.steps[step] || []
             pads.forEach(pad => {
@@ -5711,7 +5881,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (c) c.innerHTML = ''
       })
 
-      // 4. Reset layers array and restore from snapshot
+      // 4. Clean up old layer audio nodes and restore from snapshot
+      this.layers.forEach(l => this.cleanupLayerAudioNode(l.id))
       this.layers = []
       this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
 
@@ -5770,22 +5941,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
           this.setTrackSoundFamily(restoredLayer.category, restoredLayer.soundFamily)
           this.setTrackIntensity(restoredLayer.category, restoredLayer.intensity)
-
-          const volSlider = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-vol-slider`)
-          if (volSlider) volSlider.value = Math.round(restoredLayer.volume * 100)
-
-          const volVal = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .vol-readout`)
-          if (volVal) volVal.textContent = `${Math.round(restoredLayer.volume * 100)}%`
-
-          const muteBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-mute-btn`)
-          if (muteBtn) muteBtn.classList.toggle('active', restoredLayer.muted)
-
-          const soloBtn = document.querySelector(`.primary-layer[data-track="${restoredLayer.category}"] .track-solo-btn`)
-          if (soloBtn) soloBtn.classList.toggle('active', restoredLayer.solo)
+          this.syncLayerVolumeUI(restoredLayer)
+          this.syncLayerMuteSoloUI(restoredLayer)
         }
       })
 
-      // 5. Update timeline and metrics
+      // 5. Update Solo/Mute routing, timeline and metrics
+      this.updateAllSoloStates()
       this.currentSeqId = seq.id
       this.renderTrackpadRuler()
       this.renderTrackpadLanes()
