@@ -3690,14 +3690,23 @@ document.addEventListener('DOMContentLoaded', () => {
       this.tlLanesMatrix.innerHTML = ''
 
       this.layers.forEach((layer) => {
+        const isBuiltinLane = this.isBuiltinTrack(layer.category)
+        const customTheme = isBuiltinLane ? null : this.getTrackColorTheme(layer.category, layer.color)
+
         const laneEl = document.createElement('div')
         laneEl.className = `tl-mini-lane tl-lane-${layer.category}`
         laneEl.dataset.layerId = layer.id
+        if (customTheme) {
+          this.applyTrackColorVars(laneEl, layer.category, layer.color)
+        }
 
         const labelEl = document.createElement('div')
         labelEl.className = `tl-lane-tag tl-mini-lane-tag ${layer.category}-tint`
         const shortName = (layer.name || layer.category).replace(/primary/i, '').trim().slice(0, 5).toUpperCase()
         labelEl.textContent = shortName
+        if (customTheme) {
+          labelEl.style.color = customTheme.timelineText
+        }
         laneEl.appendChild(labelEl)
 
         const stepsWrap = document.createElement('div')
@@ -3705,15 +3714,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let s = 0; s < this.totalSteps; s++) {
           const pads = layer.steps[s] || []
-          const hasActive = pads.some(p => p.active)
+          const activePad = pads.find(p => p.active)
+          const hasActive = !!activePad
 
           const stepDot = document.createElement('div')
           let activeSpecific = ''
           if (hasActive) {
-            if (layer.category === 'kick') activeSpecific = 'active-kick kick-active'
-            else if (layer.category === 'snare') activeSpecific = 'active-snare snare-active'
-            else if (layer.category === 'hihat') activeSpecific = 'active-hihat hihat-active'
-            else activeSpecific = 'active-sub sub-active'
+            const effectiveCat = activePad.category || layer.category
+            if (effectiveCat === 'kick') activeSpecific = 'active-kick kick-active'
+            else if (effectiveCat === 'snare') activeSpecific = 'active-snare snare-active'
+            else if (effectiveCat === 'hihat') activeSpecific = 'active-hihat hihat-active'
+            else {
+              activeSpecific = 'active-custom'
+              const padTheme = this.getTrackColorTheme(
+                effectiveCat,
+                effectiveCat === layer.category ? layer.color : null
+              )
+              if (effectiveCat !== layer.category) {
+                this.applyTrackColorVars(stepDot, effectiveCat)
+              }
+              stepDot.style.background = padTheme.color
+              stepDot.style.boxShadow = `0 0 6px ${padTheme.glow}`
+            }
           }
           stepDot.className = `tl-mini-step ${hasActive ? 'active ' + activeSpecific : ''}`
           stepDot.dataset.step = s
