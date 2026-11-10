@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Each step in a layer is an array of pad instances (supporting multiple pads at the same beat position)
       this.layers = []
       this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
+      this.customTrackColorCache = {}
       this.activePopoverPad = null // { layerId, step, padId }
 
       // Preset Beat Patterns (8 steps) with Dedicated Sound Families & Intensity Variations
@@ -239,9 +240,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ------------------------------------------------------------------------
+    // Custom Track Color Resolution Helpers
+    // ------------------------------------------------------------------------
+    isBuiltinTrack(category) {
+      return ['kick', 'snare', 'hihat'].includes(category)
+    }
+
+    getTrackColor(category, fallbackColor = null) {
+      if (this.isBuiltinTrack(category)) return null
+      if (fallbackColor && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(fallbackColor)) {
+        return fallbackColor
+      }
+
+      const manifestColor = this.manifest?.categories?.[category]?.color
+      if (manifestColor) return manifestColor
+
+      const existingLayer = this.layers.find(l => (l.category === category || l.parentTrack === category) && l.color)
+      if (existingLayer) return existingLayer.color
+
+      if (this.customTrackColorCache[category]) return this.customTrackColorCache[category]
+
+      const usedColors = [
+        ...Object.values(this.manifest?.categories || {}).map(c => c.color),
+        ...this.layers.map(l => l.color),
+        ...Object.values(this.customTrackColorCache)
+      ].filter(Boolean)
+
+      const picked = window.AudioLibrary?.pickRandomTrackColor
+        ? window.AudioLibrary.pickRandomTrackColor(usedColors)
+        : '#8b5cf6'
+
+      this.customTrackColorCache[category] = picked
+      if (this.manifest?.categories?.[category]) {
+        this.manifest.categories[category].color = picked
+      }
+      return picked
+    }
+
+    getTrackColorTheme(category, fallbackColor = null) {
+      const hex = this.getTrackColor(category, fallbackColor) || '#8b5cf6'
+      if (window.AudioLibrary?.buildTrackColorTheme) {
+        return window.AudioLibrary.buildTrackColorTheme(hex)
+      }
+      return {
+        color: hex,
+        light: hex,
+        dark: hex,
+        gradient: `linear-gradient(135deg, ${hex} 0%, ${hex} 100%)`,
+        borderStrong: hex,
+        text: hex,
+        soft: 'rgba(139, 92, 246, 0.1)',
+        border: 'rgba(139, 92, 246, 0.35)',
+        glow: 'rgba(139, 92, 246, 0.45)',
+        glowSoft: 'rgba(139, 92, 246, 0.28)',
+        timelineText: hex
+      }
+    }
+
+    getTrackColorCssVars(category, fallbackColor = null) {
+      const t = this.getTrackColorTheme(category, fallbackColor)
+      return [
+        `--track-color:${t.color}`,
+        `--track-color-light:${t.light}`,
+        `--track-color-dark:${t.dark}`,
+        `--track-color-gradient:${t.gradient}`,
+        `--track-color-border-strong:${t.borderStrong}`,
+        `--track-color-text:${t.text}`,
+        `--track-color-soft:${t.soft}`,
+        `--track-color-border:${t.border}`,
+        `--track-color-glow:${t.glow}`,
+        `--track-color-glow-soft:${t.glowSoft}`
+      ].join(';')
+    }
+
+    applyTrackColorVars(el, category, fallbackColor = null) {
+      if (!el || this.isBuiltinTrack(category)) return
+      const t = this.getTrackColorTheme(category, fallbackColor)
+      el.style.setProperty('--track-color', t.color)
+      el.style.setProperty('--track-color-light', t.light)
+      el.style.setProperty('--track-color-dark', t.dark)
+      el.style.setProperty('--track-color-gradient', t.gradient)
+      el.style.setProperty('--track-color-border-strong', t.borderStrong)
+      el.style.setProperty('--track-color-text', t.text)
+      el.style.setProperty('--track-color-soft', t.soft)
+      el.style.setProperty('--track-color-border', t.border)
+      el.style.setProperty('--track-color-glow', t.glow)
+      el.style.setProperty('--track-color-glow-soft', t.glowSoft)
+    }
+
+    // ------------------------------------------------------------------------
     // Session Persistence Engine (Local Storage + IndexedDB Sync)
     // ------------------------------------------------------------------------
     saveActiveSession() {
+      if (this.isRestoringSession) return
       try {
         const sessionData = {
           version: 1,
@@ -254,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             badge: layer.badge,
             name: layer.name,
             category: layer.category,
+            color: layer.color || this.getTrackColor(layer.category) || null,
             soundFamily: layer.soundFamily || '',
             intensity: layer.intensity || 'med',
             volume: layer.volume !== undefined ? layer.volume : 1.0,
@@ -279,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     restoreActiveSession() {
+      this.isRestoringSession = true
       try {
         const raw = localStorage.getItem('beatmaker_active_session')
         if (!raw) return false
@@ -323,11 +416,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 6. Restore primary layers (Kick, Snare, Hi-Hat + Custom tracks)
         primaryLayersData.forEach(lData => {
+          const layerColor = this.isBuiltinTrack(lData.category)
+            ? null
+            : (this.manifest?.categories?.[lData.category]?.color || this.getTrackColor(lData.category, lData.color))
+
           const restoredLayer = {
             id: lData.id,
             badge: lData.badge,
             name: lData.name,
             category: lData.category,
+            color: layerColor,
             soundFamily: lData.soundFamily || '',
             intensity: lData.intensity || 'med',
             volume: lData.volume !== undefined ? lData.volume : 1.0,
@@ -362,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           this.layers.push(restoredLayer)
 
-          const isBuiltIn = ['kick', 'snare', 'hihat'].includes(restoredLayer.category)
+          const isBuiltIn = this.isBuiltinTrack(restoredLayer.category)
           if (isBuiltIn) {
             // Re-render DOM cells
             for (let s = 0; s < this.totalSteps; s++) {
@@ -385,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
               id: restoredLayer.category,
               name: restoredLayer.name,
               trackNumber: parseInt(restoredLayer.badge, 10) || 4,
+              color: restoredLayer.color,
               baseTrackSound: restoredLayer.soundFamily,
               type: 'custom'
             }
@@ -394,11 +493,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 7. Restore sublayers (both under built-ins and custom tracks)
         subLayersData.forEach(lData => {
+          const subColor = this.isBuiltinTrack(lData.category)
+            ? null
+            : (this.manifest?.categories?.[lData.category]?.color || this.getTrackColor(lData.category, lData.color))
+
           const restoredSub = {
             id: lData.id,
             badge: lData.badge,
             name: lData.name,
             category: lData.category,
+            color: subColor,
             soundFamily: lData.soundFamily || '',
             intensity: lData.intensity || 'med',
             volume: lData.volume !== undefined ? lData.volume : 1.0,
@@ -441,10 +545,14 @@ document.addEventListener('DOMContentLoaded', () => {
         this.updateAllSoloStates()
         this.populatePopoverCategories()
 
+        this.isRestoringSession = false
+        this.saveActiveSession()
         return true
       } catch (err) {
         console.warn('Could not restore active session:', err)
         return false
+      } finally {
+        this.isRestoringSession = false
       }
     }
 
@@ -536,10 +644,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const intensityClass = isAccent ? 'accent' : isGhost ? 'ghost' : ''
       const activeClass = pad.active ? 'active' : ''
       const soundLabel = pad.soundFamily || 'No Sound'
+      const isBuiltin = this.isBuiltinTrack(pad.category)
+      const customPadClass = isBuiltin ? '' : 'custom-pad'
+      const padFallbackColor = pad.category === layer.category ? layer.color : null
+      const customStyleAttr = isBuiltin ? '' : `style="${this.getTrackColorCssVars(pad.category, padFallbackColor)}"`
 
       return `
         <div class="pad-wrapper" data-pad-id="${pad.id}" data-layer-id="${layer.id}" data-step="${step}">
-          <button class="pad ${pad.category}-pad b${step} ${activeClass} ${intensityClass}"
+          <button class="pad ${pad.category}-pad ${customPadClass} b${step} ${activeClass} ${intensityClass}"
+            ${customStyleAttr}
             data-pad-id="${pad.id}"
             data-layer-id="${layer.id}"
             data-step="${step}"
@@ -1007,12 +1120,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const trackDisplayName = trackManifest?.name || (parentTrack.charAt(0).toUpperCase() + parentTrack.slice(1))
       const layerName = `${trackDisplayName} L${layerNum}`
+      const layerColor = this.isBuiltinTrack(baseCategory) ? null : this.getTrackColor(baseCategory)
 
       const newLayer = {
         id: layerId,
         badge: `L${layerNum}`,
         name: layerName,
         category: baseCategory,
+        color: layerColor,
         soundFamily: defaultFamily,
         intensity: 'med',
         volume: 1.0,
@@ -1063,10 +1178,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (!container) return
 
+      const isBuiltin = this.isBuiltinTrack(layer.category)
       const layerEl = document.createElement('div')
-      layerEl.className = `track-channel sublayer ${layer.category}-beat`
+      layerEl.className = `track-channel sublayer ${isBuiltin ? '' : 'custom-beat '}${layer.category}-beat${layer.muted ? ' is-muted' : ''}`
       layerEl.dataset.layerId = layer.id
       layerEl.dataset.track = layer.category
+      if (!isBuiltin) {
+        layer.color = this.getTrackColor(layer.category, layer.color)
+        this.applyTrackColorVars(layerEl, layer.category, layer.color)
+      }
 
       const familyOptionsHTML = this.getSoundFamilyOptionsHTML(layer.category, layer.soundFamily)
 
@@ -2441,13 +2561,15 @@ document.addEventListener('DOMContentLoaded', () => {
       let layer = this.layers.find(l => l.id === `${track.id}-primary`)
       const customSounds = this.manifest?.categories?.[track.id]?.sounds || {}
       const soundFamily = track.baseTrackSound || (Object.keys(customSounds).length > 0 ? Object.keys(customSounds)[0] : '') || ''
+      const trackColor = this.getTrackColor(track.id, track.color || layer?.color)
 
       if (!layer) {
         layer = {
           id: `${track.id}-primary`,
-          badge: `0${Math.min(9, track.trackNumber || (this.layers.length + 1))}`,
+          badge: String(track.trackNumber || (this.layers.length + 1)).padStart(2, '0'),
           name: track.name,
           category: track.id,
+          color: trackColor,
           soundFamily: soundFamily,
           intensity: 'med',
           volume: 1.0,
@@ -2472,6 +2594,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         this.layers.push(layer)
+      } else {
+        layer.color = trackColor
       }
 
       const container = document.getElementById('custom-layers-container')
@@ -2484,11 +2608,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupEl = document.createElement('div')
       groupEl.className = 'track-channel-group custom-track-group'
       groupEl.dataset.track = track.id
+      this.applyTrackColorVars(groupEl, track.id, trackColor)
 
       const optionsHTML = this.getSoundFamilyOptionsHTML(track.id, layer.soundFamily)
 
       groupEl.innerHTML = `
-        <div class="track-channel custom-beat primary-layer" data-track="${track.id}" data-layer-id="${layer.id}">
+        <div class="track-channel custom-beat primary-layer ${layer.muted ? 'is-muted' : ''}" data-track="${track.id}" data-layer-id="${layer.id}">
           <div class="channel-strip">
             <div class="channel-main-row">
               <div class="channel-identity">
@@ -2499,10 +2624,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="track-btn audition-btn" data-layer-id="${layer.id}" title="Preview Sound" aria-label="Audition ${track.name}">
                       <i class="fa-solid fa-play"></i>
                     </button>
-                    <button class="track-btn mute-btn" data-layer-id="${layer.id}" title="Mute Track (M)">
-                      <i class="fa-solid fa-volume-high"></i>
+                    <button class="track-btn mute-btn ${layer.muted ? 'active' : ''}" data-layer-id="${layer.id}" title="Mute Track (M)">
+                      <i class="fa-solid ${layer.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>
                     </button>
-                    <button class="track-btn solo-btn" data-layer-id="${layer.id}" title="Solo Track (S)">
+                    <button class="track-btn solo-btn ${layer.solo ? 'active' : ''}" data-layer-id="${layer.id}" title="Solo Track (S)">
                       <span>S</span>
                     </button>
                     <button class="track-btn delete-custom-track-btn" data-track-id="${track.id}" title="Delete Custom Track">
@@ -3202,10 +3327,14 @@ document.addEventListener('DOMContentLoaded', () => {
       this.soundCategoriesList.innerHTML = ''
 
       Object.entries(this.manifest.categories).forEach(([catKey, cat]) => {
-        const isBuiltin = cat.type === 'builtin' || ['kick', 'snare', 'hihat'].includes(catKey)
+        const isBuiltin = cat.type === 'builtin' || this.isBuiltinTrack(catKey)
         const catCard = document.createElement('div')
         catCard.className = `category-card ${!isBuiltin ? 'custom-category-card' : ''}`
         catCard.dataset.track = catKey
+        if (!isBuiltin) {
+          cat.color = this.getTrackColor(catKey, cat.color)
+          this.applyTrackColorVars(catCard, catKey, cat.color)
+        }
 
         let soundFamiliesHTML = ''
         const sounds = cat.sounds || {}
@@ -4186,6 +4315,7 @@ document.addEventListener('DOMContentLoaded', () => {
           badge: layer.badge,
           name: layer.name,
           category: layer.category,
+          color: layer.color || this.getTrackColor(layer.category) || null,
           soundFamily: layer.soundFamily,
           intensity: layer.intensity,
           volume: layer.volume,
@@ -4262,11 +4392,16 @@ document.addEventListener('DOMContentLoaded', () => {
       this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
 
       seq.layers.forEach(layerData => {
+        const layerColor = this.isBuiltinTrack(layerData.category)
+          ? null
+          : this.getTrackColor(layerData.category, layerData.color)
+
         const restoredLayer = {
           id: layerData.id,
           badge: layerData.badge,
           name: layerData.name,
           category: layerData.category,
+          color: layerColor,
           soundFamily: layerData.soundFamily,
           intensity: layerData.intensity,
           volume: layerData.volume !== undefined ? layerData.volume : 1.0,
@@ -4294,6 +4429,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.sublayerCounters[restoredLayer.parentTrack]++
           }
           this.renderLayerDOM(restoredLayer)
+        } else if (!this.isBuiltinTrack(restoredLayer.category)) {
+          const trackObj = {
+            id: restoredLayer.category,
+            name: restoredLayer.name,
+            trackNumber: parseInt(restoredLayer.badge, 10) || 4,
+            color: restoredLayer.color,
+            baseTrackSound: restoredLayer.soundFamily,
+            type: 'custom'
+          }
+          this.createCustomTrackDOM(trackObj)
         } else {
           for (let s = 0; s < this.totalSteps; s++) {
             this.reRenderStepCell(restoredLayer, s)
@@ -4385,6 +4530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const kickLayer = seq.layers.find(l => l.category === 'kick')
         const snareLayer = seq.layers.find(l => l.category === 'snare')
         const hihatLayer = seq.layers.find(l => l.category === 'hihat')
+        const customLayers = seq.layers.filter(l => !this.isBuiltinTrack(l.category))
         const previewSteps = seq.totalSteps || 8
         const maxPreviewSteps = Math.min(24, previewSteps)
         let previewDotsHTML = ''
@@ -4392,16 +4538,22 @@ document.addEventListener('DOMContentLoaded', () => {
           const hasKick = kickLayer && kickLayer.steps[s] && kickLayer.steps[s].some(p => p.active)
           const hasSnare = snareLayer && snareLayer.steps[s] && snareLayer.steps[s].some(p => p.active)
           const hasHihat = hihatLayer && hihatLayer.steps[s] && hihatLayer.steps[s].some(p => p.active)
-          const isHit = hasKick || hasSnare || hasHihat
+          const activeCustomLayer = customLayers.find(l => l.steps[s] && l.steps[s].some(p => p.active))
+          const isHit = hasKick || hasSnare || hasHihat || !!activeCustomLayer
           const isBeatBoundary = (s + 1) % 4 === 0 && s < maxPreviewSteps - 1
 
           let hitClass = 'dot-off'
+          let customStyle = ''
           if (hasKick && hasSnare) hitClass = 'hit-both'
           else if (hasKick) hitClass = 'hit-kick'
           else if (hasSnare) hitClass = 'hit-snare'
           else if (hasHihat) hitClass = 'hit-hihat'
+          else if (activeCustomLayer) {
+            const theme = this.getTrackColorTheme(activeCustomLayer.category, activeCustomLayer.color)
+            customStyle = `style="background: ${theme.color}; box-shadow: 0 0 4px ${theme.glow};"`
+          }
 
-          previewDotsHTML += `<span class="seq-mini-pip ${hitClass} ${isHit ? 'active-dot' : ''} ${isBeatBoundary ? 'beat-divider' : ''}"></span>`
+          previewDotsHTML += `<span class="seq-mini-pip ${hitClass} ${isHit ? 'active-dot' : ''} ${isBeatBoundary ? 'beat-divider' : ''}" ${customStyle}></span>`
         }
 
         const isCurrentActive = this.currentSeqId === seq.id

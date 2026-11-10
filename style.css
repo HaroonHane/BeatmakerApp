@@ -2052,6 +2052,16 @@ kbd {
   color: #ffffff;
 }
 
+/* Custom Track Pad Active (Per-Track Random Accent Theme) */
+.pad.custom-pad.active {
+  background: var(--track-color-gradient, linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%));
+  border-color: var(--track-color-border-strong, #c4b5fd);
+  box-shadow: 0 6px 20px var(--track-color-glow, rgba(139, 92, 246, 0.45)),
+    0 2px 6px var(--track-color-glow-soft, rgba(139, 92, 246, 0.28)),
+    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+
 /* Ghost / Accent Hits */
 .pad.ghost.active {
   opacity: 0.65;
@@ -2062,6 +2072,10 @@ kbd {
 .pad.accent.active {
   filter: brightness(1.15);
   box-shadow: 0 8px 24px var(--color-primary-glow), inset 0 1px 2px #ffffff !important;
+}
+
+.pad.custom-pad.accent.active {
+  box-shadow: 0 8px 24px var(--track-color-glow, rgba(139, 92, 246, 0.55)), inset 0 1px 2px #ffffff !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -4316,10 +4330,14 @@ kbd {
   color: #0369a1;
 }
 
+.custom-category-card {
+  border-left: 4px solid var(--track-color, #8b5cf6);
+}
+
 .custom-track-badge {
-  background: #f5f3ff !important;
-  color: #7c3aed !important;
-  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+  background: var(--track-color-soft, #f5f3ff) !important;
+  color: var(--track-color-text, #7c3aed) !important;
+  border: 1px solid var(--track-color-border, rgba(139, 92, 246, 0.35)) !important;
 }
 
 .empty-track-state {
@@ -4603,14 +4621,54 @@ kbd {
 }
 
 /* Custom Track in Sequencer */
-.custom-beat {
-  border-left: 4px solid #8b5cf6;
+.custom-beat > .channel-strip::before {
+  background: var(--track-color, #8b5cf6);
 }
 
 .custom-beat .track-badge {
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: var(--track-color-soft, #f5f3ff);
+  color: var(--track-color-text, #7c3aed);
+  border: 1px solid var(--track-color-border, rgba(139, 92, 246, 0.35));
+}
+
+.custom-beat .audition-btn:hover {
+  color: var(--track-color-text, #7c3aed);
+  border-color: var(--track-color-border, rgba(139, 92, 246, 0.4));
+  background: #ffffff;
+  box-shadow: 0 2px 6px var(--track-color-glow, rgba(139, 92, 246, 0.25)), inset 0 1px 0 #ffffff;
+}
+
+.custom-beat .volume-slider::-webkit-slider-thumb,
+.custom-beat .volume-slider::-moz-range-thumb {
+  border-color: var(--track-color, #8b5cf6);
+}
+
+.custom-beat .meter-bar {
+  background: var(--track-color, #8b5cf6);
+}
+
+.custom-beat .intensity-label i {
+  color: var(--track-color, #8b5cf6);
+}
+
+.track-channel-group.custom-track-group .add-layer-btn {
+  color: var(--track-color-text, #7c3aed);
+  border-color: var(--track-color-border, rgba(139, 92, 246, 0.3));
+  background: linear-gradient(180deg, #ffffff 0%, var(--track-color-soft, #f5f3ff) 100%);
+}
+
+.track-channel-group.custom-track-group .add-layer-btn:hover {
+  background: var(--track-color-gradient, linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%));
+  color: #ffffff;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px var(--track-color-glow, rgba(139, 92, 246, 0.35));
+}
+
+.custom-beat .chunk-add-layer-btn:hover {
+  background: var(--track-color-soft, #f5f3ff);
+  color: var(--track-color-text, #7c3aed);
+  border-color: var(--track-color, #8b5cf6);
 }
 
 .delete-custom-track-btn {

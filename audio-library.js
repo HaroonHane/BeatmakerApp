@@ -9,6 +9,95 @@
 (function(window) {
   'use strict';
 
+  // --- 0. Curated Studio Color Palette & Theme Derivation ---
+  const CUSTOM_TRACK_COLOR_PALETTE = [
+    '#8b5cf6', // Electric Violet
+    '#0ea5e9', // Ocean Sky
+    '#ec4899', // Hot Rose
+    '#10b981', // Emerald Mint
+    '#6366f1', // Indigo Cobalt
+    '#f59e0b', // Amber Gold
+    '#f43f5e', // Crimson Coral
+    '#06b6d4', // Cyan Turquoise
+    '#d946ef', // Fuchsia Plum
+    '#3b82f6', // Royal Blue
+    '#14b8a6', // Teal Jade
+    '#ef4444'  // Scarlet Red
+  ];
+
+  function normalizeHexColor(hex) {
+    if (typeof hex !== 'string') return '#8b5cf6';
+    const cleaned = hex.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(cleaned)) return cleaned.toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(cleaned)) {
+      const r = cleaned[1], g = cleaned[2], b = cleaned[3];
+      return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+    }
+    return '#8b5cf6';
+  }
+
+  function hexToRgb(hex) {
+    const norm = normalizeHexColor(hex);
+    return {
+      r: parseInt(norm.slice(1, 3), 16),
+      g: parseInt(norm.slice(3, 5), 16),
+      b: parseInt(norm.slice(5, 7), 16)
+    };
+  }
+
+  function mixHexColors(hexA, hexB, weightB) {
+    const a = hexToRgb(hexA);
+    const b = hexToRgb(hexB);
+    const w = Math.max(0, Math.min(1, weightB));
+    const r = Math.round(a.r * (1 - w) + b.r * w);
+    const g = Math.round(a.g * (1 - w) + b.g * w);
+    const bl = Math.round(a.b * (1 - w) + b.b * w);
+    return `#${[r, g, bl].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  function hslToHex(h, s, l) {
+    const sat = s / 100;
+    const lig = l / 100;
+    const k = n => (n + h / 30) % 12;
+    const a = sat * Math.min(lig, 1 - lig);
+    const f = n => Math.round(255 * (lig - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))));
+    return `#${[f(0), f(8), f(4)].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  /** Pick a random vibrant color, avoiding already used track colors when available. */
+  function pickRandomTrackColor(usedColors = []) {
+    const usedSet = new Set(usedColors.filter(Boolean).map(normalizeHexColor));
+    const available = CUSTOM_TRACK_COLOR_PALETTE.filter(c => !usedSet.has(normalizeHexColor(c)));
+    if (available.length > 0) {
+      return available[Math.floor(Math.random() * available.length)];
+    }
+    const hue = Math.floor(Math.random() * 360);
+    const sat = 76 + Math.floor(Math.random() * 14);
+    const lig = 46 + Math.floor(Math.random() * 9);
+    return hslToHex(hue, sat, lig);
+  }
+
+  /** Build CSS tokens from a single hex accent so tracks, pads, and timeline share a cohesive theme. */
+  function buildTrackColorTheme(hex) {
+    const color = normalizeHexColor(hex);
+    const { r, g, b } = hexToRgb(color);
+    const light = mixHexColors(color, '#ffffff', 0.14);
+    const dark = mixHexColors(color, '#000000', 0.16);
+    return {
+      color,
+      light,
+      dark,
+      gradient: `linear-gradient(135deg, ${light} 0%, ${dark} 100%)`,
+      borderStrong: mixHexColors(color, '#ffffff', 0.25),
+      text: mixHexColors(color, '#000000', 0.22),
+      soft: `rgba(${r}, ${g}, ${b}, 0.1)`,
+      border: `rgba(${r}, ${g}, ${b}, 0.35)`,
+      glow: `rgba(${r}, ${g}, ${b}, 0.45)`,
+      glowSoft: `rgba(${r}, ${g}, ${b}, 0.28)`,
+      timelineText: mixHexColors(color, '#ffffff', 0.28)
+    };
+  }
+
   // --- 1. Audio DSP Helper Functions ---
   function createLPF(cutoff, sampleRate = 44100, Q = 0.707) {
     const w0 = 2 * Math.PI * Math.min(cutoff, sampleRate * 0.45) / sampleRate;
@@ -289,11 +378,35 @@
       }
     }
 
+    pickRandomTrackColor(usedColors = []) {
+      return pickRandomTrackColor(usedColors);
+    }
+
+    buildTrackColorTheme(hex) {
+      return buildTrackColorTheme(hex);
+    }
+
+    async ensureCustomTrackColors(tracks) {
+      const usedColors = tracks
+        .filter(t => t.type === 'custom' && t.color)
+        .map(t => t.color);
+
+      for (const track of tracks) {
+        if (track.type === 'custom' && !track.color) {
+          track.color = pickRandomTrackColor(usedColors);
+          usedColors.push(track.color);
+          await this.db.table('tracks').put(track);
+        }
+      }
+      return tracks;
+    }
+
     // --- Track Management ---
     async getAllTracks() {
       await this.init();
       const tracks = await this.db.table('tracks').toArray();
-      return tracks.sort((a, b) => (a.trackNumber || 99) - (b.trackNumber || 99));
+      tracks.sort((a, b) => (a.trackNumber || 99) - (b.trackNumber || 99));
+      return await this.ensureCustomTrackColors(tracks);
     }
 
     async getTrack(trackId) {
@@ -308,6 +421,7 @@
 
       const existingTracks = await this.getAllTracks();
       const customTracks = existingTracks.filter(t => t.type === 'custom');
+      const usedColors = customTracks.map(t => t.color).filter(Boolean);
       const trackNumber = 4 + customTracks.length;
       const trackId = `custom-track-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -316,6 +430,7 @@
         name: trimmed,
         type: 'custom',
         trackNumber: trackNumber,
+        color: pickRandomTrackColor(usedColors),
         baseTrackSound: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -647,14 +762,18 @@
             name: track.name,
             trackNumber: track.trackNumber,
             type: track.type,
+            color: track.color || null,
             baseTrackSound: track.baseTrackSound || null,
             defaultVariation: 'med',
             sounds: {}
           };
         } else {
-          // Update track name if it was renamed
+          // Update track metadata if it was renamed or assigned a color
           manifest.categories[track.id].name = track.name;
           manifest.categories[track.id].type = track.type;
+          if (track.color) {
+            manifest.categories[track.id].color = track.color;
+          }
         }
       });
 
