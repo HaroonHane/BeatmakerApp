@@ -2195,7 +2195,7 @@ kbd {
   border-radius: 10px;
   background: linear-gradient(180deg, #ffffff 0%, #edf1f7 100%);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.04),
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
     0 1px 2px rgba(0, 0, 0, 0.03),
     inset 0 1px 0 #ffffff;
   cursor: pointer;
@@ -2484,24 +2484,28 @@ kbd {
 
 /* Matrix Bottom Actions */
 .matrix-bottom-actions {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   justify-content: center;
   gap: 1rem;
-  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  align-self: center;
 }
 
-
-
-.add-master-layer-btn {
+.matrix-bottom-actions .add-master-layer-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 7px 22px;
 
-  height: 46px;
-  padding: 7px 17px;
-
+  font-family: var(--font-main);
   border: 1px solid #ffb77f;
   border-radius: 100px;
 
@@ -2524,39 +2528,166 @@ kbd {
 }
 
 /* Icon */
-.master-layer-icon {
+.matrix-bottom-actions .master-layer-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 
   color: #f15a24;
-  font-size: 17px;
+  font-size: 18px;
 }
 
 /* Text */
-.master-layer-text {
-  font-size: 12px;
+.matrix-bottom-actions .master-layer-text {
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.1px;
+  letter-spacing: 0.15px;
+  line-height: 1;
   white-space: nowrap;
 }
 
+/* Equalize Add Beat Button alongside Add Instrument Layer */
+.matrix-bottom-actions .add-beat-col {
+  width: 100%;
+  height: 100%;
+}
+
+.matrix-bottom-actions .add-beat-btn {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  gap: 11px;
+  padding: 7px 18px 7px 8px;
+  font-family: var(--font-main);
+}
+
+.matrix-bottom-actions .add-beat-icon-wrap {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  font-size: 16px;
+}
+
+.matrix-bottom-actions .add-beat-text {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.35px;
+  line-height: 1;
+}
+
+.matrix-bottom-actions .add-beat-badge {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  line-height: 1;
+}
+
+.matrix-bottom-actions .add-beat-waveform {
+  height: 24px;
+}
+
+.matrix-bottom-actions .add-beat-waveform span:nth-child(1),
+.matrix-bottom-actions .add-beat-waveform span:nth-child(7) {
+  height: 7px;
+}
+
+.matrix-bottom-actions .add-beat-waveform span:nth-child(2),
+.matrix-bottom-actions .add-beat-waveform span:nth-child(6) {
+  height: 13px;
+}
+
+.matrix-bottom-actions .add-beat-waveform span:nth-child(3),
+.matrix-bottom-actions .add-beat-waveform span:nth-child(5) {
+  height: 19px;
+}
+
+.matrix-bottom-actions .add-beat-waveform span:nth-child(4) {
+  height: 24px;
+}
+
 /* Hover */
-.add-master-layer-btn:hover {
+.matrix-bottom-actions .add-master-layer-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(255, 104, 36, 0.22);
   filter: brightness(1.02);
 }
 
 /* Active */
-.add-master-layer-btn:active {
+.matrix-bottom-actions .add-master-layer-btn:active {
   transform: scale(0.97);
 }
 
 /* Accessibility */
-.add-master-layer-btn:focus-visible {
+.matrix-bottom-actions .add-master-layer-btn:focus-visible {
   outline: 3px solid rgba(255, 101, 0, 0.25);
   outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .matrix-bottom-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .matrix-bottom-actions .add-master-layer-btn,
+  .matrix-bottom-actions .add-beat-btn {
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .matrix-bottom-actions .add-beat-btn {
+    gap: 9px;
+    padding: 6px 12px 6px 7px;
+  }
+
+  .matrix-bottom-actions .add-beat-icon-wrap {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 15px;
+  }
+
+  .matrix-bottom-actions .master-layer-text,
+  .matrix-bottom-actions .add-beat-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 680px) {
+  .matrix-bottom-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .matrix-bottom-actions .add-master-layer-btn,
+  .matrix-bottom-actions .add-beat-btn {
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .matrix-bottom-actions .add-beat-btn {
+    gap: 9px;
+    padding: 6px 12px 6px 7px;
+  }
+
+  .matrix-bottom-actions .add-beat-icon-wrap {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 15px;
+  }
+
+  .matrix-bottom-actions .master-layer-text,
+  .matrix-bottom-actions .add-beat-text {
+    font-size: 13px;
+  }
 }
 
 /* Step Columns & Multi-Pad Layout Stability */
