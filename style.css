@@ -683,14 +683,32 @@ kbd {
   gap: 0.35rem;
 }
 
+.preset-dropdown-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.preset-dropdown-icon {
+  position: absolute;
+  left: 0.65rem;
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .preset-dropdown {
   height: 34px;
+  width: 100%;
   flex: 1;
   min-width: 0;
   background: #ffffff;
   border: 1px solid #dce2ed;
   border-radius: 8px;
-  padding: 0 0.55rem;
+  padding: 0 0.55rem 0 1.65rem;
   color: var(--text-primary);
   font-family: var(--font-main);
   font-size: 0.74rem;
@@ -1632,7 +1650,7 @@ kbd {
   gap: 0.25rem;
 }
 
-/* Tactile Switch Buttons for Audition (▶), Solo (S), Mute (M) */
+/* Tactile Switch Buttons for Audition (Play), Solo (S), Mute (M) */
 .track-btn {
   width: 24px;
   height: 24px;
@@ -2350,7 +2368,7 @@ kbd {
   border-radius: 8px;
 }
 
-/* Individual Pad Controls (⚙ and ✕) */
+/* Individual Pad Controls (Config and Delete) */
 .pad-controls {
   position: absolute;
   top: 3px;

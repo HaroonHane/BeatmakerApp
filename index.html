@@ -166,14 +166,17 @@
           <span>GROOVE PRESETS</span>
         </div>
         <div class="preset-selector-wrap">
-          <select id="groove-presets" class="preset-dropdown" aria-label="Load Groove Preset">
-            <option value="" disabled selected>⚡ Presets...</option>
-            <option value="trap">🔥 Trap 808 Heat</option>
-            <option value="boombap">🥁 Hip-Hop Boom Bap</option>
-            <option value="house">🕺 Four-on-the-Floor House</option>
-            <option value="techno">⚡ Cyber Techno</option>
-            <option value="lofi">☕ Lo-Fi Chill Hop</option>
-          </select>
+          <div class="preset-dropdown-container">
+            <i class="fa-solid fa-bolt preset-dropdown-icon"></i>
+            <select id="groove-presets" class="preset-dropdown" aria-label="Load Groove Preset">
+              <option value="" disabled selected>Load Preset Beat...</option>
+              <option value="trap">Trap 808 Heat</option>
+              <option value="boombap">Hip-Hop Boom Bap</option>
+              <option value="house">Four-on-the-Floor House</option>
+              <option value="techno">Cyber Techno</option>
+              <option value="lofi">Lo-Fi Chill Hop</option>
+            </select>
+          </div>
           <button class="random-beat-btn" id="random-beat-btn" title="Generate Random Beat Pattern">
             <i class="fa-solid fa-dice"></i> Dice
           </button>
