@@ -1239,28 +1239,22 @@ kbd {
   width: 100%;
 }
 
-/* Horizontally Scrollable Timeline Viewport with Sticky Channel Strips */
+/* Sequencer Viewport Container with Independent Per-Track Scrolling */
 .sequencer-viewport {
   width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
   position: relative;
   border-radius: 18px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.65rem;
+  padding-bottom: 0.25rem;
 }
 
-/* Elegant visible claymorphic scrollbar */
 .sequencer-viewport::-webkit-scrollbar {
-  height: 9px;
+  height: 8px;
 }
 
 .sequencer-viewport::-webkit-scrollbar-track {
   background: #edf0f5;
   border-radius: 9999px;
-  margin-left: 285px;
-  /* aligns right after the sticky 270px channel strip */
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -1269,11 +1263,6 @@ kbd {
   border-radius: 9999px;
   border: 2px solid #edf0f5;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.sequencer-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-gradient);
 }
 
 /* Canvas containing all sequencer rows */
@@ -1281,20 +1270,33 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
 }
 
-/* Step Header Bar & Step Ruler */
+/* Step Header Bar & Synchronized Step Ruler Viewport */
 .step-header-bar {
   display: flex;
   align-items: stretch;
   padding: 0;
   margin: 0;
   border: 1px solid transparent;
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   box-sizing: border-box;
+}
+
+.step-ruler-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.step-ruler-viewport::-webkit-scrollbar {
+  display: none;
 }
 
 .step-header-spacer {
@@ -1657,10 +1659,42 @@ kbd {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   position: relative;
   overflow: visible;
-  /* allows sticky channel-strip to stay pinned */
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   box-sizing: border-box;
+}
+
+/* Independent Horizontal Scroll Area Per Track */
+.track-pads-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 17px 17px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.track-pads-viewport::-webkit-scrollbar {
+  height: 6px;
+}
+
+.track-pads-viewport::-webkit-scrollbar-track {
+  background: rgba(237, 240, 245, 0.75);
+  border-radius: 9999px;
+  margin: 0 10px;
+}
+
+.track-pads-viewport::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  transition: background 0.15s ease;
+}
+
+.track-pads-viewport::-webkit-scrollbar-thumb:hover,
+.track-pads-viewport:hover::-webkit-scrollbar-thumb {
+  background: #94a3b8;
 }
 
 .track-channel::before {
@@ -2334,8 +2368,7 @@ kbd {
   padding: 0;
   transition: all 0.25s ease;
   overflow: visible;
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
 }
 
 .track-channel-group:hover {
@@ -2350,8 +2383,7 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
 }
 
 /* Sublayer Track Row - exact matching padding and width as primary-layer */
@@ -5299,10 +5331,6 @@ body.library-open {
     flex: 0 0 285px;
   }
 
-  .sequencer-viewport::-webkit-scrollbar-track {
-    margin-left: 285px;
-  }
-
   .ux-laws-grid {
     grid-template-columns: 1fr;
   }
@@ -5360,10 +5388,6 @@ body.library-open {
     flex: 0 0 285px;
   }
 
-  .sequencer-viewport::-webkit-scrollbar-track {
-    margin-left: 285px;
-  }
-
   .step-header-bar {
     display: flex;
   }
@@ -5371,11 +5395,28 @@ body.library-open {
   .track-channel {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
   }
 
   .pad {
     min-height: 44px;
+  }
+}
+
+@media (max-width: 580px) {
+  .sequencer-viewport {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .sequencer-canvas {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .step-ruler-viewport,
+  .track-pads-viewport {
+    min-width: 260px;
   }
 }
 

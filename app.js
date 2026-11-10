@@ -136,11 +136,20 @@ document.addEventListener('DOMContentLoaded', () => {
         hihat: document.querySelector('#hihat-meter .meter-bar')
       }
 
-      // Dynamic Unlimited Beat Expansion & Horizontal Scrolling
+      // Dynamic Unlimited Beat Expansion & Per-Track Independent Scrolling
       this.numBeats = 2
       this.totalSteps = 8
       this.sequencerViewport = document.getElementById('sequencer-viewport')
+      this.stepRulerViewport = document.getElementById('step-ruler-viewport')
       this.stepRuler = document.getElementById('step-ruler')
+      this.activeTrackViewport = null
+      this.scrollSyncRafId = null
+      this.pendingRulerLeft = null
+      this.lastProgrammaticRulerLeft = null
+      this.suppressRulerScrollUntil = 0
+      this.suppressTrackScrollUntil = 0
+      this.userScrollOrigin = null
+      this.rulerScrollOriginTimer = null
       this.addBeatBtn = document.getElementById('add-beat-btn')
       this.addBeatBottomBtn = document.getElementById('add-beat-bottom-btn')
       this.beatCountVal = document.getElementById('beat-count-val')
@@ -194,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.bindPrimaryIntensityEvents()
       this.bindLayerCreationButtons()
       this.bindBeatExpansionEvents()
+      this.initTrackScrollSync()
       this.bindPadPopoverEvents()
       this.bindPresetEvents()
       this.bindModalEvents()
@@ -1199,6 +1209,177 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     }
 
+    initTrackScrollSync() {
+      this.bindStepRulerScrollSync()
+      this.getTrackScrollViewports().forEach(vp => {
+        this.bindTrackScrollViewport(vp)
+      })
+    }
+
+    getTrackScrollViewports() {
+      return Array.from(document.querySelectorAll('.track-pads-viewport'))
+    }
+
+    bindStepRulerScrollSync() {
+      const rulerVp = this.stepRulerViewport
+      if (!rulerVp || rulerVp.dataset.scrollBound === '1') return
+      rulerVp.dataset.scrollBound = '1'
+
+      const markRulerOrigin = () => {
+        this.userScrollOrigin = 'ruler'
+        if (this.rulerScrollOriginTimer) clearTimeout(this.rulerScrollOriginTimer)
+        this.rulerScrollOriginTimer = setTimeout(() => {
+          if (this.userScrollOrigin === 'ruler') this.userScrollOrigin = null
+        }, 180)
+      }
+
+      rulerVp.addEventListener('pointerdown', markRulerOrigin, { passive: true })
+      rulerVp.addEventListener('touchstart', markRulerOrigin, { passive: true })
+      rulerVp.addEventListener('wheel', markRulerOrigin, { passive: true })
+
+      let rulerRafId = null
+      rulerVp.addEventListener('scroll', () => {
+        const now = performance.now()
+        if (now < this.suppressRulerScrollUntil) return
+        if (this.lastProgrammaticRulerLeft !== null && Math.abs(rulerVp.scrollLeft - this.lastProgrammaticRulerLeft) <= 1) {
+          return
+        }
+        this.lastProgrammaticRulerLeft = null
+        if (this.userScrollOrigin !== 'ruler') return
+        markRulerOrigin()
+
+        if (rulerRafId !== null) return
+        rulerRafId = requestAnimationFrame(() => {
+          rulerRafId = null
+          const left = rulerVp.scrollLeft
+          this.suppressTrackScrollUntil = performance.now() + 100
+          this.getTrackScrollViewports().forEach(vp => {
+            if (Math.abs(vp.scrollLeft - left) > 0.5) {
+              vp.scrollLeft = left
+            }
+          })
+        })
+      }, { passive: true })
+    }
+
+    bindTrackScrollViewport(trackViewport) {
+      if (!trackViewport || trackViewport.dataset.scrollBound === '1') return
+      trackViewport.dataset.scrollBound = '1'
+
+      const syncActiveToRuler = () => {
+        if (performance.now() < this.suppressTrackScrollUntil) return
+        this.userScrollOrigin = 'track'
+        this.activeTrackViewport = trackViewport
+        this.syncRulerOffsetNow(trackViewport.scrollLeft)
+      }
+
+      const trackRow = trackViewport.closest('.track-channel')
+      if (trackRow) {
+        trackRow.addEventListener('pointerenter', syncActiveToRuler, { passive: true })
+      }
+      trackViewport.addEventListener('pointerdown', syncActiveToRuler, { passive: true })
+      trackViewport.addEventListener('touchstart', syncActiveToRuler, { passive: true })
+      trackViewport.addEventListener('wheel', () => {
+        this.userScrollOrigin = 'track'
+        this.activeTrackViewport = trackViewport
+      }, { passive: true })
+      trackViewport.addEventListener('focusin', syncActiveToRuler, { passive: true })
+
+      trackViewport.addEventListener('scroll', () => {
+        if (performance.now() < this.suppressTrackScrollUntil || this.userScrollOrigin === 'ruler') return
+        this.activeTrackViewport = trackViewport
+        this.scheduleRulerSync(trackViewport.scrollLeft)
+      }, { passive: true })
+    }
+
+    scheduleRulerSync(targetLeft) {
+      this.pendingRulerLeft = targetLeft
+      if (this.scrollSyncRafId !== null) return
+      this.scrollSyncRafId = requestAnimationFrame(() => {
+        this.scrollSyncRafId = null
+        const nextLeft = this.pendingRulerLeft
+        this.pendingRulerLeft = null
+        if (nextLeft !== null) {
+          this.syncRulerOffsetNow(nextLeft)
+        }
+      })
+    }
+
+    syncRulerOffsetNow(targetLeft) {
+      const rulerVp = this.stepRulerViewport
+      if (!rulerVp) return
+      const maxLeft = Math.max(0, rulerVp.scrollWidth - rulerVp.clientWidth)
+      const clamped = Math.max(0, Math.min(targetLeft, maxLeft))
+      if (Math.abs(rulerVp.scrollLeft - clamped) <= 0.5) return
+      this.lastProgrammaticRulerLeft = clamped
+      this.suppressRulerScrollUntil = performance.now() + 100
+      rulerVp.scrollLeft = clamped
+    }
+
+    scrollMatrixToOffset(targetLeft, smooth = false) {
+      const guardMs = smooth ? 450 : 100
+      const now = performance.now()
+      this.suppressRulerScrollUntil = now + guardMs
+      this.suppressTrackScrollUntil = now + guardMs
+
+      const trackVps = this.getTrackScrollViewports()
+      const beatMaxLeft = trackVps.length
+        ? Math.max(0, trackVps[0].scrollWidth - trackVps[0].clientWidth)
+        : (this.stepRulerViewport ? Math.max(0, this.stepRulerViewport.scrollWidth - this.stepRulerViewport.clientWidth) : 0)
+      const sharedTarget = Math.max(0, Math.min(targetLeft, beatMaxLeft))
+
+      const targets = []
+      if (this.stepRulerViewport) targets.push(this.stepRulerViewport)
+      trackVps.forEach(vp => targets.push(vp))
+
+      targets.forEach(vp => {
+        const vpMax = Math.max(0, vp.scrollWidth - vp.clientWidth)
+        const clamped = Math.max(0, Math.min(sharedTarget, vpMax))
+        if (vp === this.stepRulerViewport) {
+          this.lastProgrammaticRulerLeft = clamped
+        }
+        if (Math.abs(vp.scrollLeft - clamped) <= 0.5) return
+        if (smooth && typeof vp.scrollTo === 'function') {
+          vp.scrollTo({ left: clamped, behavior: 'smooth' })
+        } else {
+          vp.scrollLeft = clamped
+        }
+      })
+    }
+
+    scrollMatrixToStepIfNeeded(stepIdx, center = false) {
+      const trackVps = this.getTrackScrollViewports()
+      const refVp = trackVps[0] || this.stepRulerViewport
+      if (!refVp || refVp.scrollWidth <= refVp.clientWidth + 10) return
+
+      if (!center && stepIdx === 0) {
+        if (refVp.scrollLeft > 0) {
+          this.scrollMatrixToOffset(0, true)
+        }
+        return
+      }
+
+      const beatIdx = Math.floor(stepIdx / 4)
+      const stepInBeat = stepIdx % 4
+      // Match .step-ruler left pad (12px), chunk width + gap (240px + 8px = 248px), step pitch (~56.7px)
+      const stepLeft = 12 + beatIdx * 248 + 10.6 + stepInBeat * 56.7
+      const stepRight = stepLeft + 49
+
+      if (center) {
+        const centered = Math.max(0, (stepLeft + 24.5) - (refVp.clientWidth / 2))
+        this.scrollMatrixToOffset(centered, true)
+        return
+      }
+
+      const visibleLeft = refVp.scrollLeft
+      const visibleRight = visibleLeft + refVp.clientWidth
+      if (stepRight > visibleRight - 25) {
+        this.scrollMatrixToOffset(stepRight - refVp.clientWidth + 60, true)
+      } else if (stepLeft < visibleLeft + 12) {
+        this.scrollMatrixToOffset(Math.max(0, stepLeft - 20), true)
+      }
+    }
+
     addBeat(playFeedback = true) {
       this.ensureAudioContextRunning()
       this.numBeats++
@@ -1304,19 +1485,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
 
-      // 5. Tactile audio feedback & smooth auto-scroll to the new beat (only if content overflows)
+      // 5. Tactile audio feedback & smooth auto-scroll to the new beat (only if track beats overflow)
       if (playFeedback) {
         this.playPadSound(this.resolveSoundFile('hihat', 'hihat-808', 'low'), 0.5)
-        if (this.sequencerViewport) {
-          setTimeout(() => {
-            if (this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10) {
-              this.sequencerViewport.scrollTo({
-                left: this.sequencerViewport.scrollWidth,
-                behavior: 'smooth'
-              })
-            }
-          }, 50)
-        }
+        setTimeout(() => {
+          const trackVps = this.getTrackScrollViewports()
+          const refVp = trackVps[0] || this.stepRulerViewport
+          if (refVp && refVp.scrollWidth > refVp.clientWidth + 10) {
+            this.scrollMatrixToOffset(refVp.scrollWidth, true)
+          }
+        }, 50)
       }
 
       this.saveActiveSession()
@@ -1516,13 +1694,23 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <!-- Dynamic Sequencer Pad Grid Chunked in 4-Pad Beats -->
-        <div class="pads-grid">
-          ${this.renderAllBeatChunksHTML(layer)}
+        <div class="track-pads-viewport" data-track-scroll="${layer.id}">
+          <div class="pads-grid">
+            ${this.renderAllBeatChunksHTML(layer)}
+          </div>
         </div>
       `
 
       container.appendChild(layerEl)
       this.bindLayerDOMEvents(layerEl, layer)
+      const vpEl = layerEl.querySelector('.track-pads-viewport')
+      this.bindTrackScrollViewport(vpEl)
+      if (vpEl && !layer.isPrimary && layer.parentTrack) {
+        const parentVp = document.querySelector(`.primary-layer[data-track="${layer.parentTrack}"] .track-pads-viewport`)
+        if (parentVp && parentVp.scrollLeft > 0) {
+          vpEl.scrollLeft = parentVp.scrollLeft
+        }
+      }
     }
 
     getSoundFamilyOptionsHTML(category, selectedSoundFamily) {
@@ -2244,34 +2432,9 @@ document.addEventListener('DOMContentLoaded', () => {
         this.updateTimelinePlayhead(currentStep)
       }
 
-      // Auto-follow playhead in scrollable viewport ONLY if sequence overflows viewport width
-      if (this.sequencerViewport && this.isPlaying) {
-        const isOverflowing = this.sequencerViewport.scrollWidth > this.sequencerViewport.clientWidth + 10
-        if (isOverflowing) {
-          if (currentStep === 0) {
-            if (this.sequencerViewport.scrollLeft > 0) {
-              this.sequencerViewport.scrollTo({ left: 0, behavior: 'smooth' })
-            }
-          } else {
-            const stepColHead = document.querySelector(`.step-col-head[data-step="${currentStep}"]`)
-            if (stepColHead) {
-              const stepRect = stepColHead.getBoundingClientRect()
-              const vpRect = this.sequencerViewport.getBoundingClientRect()
-              const stickyStripWidth = 285
-
-              // Only scroll right if the step is leaving the visible right viewport edge
-              if (stepRect.right > vpRect.right - 25) {
-                const delta = stepRect.right - vpRect.right + 60
-                this.sequencerViewport.scrollBy({ left: delta, behavior: 'smooth' })
-              }
-              // If step is tucked behind the sticky channel strip on the left
-              else if (stepRect.left < vpRect.left + stickyStripWidth) {
-                const delta = stepRect.left - (vpRect.left + stickyStripWidth + 20)
-                this.sequencerViewport.scrollBy({ left: delta, behavior: 'smooth' })
-              }
-            }
-          }
-        }
+      // Auto-follow playhead across synced timeline & track viewports (only if overflowing)
+      if (this.isPlaying) {
+        this.scrollMatrixToStepIfNeeded(currentStep, false)
       }
 
       // 2. Playback Multi-Layer Engine
@@ -2954,8 +3117,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- Dynamic Sequencer Pad Grid Chunked in 4-Pad Beats -->
-          <div class="pads-grid">
-            ${this.renderAllBeatChunksHTML(layer)}
+          <div class="track-pads-viewport" data-track-scroll="${layer.id}">
+            <div class="pads-grid">
+              ${this.renderAllBeatChunksHTML(layer)}
+            </div>
           </div>
         </div>
 
@@ -2972,6 +3137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       container.appendChild(groupEl)
       this.bindCustomTrackDOMEvents(groupEl, layer, track)
+      this.bindTrackScrollViewport(groupEl.querySelector('.track-pads-viewport'))
 
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       this.saveActiveSession()
@@ -4200,13 +4366,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update timeline playhead
       this.updateTimelinePlayhead(clamped)
 
-      // Auto-scroll viewport if step is out of view
-      if (this.sequencerViewport) {
-        const stepColHead = document.querySelector(`.step-col-head[data-step="${clamped}"]`)
-        if (stepColHead) {
-          stepColHead.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-        }
-      }
+      // Auto-scroll ruler & track viewports if step is out of view
+      this.scrollMatrixToStepIfNeeded(clamped, true)
 
       // Audition preview of active pads at this step for immediate tactile response
       this.layers.forEach(layer => {

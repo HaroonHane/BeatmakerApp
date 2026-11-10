@@ -307,66 +307,68 @@
                 </span>
               </div>
             </div>
-            <div class="step-ruler" id="step-ruler">
-              <!-- Beat 1 (Steps 1-4) -->
-              <div class="beat-group-header beat-1-header" data-beat="1">
-                <div class="beat-header-top">
-                  <span class="beat-label">BEAT 01</span>
-                </div>
-                <div class="step-numbers">
-                  <div class="step-col-head" data-step="0"><span class="step-idx">1</span>
-                    <div class="step-dot" data-step="0"></div>
+            <div class="step-ruler-viewport" id="step-ruler-viewport">
+              <div class="step-ruler" id="step-ruler">
+                <!-- Beat 1 (Steps 1-4) -->
+                <div class="beat-group-header beat-1-header" data-beat="1">
+                  <div class="beat-header-top">
+                    <span class="beat-label">BEAT 01</span>
                   </div>
-                  <div class="step-col-head" data-step="1"><span class="step-idx">2</span>
-                    <div class="step-dot" data-step="1"></div>
-                  </div>
-                  <div class="step-col-head" data-step="2"><span class="step-idx">3</span>
-                    <div class="step-dot" data-step="2"></div>
-                  </div>
-                  <div class="step-col-head" data-step="3"><span class="step-idx">4</span>
-                    <div class="step-dot" data-step="3"></div>
-                  </div>
-                </div>
-              </div>
-              <!-- Beat 2 (Steps 5-8) -->
-              <div class="beat-group-header beat-2-header" data-beat="2">
-                <div class="beat-header-top">
-                  <span class="beat-label">BEAT 02</span>
-                </div>
-                <div class="step-numbers">
-                  <div class="step-col-head" data-step="4"><span class="step-idx">5</span>
-                    <div class="step-dot" data-step="4"></div>
-                  </div>
-                  <div class="step-col-head" data-step="5"><span class="step-idx">6</span>
-                    <div class="step-dot" data-step="5"></div>
-                  </div>
-                  <div class="step-col-head" data-step="6"><span class="step-idx">7</span>
-                    <div class="step-dot" data-step="6"></div>
-                  </div>
-                  <div class="step-col-head" data-step="7"><span class="step-idx">8</span>
-                    <div class="step-dot" data-step="7"></div>
+                  <div class="step-numbers">
+                    <div class="step-col-head" data-step="0"><span class="step-idx">1</span>
+                      <div class="step-dot" data-step="0"></div>
+                    </div>
+                    <div class="step-col-head" data-step="1"><span class="step-idx">2</span>
+                      <div class="step-dot" data-step="1"></div>
+                    </div>
+                    <div class="step-col-head" data-step="2"><span class="step-idx">3</span>
+                      <div class="step-dot" data-step="2"></div>
+                    </div>
+                    <div class="step-col-head" data-step="3"><span class="step-idx">4</span>
+                      <div class="step-dot" data-step="3"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+                <!-- Beat 2 (Steps 5-8) -->
+                <div class="beat-group-header beat-2-header" data-beat="2">
+                  <div class="beat-header-top">
+                    <span class="beat-label">BEAT 02</span>
+                  </div>
+                  <div class="step-numbers">
+                    <div class="step-col-head" data-step="4"><span class="step-idx">5</span>
+                      <div class="step-dot" data-step="4"></div>
+                    </div>
+                    <div class="step-col-head" data-step="5"><span class="step-idx">6</span>
+                      <div class="step-dot" data-step="5"></div>
+                    </div>
+                    <div class="step-col-head" data-step="6"><span class="step-idx">7</span>
+                      <div class="step-dot" data-step="6"></div>
+                    </div>
+                    <div class="step-col-head" data-step="7"><span class="step-idx">8</span>
+                      <div class="step-dot" data-step="7"></div>
+                    </div>
+                  </div>
+                </div>
 
-              <!-- Add Beat Column / Action -->
-              <div class="add-beat-col" id="add-beat-col">
-                <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
-                  <div class="add-beat-icon-wrap">
-                    <i class="fa-solid fa-plus"></i>
-                  </div>
+                <!-- Add Beat Column / Action -->
+                <div class="add-beat-col" id="add-beat-col">
+                  <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
+                    <div class="add-beat-icon-wrap">
+                      <i class="fa-solid fa-plus"></i>
+                    </div>
 
-                  <span class="add-beat-text">ADD BEAT</span>
-                  <div class="add-beat-waveform">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </button>
+                    <span class="add-beat-text">ADD BEAT</span>
+                    <div class="add-beat-waveform">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -443,7 +445,8 @@
               </div>
 
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-              <div class="kick-pads pads-grid">
+              <div class="track-pads-viewport" data-track-scroll="kick-primary">
+                <div class="kick-pads pads-grid">
                 <div class="beat-chunk beat-chunk-1">
                   <div class="beat-step-cell" data-step="0">
                     <div class="pads-stack-container">
@@ -564,6 +567,7 @@
                   <button class="chunk-add-layer-btn" data-track="kick" data-layer-id="kick-primary" data-beat="2"
                     title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
                 </div>
+                </div>
               </div>
             </div>
             <!-- Sub-Layers Container for Kick -->
@@ -655,7 +659,8 @@
               </div>
 
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-              <div class="snare-pads pads-grid">
+              <div class="track-pads-viewport" data-track-scroll="snare-primary">
+                <div class="snare-pads pads-grid">
                 <div class="beat-chunk beat-chunk-1">
                   <div class="beat-step-cell" data-step="0">
                     <div class="pads-stack-container">
@@ -776,6 +781,7 @@
                   <button class="chunk-add-layer-btn" data-track="snare" data-layer-id="snare-primary" data-beat="2"
                     title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
                 </div>
+                </div>
               </div>
             </div>
             <!-- Sub-Layers Container for Snare -->
@@ -868,7 +874,8 @@
               </div>
 
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
-              <div class="hihat-pads pads-grid">
+              <div class="track-pads-viewport" data-track-scroll="hihat-primary">
+                <div class="hihat-pads pads-grid">
                 <div class="beat-chunk beat-chunk-1">
                   <div class="beat-step-cell" data-step="0">
                     <div class="pads-stack-container">
@@ -988,6 +995,7 @@
                   </div>
                   <button class="chunk-add-layer-btn" data-track="hihat" data-layer-id="hihat-primary" data-beat="2"
                     title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
+                </div>
                 </div>
               </div>
             </div>
