@@ -2185,6 +2185,8 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   padding: 0.15rem 0 0.15rem 0.75rem;
   position: sticky;
   left: 0;
@@ -4696,4 +4698,155 @@ kbd {
 .import-first-btn {
   padding: 0.65rem 1.25rem;
   font-size: 0.8rem;
+}
+
+/* Per-Track Preview-on-Add Checkmark Toggle */
+.track-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  height: 26px;
+  padding: 0 0.65rem 0 0.45rem;
+  background: #ffffff;
+  border: 1px solid #dce2ed;
+  border-radius: 9999px;
+  font-family: var(--font-main);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 #ffffff;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-actions .track-preview-toggle {
+  height: 32px;
+  border-radius: 8px;
+  padding: 0 0.75rem 0 0.55rem;
+  font-size: 0.72rem;
+}
+
+.track-preview-toggle:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+  transform: translateY(-1px);
+}
+
+.track-preview-toggle input[type="checkbox"],
+.add-track-preview-option input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.preview-check-box {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: transparent;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+}
+
+.track-preview-toggle input[type="checkbox"]:checked + .preview-check-box,
+.add-track-preview-option input[type="checkbox"]:checked + .preview-check-box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(255, 94, 30, 0.35);
+}
+
+.track-preview-toggle:has(input:checked) {
+  color: #1e293b;
+  border-color: rgba(255, 94, 30, 0.35);
+  background: #fffaf7;
+}
+
+.track-preview-toggle[data-track="snare"]:has(input:checked) {
+  border-color: rgba(26, 29, 36, 0.3);
+  background: #f8fafc;
+}
+
+.track-preview-toggle[data-track="snare"] input:checked + .preview-check-box {
+  background: var(--color-charcoal);
+  border-color: var(--color-charcoal);
+  box-shadow: 0 1px 4px rgba(26, 29, 36, 0.3);
+}
+
+.track-preview-toggle[data-track="hihat"]:has(input:checked) {
+  border-color: rgba(118, 224, 26, 0.45);
+  background: #f4fbf0;
+  color: #3b8206;
+}
+
+.track-preview-toggle[data-track="hihat"] input:checked + .preview-check-box {
+  background: #5ec20b;
+  border-color: #4b9b09;
+  box-shadow: 0 1px 4px rgba(118, 224, 26, 0.4);
+}
+
+.custom-track-group .track-preview-toggle:has(input:checked),
+.custom-category-card .track-preview-toggle:has(input:checked) {
+  color: var(--track-color-text, #7c3aed);
+  border-color: var(--track-color-border, rgba(139, 92, 246, 0.35));
+  background: var(--track-color-soft, #f5f3ff);
+}
+
+.custom-track-group .track-preview-toggle input:checked + .preview-check-box,
+.custom-category-card .track-preview-toggle input:checked + .preview-check-box {
+  background: var(--track-color, #8b5cf6);
+  border-color: var(--track-color, #8b5cf6);
+  box-shadow: 0 1px 4px var(--track-color-glow, rgba(139, 92, 246, 0.4));
+}
+
+/* Add New Track Modal Preview Option */
+.add-track-preview-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 0.45rem;
+  transition: all 0.16s ease;
+}
+
+.add-track-preview-option:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.add-track-preview-option:has(input:checked) {
+  border-color: rgba(255, 94, 30, 0.35);
+  background: #fff9f5;
+}
+
+.add-track-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.add-track-preview-text strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.add-track-preview-text small {
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.3;
 }

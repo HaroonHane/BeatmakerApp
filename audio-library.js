@@ -414,7 +414,7 @@
       return await this.db.table('tracks').get(trackId);
     }
 
-    async addCustomTrack(trackName) {
+    async addCustomTrack(trackName, options = {}) {
       await this.init();
       const trimmed = (trackName || '').trim();
       if (!trimmed) throw new Error('Track name cannot be empty');
@@ -431,6 +431,7 @@
         type: 'custom',
         trackNumber: trackNumber,
         color: pickRandomTrackColor(usedColors),
+        previewOnImport: options.previewOnImport !== undefined ? !!options.previewOnImport : true,
         baseTrackSound: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -438,6 +439,16 @@
 
       await this.db.table('tracks').put(newTrack);
       return newTrack;
+    }
+
+    async setTrackPreviewOnImport(trackId, enabled) {
+      await this.init();
+      const track = await this.getTrack(trackId);
+      if (!track) return null;
+      track.previewOnImport = !!enabled;
+      track.updatedAt = new Date().toISOString();
+      await this.db.table('tracks').put(track);
+      return track;
     }
 
     async renameTrack(trackId, newName) {
@@ -756,6 +767,7 @@
 
       // 1. Ensure all custom tracks exist in manifest
       allTracks.forEach(track => {
+        const previewFlag = track.previewOnImport !== undefined ? !!track.previewOnImport : true;
         if (!manifest.categories[track.id]) {
           manifest.categories[track.id] = {
             id: track.id,
@@ -763,16 +775,20 @@
             trackNumber: track.trackNumber,
             type: track.type,
             color: track.color || null,
+            previewOnImport: previewFlag,
             baseTrackSound: track.baseTrackSound || null,
             defaultVariation: 'med',
             sounds: {}
           };
         } else {
-          // Update track metadata if it was renamed or assigned a color
+          // Update track metadata if it was renamed or assigned a color/preview pref
           manifest.categories[track.id].name = track.name;
           manifest.categories[track.id].type = track.type;
           if (track.color) {
             manifest.categories[track.id].color = track.color;
+          }
+          if (track.previewOnImport !== undefined) {
+            manifest.categories[track.id].previewOnImport = previewFlag;
           }
         }
       });

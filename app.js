@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.layers = []
       this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
       this.customTrackColorCache = {}
+      this.trackPreviewPrefs = this.loadTrackPreviewPrefs()
       this.activePopoverPad = null // { layerId, step, padId }
 
       // Preset Beat Patterns (8 steps) with Dedicated Sound Families & Intensity Variations
@@ -155,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.cancelAddTrackBtn = document.getElementById('cancel-add-track-modal')
       this.confirmAddTrackBtn = document.getElementById('confirm-add-track-modal')
       this.customTrackNameInput = document.getElementById('custom-track-name-input')
+      this.newTrackPreviewCheckbox = document.getElementById('new-track-preview-checkbox')
       this.trackNameSuggestions = document.getElementById('track-name-suggestions')
 
       this.importProgressModal = document.getElementById('import-progress-modal')
@@ -217,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.refreshTrackSoundSelectors('snare')
       this.refreshTrackSoundSelectors('hihat')
       this.renderSoundAssetsModal()
+      this.syncAllTrackPreviewCheckboxes()
       this.populatePopoverCategories()
 
       // Safety net: persist active session on window beforeunload
@@ -326,6 +329,76 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.setProperty('--track-color-border', t.border)
       el.style.setProperty('--track-color-glow', t.glow)
       el.style.setProperty('--track-color-glow-soft', t.glowSoft)
+    }
+
+    // ------------------------------------------------------------------------
+    // Per-Track Preview-on-Import Checkmark Preferences
+    // ------------------------------------------------------------------------
+    loadTrackPreviewPrefs() {
+      try {
+        const raw = localStorage.getItem('beatmaker_track_preview_prefs')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed && typeof parsed === 'object') return parsed
+        }
+      } catch (e) {}
+      return {}
+    }
+
+    saveTrackPreviewPrefs() {
+      try {
+        localStorage.setItem('beatmaker_track_preview_prefs', JSON.stringify(this.trackPreviewPrefs || {}))
+      } catch (e) {}
+    }
+
+    isTrackPreviewEnabled(trackId) {
+      if (this.trackPreviewPrefs && this.trackPreviewPrefs[trackId] !== undefined) {
+        return !!this.trackPreviewPrefs[trackId]
+      }
+      const manifestCat = this.manifest?.categories?.[trackId]
+      if (manifestCat && manifestCat.previewOnImport !== undefined) {
+        return !!manifestCat.previewOnImport
+      }
+      return true
+    }
+
+    setTrackPreviewOnImport(trackId, enabled) {
+      if (!trackId) return
+      const flag = !!enabled
+      if (!this.trackPreviewPrefs) this.trackPreviewPrefs = {}
+      this.trackPreviewPrefs[trackId] = flag
+      this.saveTrackPreviewPrefs()
+
+      if (this.manifest?.categories?.[trackId]) {
+        this.manifest.categories[trackId].previewOnImport = flag
+      }
+      if (window.AudioLibrary?.setTrackPreviewOnImport) {
+        window.AudioLibrary.setTrackPreviewOnImport(trackId, flag).catch(() => {})
+      }
+
+      document.querySelectorAll(`.track-preview-checkbox[data-track="${trackId}"]`).forEach(cb => {
+        cb.checked = flag
+      })
+    }
+
+    renderTrackPreviewToggleHTML(trackId, trackName, labelText = 'Preview on Add') {
+      const checkedAttr = this.isTrackPreviewEnabled(trackId) ? 'checked' : ''
+      return `
+        <label class="track-preview-toggle" data-track="${trackId}" title="Play sound automatically when a new base sound is added to ${trackName}">
+          <input type="checkbox" class="track-preview-checkbox" data-track="${trackId}" ${checkedAttr} />
+          <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
+          <span class="preview-check-label">${labelText}</span>
+        </label>
+      `
+    }
+
+    syncAllTrackPreviewCheckboxes() {
+      document.querySelectorAll('.track-preview-checkbox').forEach(cb => {
+        const trackId = cb.dataset.track
+        if (trackId) {
+          cb.checked = this.isTrackPreviewEnabled(trackId)
+        }
+      })
     }
 
     // ------------------------------------------------------------------------
@@ -875,6 +948,17 @@ document.addEventListener('DOMContentLoaded', () => {
           const track = btn.dataset.track || 'kick'
           this.addLayer(track)
         })
+      })
+
+      // 1b. "Preview on Add" checkmark toggle on built-in tracks
+      document.querySelectorAll('.track-preview-checkbox').forEach(cb => {
+        const track = cb.dataset.track
+        if (track) {
+          cb.checked = this.isTrackPreviewEnabled(track)
+          cb.addEventListener('change', (e) => {
+            this.setTrackPreviewOnImport(track, e.target.checked)
+          })
+        }
       })
 
       // 2. "Add Layer" on each 4-pad beat card -> adds a 4-pad layer to THIS specific beat!
@@ -2678,6 +2762,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <button class="add-layer-btn" data-track="${track.id}" title="Add independent 4-pad layer beneath ${track.name}">
             <i class="fa-solid fa-plus"></i> Add Layer to ${track.name}
           </button>
+          ${this.renderTrackPreviewToggleHTML(track.id, track.name, 'Preview on Add')}
         </div>
       `
 
@@ -2806,6 +2891,15 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
+      // 9b. Preview on Add checkmark
+      const previewCheckbox = groupEl.querySelector('.track-preview-checkbox')
+      if (previewCheckbox) {
+        previewCheckbox.checked = this.isTrackPreviewEnabled(track.id)
+        previewCheckbox.addEventListener('change', (e) => {
+          this.setTrackPreviewOnImport(track.id, e.target.checked)
+        })
+      }
+
       // 10. Chunk Add Layer buttons
       groupEl.querySelectorAll('.chunk-add-layer-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -2898,6 +2992,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     openAddTrackModal() {
       if (this.customTrackNameInput) this.customTrackNameInput.value = ''
+      if (this.newTrackPreviewCheckbox) this.newTrackPreviewCheckbox.checked = true
       if (this.addTrackModal) {
         this.addTrackModal.style.display = 'flex'
         void this.addTrackModal.offsetWidth
@@ -2927,8 +3022,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return
       }
 
+      const previewOnImport = this.newTrackPreviewCheckbox ? this.newTrackPreviewCheckbox.checked : true
+
       try {
-        const newTrack = await window.AudioLibrary.addCustomTrack(name)
+        const newTrack = await window.AudioLibrary.addCustomTrack(name, { previewOnImport })
+        this.setTrackPreviewOnImport(newTrack.id, previewOnImport)
         await window.AudioLibrary.syncManifestWithDB(this.manifest)
         this.createCustomTrackDOM(newTrack)
         this.populatePopoverCategories()
@@ -2983,6 +3081,10 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             await window.AudioLibrary.deleteTrack(trackId)
             delete this.manifest.categories[trackId]
+            if (this.trackPreviewPrefs && trackId in this.trackPreviewPrefs) {
+              delete this.trackPreviewPrefs[trackId]
+              this.saveTrackPreviewPrefs()
+            }
 
             // Remove all layers for this track from this.layers
             this.layers = this.layers.filter(l => l.category !== trackId && l.parentTrack !== trackId)
@@ -3243,7 +3345,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
               this.closeImportProgressModal()
               this.showToast(`Imported "${importedSound.name}" with 5 studio variations!`, 'success')
-              this.playPadSound(this.resolveSoundFile(trackId, importedSound.id, 'med'), 0.85)
+              if (this.isTrackPreviewEnabled(trackId)) {
+                this.playPadSound(this.resolveSoundFile(trackId, importedSound.id, 'med'), 0.85)
+              }
             }, 500)
 
           } catch (err) {
@@ -3401,6 +3505,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h3 class="category-name">${cat.name}</h3>
             </div>
             <div class="category-actions">
+              ${this.renderTrackPreviewToggleHTML(catKey, cat.name, 'Preview')}
               <button class="modal-track-action-btn track-import-btn" data-track="${catKey}" title="Import new base sound into ${cat.name}">
                 <i class="fa-solid fa-file-arrow-up"></i> Import Base Sound
               </button>
@@ -3427,6 +3532,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
           const src = btn.dataset.src
           if (src) this.playDirectSound(src)
+        })
+      })
+
+      // Bind Preview-on-Import Checkboxes inside Sound Library modal
+      this.soundCategoriesList.querySelectorAll('.track-preview-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          e.stopPropagation()
+          const trackId = cb.dataset.track
+          if (trackId) this.setTrackPreviewOnImport(trackId, e.target.checked)
         })
       })
 

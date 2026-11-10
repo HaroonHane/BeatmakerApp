@@ -562,6 +562,11 @@
               <button class="add-layer-btn" data-track="kick" title="Add independent 4-pad layer beneath Kick">
                 <i class="fa-solid fa-plus"></i> Add Layer to Kick
               </button>
+              <label class="track-preview-toggle" data-track="kick" title="Play sound automatically when a new base sound is added to Kick">
+                <input type="checkbox" class="track-preview-checkbox" data-track="kick" checked />
+                <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
+                <span class="preview-check-label">Preview on Add</span>
+              </label>
             </div>
           </div>
 
@@ -768,6 +773,11 @@
               <button class="add-layer-btn" data-track="snare" title="Add independent 4-pad layer beneath Snare">
                 <i class="fa-solid fa-plus"></i> Add Layer to Snare
               </button>
+              <label class="track-preview-toggle" data-track="snare" title="Play sound automatically when a new base sound is added to Snare">
+                <input type="checkbox" class="track-preview-checkbox" data-track="snare" checked />
+                <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
+                <span class="preview-check-label">Preview on Add</span>
+              </label>
             </div>
           </div>
 
@@ -975,6 +985,11 @@
               <button class="add-layer-btn" data-track="hihat" title="Add independent 4-pad layer beneath Hi-Hat">
                 <i class="fa-solid fa-plus"></i> Add Layer to Hi-Hat
               </button>
+              <label class="track-preview-toggle" data-track="hihat" title="Play sound automatically when a new base sound is added to Hi-Hat">
+                <input type="checkbox" class="track-preview-checkbox" data-track="hihat" checked />
+                <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
+                <span class="preview-check-label">Preview on Add</span>
+              </label>
             </div>
           </div>
 
@@ -1408,6 +1423,15 @@
             <button type="button" class="track-suggestion-pill" data-name="Shaker">Shaker</button>
           </div>
         </div>
+
+        <label class="add-track-preview-option" for="new-track-preview-checkbox">
+          <input type="checkbox" id="new-track-preview-checkbox" checked />
+          <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
+          <span class="add-track-preview-text">
+            <strong>Preview sound when added</strong>
+            <small>Play the imported base sound automatically once it is added to this track</small>
+          </span>
+        </label>
 
         <div class="track-info-notice">
           <i class="fa-solid fa-circle-info"></i>
