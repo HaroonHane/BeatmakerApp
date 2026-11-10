@@ -111,8 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.dismissAssetsModalBtn = document.getElementById('dismiss-assets-modal')
       this.soundCategoriesList = document.getElementById('sound-categories-list')
 
-      // Pad Popover Config Modal Elements
+      // Pad Popover Config Drawer Elements
       this.padPopover = document.getElementById('pad-popover')
+      this.popoverSubtitle = document.getElementById('popover-subtitle')
       this.popoverClose = document.getElementById('popover-close')
       this.popoverSoundCat = document.getElementById('popover-sound-category')
       this.popoverSoundFamily = document.getElementById('popover-sound-family')
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.initTimeline()
       this.initExportEngine()
       this.initSequenceLibrary()
+      this.initSideDrawerManager()
 
       // Hydrate local IndexedDB audio library & custom tracks
       await this.initAudioLibrary()
@@ -452,6 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('beatmaker_active_session', JSON.stringify(sessionData))
       } catch (err) {
         console.warn('Could not save active session:', err)
+      }
+      if (this.syncOpenDrawerState) {
+        this.syncOpenDrawerState()
       }
     }
 
@@ -2044,10 +2049,19 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
-      // Open Modal
-      if (this.padPopover) {
-        this.padPopover.classList.add('active')
+      // Update Drawer Context Subtitle (which pad/step is currently being configured)
+      if (this.popoverSubtitle) {
+        const beatNum = Math.floor(step / 4) + 1
+        const stepInBeat = (step % 4) + 1
+        this.popoverSubtitle.textContent = `${layer.name || layer.category} • Beat ${beatNum} • Step ${stepInBeat}`
       }
+
+      // Open Side Drawer
+      this.openSideDrawer('pad-config')
+    }
+
+    closePadPopover() {
+      this.closeSideDrawer('pad-config')
     }
 
     populatePopoverCategories(selectedCategory = null) {
@@ -2092,15 +2106,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     bindPadPopoverEvents() {
-      // Close popover
+      // Close drawer
       if (this.popoverClose) {
         this.popoverClose.onclick = () => {
-          if (this.padPopover) this.padPopover.classList.remove('active')
+          this.closePadPopover()
         }
       }
       if (this.popoverDone) {
         this.popoverDone.onclick = () => {
-          if (this.padPopover) this.padPopover.classList.remove('active')
+          this.closePadPopover()
         }
       }
 
@@ -2244,22 +2258,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Delete Button inside Popover
+      // Delete Button inside Configure Pad Drawer
       if (this.popoverDelete) {
         this.popoverDelete.onclick = () => {
           if (!this.activePopoverPad) return
           const { layerId, step, padId } = this.activePopoverPad
           this.removePad(layerId, step, padId)
-          if (this.padPopover) this.padPopover.classList.remove('active')
-        }
-      }
-
-      // Close modal on backdrop click
-      if (this.padPopover) {
-        this.padPopover.onclick = (e) => {
-          if (e.target === this.padPopover) {
-            this.padPopover.classList.remove('active')
-          }
+          this.closePadPopover()
         }
       }
     }
@@ -2942,29 +2947,149 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
-      // Sound Assets Modal
+      // Sound Assets Drawer (Toggle on button click, close via close/dismiss buttons)
       if (this.soundAssetsBtn && this.soundAssetsModal) {
         this.soundAssetsBtn.addEventListener('click', () => {
-          this.soundAssetsModal.classList.add('active')
+          this.toggleSoundAssetsDrawer()
         })
       }
 
       if (this.closeAssetsModalBtn && this.soundAssetsModal) {
         this.closeAssetsModalBtn.addEventListener('click', () => {
-          this.soundAssetsModal.classList.remove('active')
+          this.closeSoundAssetsDrawer()
         })
       }
 
       if (this.dismissAssetsModalBtn && this.soundAssetsModal) {
         this.dismissAssetsModalBtn.addEventListener('click', () => {
-          this.soundAssetsModal.classList.remove('active')
+          this.closeSoundAssetsDrawer()
         })
       }
+    }
 
-      if (this.soundAssetsModal) {
-        this.soundAssetsModal.addEventListener('click', (e) => {
-          if (e.target === this.soundAssetsModal) this.soundAssetsModal.classList.remove('active')
+    // ------------------------------------------------------------------------
+    // Unified Right-Side Drawer Manager (Single Active Drawer, Zero Backdrop)
+    // ------------------------------------------------------------------------
+    initSideDrawerManager() {
+      this.activeSideDrawer = null
+      this.sideDrawers = {
+        'sound-assets': {
+          el: this.soundAssetsModal,
+          toggleBtn: this.soundAssetsBtn
+        },
+        'pad-config': {
+          el: this.padPopover,
+          toggleBtn: null
+        },
+        'save': {
+          el: this.saveModal,
+          toggleBtn: this.saveSeqBtn
+        },
+        'export': {
+          el: this.exportModal,
+          toggleBtn: this.exportBtn
+        }
+      }
+    }
+
+    openSideDrawer(key) {
+      const target = this.sideDrawers && this.sideDrawers[key]
+      if (!target || !target.el) return
+
+      Object.entries(this.sideDrawers).forEach(([k, entry]) => {
+        if (k !== key && entry.el && entry.el.classList.contains('active')) {
+          entry.el.classList.remove('active')
+          entry.el.setAttribute('aria-hidden', 'true')
+          if (entry.toggleBtn) {
+            entry.toggleBtn.classList.remove('drawer-trigger-active')
+            entry.toggleBtn.setAttribute('aria-expanded', 'false')
+          }
+          if (k === 'pad-config') {
+            this.activePopoverPad = null
+          }
+        }
+      })
+
+      target.el.classList.add('active')
+      target.el.setAttribute('aria-hidden', 'false')
+      if (target.toggleBtn) {
+        target.toggleBtn.classList.add('drawer-trigger-active')
+        target.toggleBtn.setAttribute('aria-expanded', 'true')
+      }
+
+      this.activeSideDrawer = key
+    }
+
+    closeSideDrawer(key = null) {
+      if (!this.sideDrawers) return
+
+      if (key) {
+        const entry = this.sideDrawers[key]
+        if (entry && entry.el) {
+          entry.el.classList.remove('active')
+          entry.el.setAttribute('aria-hidden', 'true')
+          if (entry.toggleBtn) {
+            entry.toggleBtn.classList.remove('drawer-trigger-active')
+            entry.toggleBtn.setAttribute('aria-expanded', 'false')
+          }
+        }
+        if (key === 'pad-config') {
+          this.activePopoverPad = null
+        }
+        if (this.activeSideDrawer === key) {
+          this.activeSideDrawer = null
+        }
+      } else {
+        Object.entries(this.sideDrawers).forEach(([k, entry]) => {
+          if (entry.el) {
+            entry.el.classList.remove('active')
+            entry.el.setAttribute('aria-hidden', 'true')
+          }
+          if (entry.toggleBtn) {
+            entry.toggleBtn.classList.remove('drawer-trigger-active')
+            entry.toggleBtn.setAttribute('aria-expanded', 'false')
+          }
         })
+        this.activePopoverPad = null
+        this.activeSideDrawer = null
+      }
+    }
+
+    toggleSideDrawer(key, onBeforeOpen = null) {
+      const entry = this.sideDrawers && this.sideDrawers[key]
+      if (!entry || !entry.el) return
+      if (entry.el.classList.contains('active')) {
+        this.closeSideDrawer(key)
+      } else {
+        if (typeof onBeforeOpen === 'function') onBeforeOpen()
+        this.openSideDrawer(key)
+      }
+    }
+
+    openSoundAssetsDrawer() {
+      this.openSideDrawer('sound-assets')
+    }
+
+    closeSoundAssetsDrawer() {
+      this.closeSideDrawer('sound-assets')
+    }
+
+    toggleSoundAssetsDrawer() {
+      this.toggleSideDrawer('sound-assets')
+    }
+
+    syncOpenDrawerState() {
+      if (!this.activeSideDrawer) return
+
+      if (this.activeSideDrawer === 'save') {
+        this.updateSaveModalStats()
+      } else if (this.activeSideDrawer === 'pad-config' && this.activePopoverPad) {
+        const { layerId, step, padId } = this.activePopoverPad
+        const layer = this.getLayer(layerId)
+        const exists = !!(layer && layer.steps && layer.steps[step] && layer.steps[step].some(p => p.id === padId))
+        if (!exists) {
+          this.closePadPopover()
+        }
       }
     }
 
@@ -4091,16 +4216,32 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setTempo(this.bpm - 5)
             break
           case 'Escape':
-            if (this.clearModal) this.clearModal.classList.remove('active')
-            if (this.uxLawsModal) this.uxLawsModal.classList.remove('active')
-            if (this.soundAssetsModal) this.soundAssetsModal.classList.remove('active')
-            if (this.padPopover) this.padPopover.classList.remove('active')
-            if (this.saveModal) this.closeSaveModal()
-            if (this.exportModal) this.closeExportModal()
+            if (this.addTrackModal && this.addTrackModal.classList.contains('active')) {
+              this.closeAddTrackModal()
+              break
+            }
+            if (this.confirmActionModal && this.confirmActionModal.classList.contains('active')) {
+              this.closeConfirmActionModal()
+              break
+            }
+            if (this.renameTrackModal && this.renameTrackModal.classList.contains('active')) {
+              this.closeRenameTrackModal()
+              break
+            }
+            if (this.clearModal && this.clearModal.classList.contains('active')) {
+              this.clearModal.classList.remove('active')
+              break
+            }
+            if (this.uxLawsModal && this.uxLawsModal.classList.contains('active')) {
+              this.uxLawsModal.classList.remove('active')
+              break
+            }
+            if (isLibOpen && isSaveModalOpen) {
+              this.closeSaveModal()
+              break
+            }
+            this.closeSideDrawer()
             if (this.libDrawer) this.closeLibrary()
-            if (this.addTrackModal) this.closeAddTrackModal()
-            if (this.confirmActionModal) this.closeConfirmActionModal()
-            if (this.renameTrackModal) this.closeRenameTrackModal()
             break
         }
       })
@@ -4397,18 +4538,13 @@ document.addEventListener('DOMContentLoaded', () => {
       this.selectedLoopCount = 1
 
       if (this.exportBtn) {
-        this.exportBtn.addEventListener('click', () => this.openExportModal())
+        this.exportBtn.addEventListener('click', () => this.toggleExportModal())
       }
       if (this.closeExportBtn) {
         this.closeExportBtn.addEventListener('click', () => this.closeExportModal())
       }
       if (this.cancelExportBtn) {
         this.cancelExportBtn.addEventListener('click', () => this.closeExportModal())
-      }
-      if (this.exportModal) {
-        this.exportModal.addEventListener('click', (e) => {
-          if (e.target === this.exportModal) this.closeExportModal()
-        })
       }
 
       // Format card selection
@@ -4441,18 +4577,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    openExportModal() {
-      if (!this.exportModal) return
+    prepareExportModal() {
       this.updateTimelineMetrics()
       if (this.exportProgressWrap) this.exportProgressWrap.style.display = 'none'
       if (this.exportProgressFill) this.exportProgressFill.style.width = '0%'
       if (this.confirmExportBtn) this.confirmExportBtn.disabled = false
-      this.exportModal.classList.add('active')
+    }
+
+    openExportModal() {
+      if (!this.exportModal) return
+      this.prepareExportModal()
+      this.openSideDrawer('export')
     }
 
     closeExportModal() {
-      if (!this.exportModal) return
-      this.exportModal.classList.remove('active')
+      this.closeSideDrawer('export')
+    }
+
+    toggleExportModal() {
+      this.toggleSideDrawer('export', () => this.prepareExportModal())
     }
 
     async handleExportConfirm() {
@@ -4759,9 +4902,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.libMoreDuplicateBtn = document.getElementById('lib-more-duplicate-btn')
       this.libMoreDeleteBtn = document.getElementById('lib-more-delete-btn')
 
-      // Save modal bindings
+      // Save drawer bindings
       if (this.saveSeqBtn) {
-        this.saveSeqBtn.addEventListener('click', () => this.openSaveModal())
+        this.saveSeqBtn.addEventListener('click', () => this.toggleSaveModal())
       }
       if (this.closeSaveBtn) {
         this.closeSaveBtn.addEventListener('click', () => this.closeSaveModal())
@@ -4769,15 +4912,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (this.cancelSaveBtn) {
         this.cancelSaveBtn.addEventListener('click', () => this.closeSaveModal())
       }
-      if (this.saveModal) {
-        this.saveModal.addEventListener('click', (e) => {
-          if (e.target === this.saveModal) this.closeSaveModal()
-        })
-      }
       if (this.confirmSaveBtn) {
         this.confirmSaveBtn.addEventListener('click', () => {
           const name = this.saveNameInput ? this.saveNameInput.value.trim() : ''
           this.saveCurrentSequence(name)
+        })
+      }
+      if (this.saveNameInput) {
+        this.saveNameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            const name = this.saveNameInput.value.trim()
+            this.saveCurrentSequence(name)
+          }
         })
       }
 
@@ -5113,18 +5260,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    openSaveModal() {
-      if (!this.saveModal) return
-      const defaultName = `Pattern ${this.library.length + 1}`
-      if (this.saveNameInput) {
-        this.saveNameInput.value = defaultName
-        setTimeout(() => {
-          this.saveNameInput.focus()
-          this.saveNameInput.select()
-        }, 100)
-      }
-
-      // Update Quick Stats Preview
+    updateSaveModalStats() {
       const statBpm = document.getElementById('save-stat-bpm')
       const statBeats = document.getElementById('save-stat-beats')
       const statLayers = document.getElementById('save-stat-layers')
@@ -5141,16 +5277,37 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       })
       if (statPads) statPads.textContent = `${activeCount} Active Pads`
+    }
 
-      this.saveModal.classList.add('active')
+    prepareSaveModal() {
+      const defaultName = `Pattern ${this.library.length + 1}`
+      if (this.saveNameInput) {
+        this.saveNameInput.value = defaultName
+        setTimeout(() => {
+          this.saveNameInput.focus()
+          this.saveNameInput.select()
+        }, 120)
+      }
+      this.updateSaveModalStats()
+    }
+
+    openSaveModal() {
+      if (!this.saveModal) return
+      this.prepareSaveModal()
+      this.openSideDrawer('save')
     }
 
     closeSaveModal() {
-      if (this.saveModal) this.saveModal.classList.remove('active')
+      this.closeSideDrawer('save')
+    }
+
+    toggleSaveModal() {
+      this.toggleSideDrawer('save', () => this.prepareSaveModal())
     }
 
     openLibrary() {
       if (!this.libDrawer || !this.libBackdrop) return
+      this.closeSideDrawer()
       const query = this.libSearchInput ? this.libSearchInput.value : ''
       if (!this.previewSeqId || !this.library.some(s => s.id === this.previewSeqId)) {
         const preferred = this.library.find(s => s.id === this.currentSeqId) || this.library[0]

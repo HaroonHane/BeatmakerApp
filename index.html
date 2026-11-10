@@ -47,7 +47,8 @@
           </div>
         </div>
 
-        <button class="sound-assets-btn" id="sound-assets-btn" title="View Categorized Sound Assets & Variations">
+        <button class="sound-assets-btn" id="sound-assets-btn" title="Toggle Categorized Sound Assets & Variations"
+          aria-controls="sound-assets-modal" aria-expanded="false">
           <div class="sound-assets-icon-wrap">
             <i class="fa-solid fa-layer-group"></i>
           </div>
@@ -212,12 +213,12 @@
         </div>
         <div class="project-controls-wrap">
           <button class="deck-btn save-btn" id="save-seq-btn" title="Save Sequence to Library (Ctrl+S)"
-            aria-label="Save Sequence">
+            aria-label="Save Sequence" aria-controls="save-sequence-modal" aria-expanded="false">
             <i class="fa-solid fa-floppy-disk"></i>
             <span>SAVE</span>
           </button>
           <button class="deck-btn export-btn" id="export-audio-btn" title="Export Audio (WAV / MP3) (Ctrl+E)"
-            aria-label="Export Audio">
+            aria-label="Export Audio" aria-controls="export-audio-modal" aria-expanded="false">
             <i class="fa-solid fa-download"></i>
             <span>EXPORT</span>
           </button>
@@ -1095,61 +1096,75 @@
     </div>
   </div>
 
-  <!-- Sound Assets & Categorized Variations Inspector Modal -->
-  <div class="modal-overlay" id="sound-assets-modal" role="dialog" aria-modal="true"
+  <!-- Sound Assets & Categorized Variations Right Drawer -->
+  <aside class="side-drawer sound-assets-drawer" id="sound-assets-modal" role="region" aria-hidden="true"
     aria-labelledby="assets-modal-title">
-    <div class="modal-content sound-modal-content glass-card">
-      <div class="ux-modal-header">
-        <div class="ux-header-title">
-          <i class="fa-solid fa-layer-group ux-accent-icon"></i>
-          <h2 id="assets-modal-title">Sound Assets &amp; Intensity Variations</h2>
+    <div class="side-drawer-shell">
+      <header class="ux-modal-header side-drawer-header">
+        <div class="modal-title-with-icon">
+          <div class="modal-header-icon assets-icon-tint">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <h2 id="assets-modal-title">Sound Assets &amp; Intensity Variations</h2>
+            <p class="drawer-subtitle">Categorized instruments &amp; 5-tier intensity variations</p>
+          </div>
         </div>
-        <button class="modal-close-btn" id="close-assets-modal" aria-label="Close modal">
+        <button class="modal-close-btn" id="close-assets-modal" aria-label="Close Sound Assets drawer"
+          title="Close Drawer (Esc)">
           <i class="fa-solid fa-xmark"></i>
         </button>
+      </header>
+
+      <div class="side-drawer-body">
+        <p class="assets-modal-intro">
+          All audio assets are organized into 3 core instrument families with designated base sounds and 5 tailored
+          acoustic intensity variations (Low, Med-Low, Med, Med-High, High) crafted using biquad low-pass filtering,
+          transient envelope shaping, velocity gain scaling, and harmonic saturation.
+        </p>
+
+        <div class="sound-categories-list" id="sound-categories-list">
+          <!-- Populated dynamically via sound-manifest.js / app.js / audio-library.js -->
+        </div>
+
+        <!-- Add Your Own Sound Track Section -->
+        <div class="sound-library-actions-bar">
+          <button class="add-custom-track-btn" id="open-add-track-modal-btn">
+            <i class="fa-solid fa-plus"></i> Add Your Own Sound Track
+          </button>
+        </div>
       </div>
 
-      <p class="assets-modal-intro">
-        All audio assets are organized into 3 core instrument families with designated base sounds and 5 tailored
-        acoustic intensity variations (Low, Med-Low, Med, Med-High, High) crafted using biquad low-pass filtering,
-        transient envelope shaping, velocity gain scaling, and harmonic saturation.
-      </p>
-
-      <div class="sound-categories-list" id="sound-categories-list">
-        <!-- Populated dynamically via sound-manifest.js / app.js / audio-library.js -->
-      </div>
-
-      <!-- Add Your Own Sound Track Section -->
-      <div class="sound-library-actions-bar">
-        <button class="add-custom-track-btn" id="open-add-track-modal-btn">
-          <i class="fa-solid fa-plus"></i> Add Your Own Sound Track
-        </button>
-      </div>
-
-      <div class="ux-modal-footer">
+      <footer class="ux-modal-footer side-drawer-footer">
         <button class="modal-confirm" id="dismiss-assets-modal">Close Library</button>
-      </div>
+      </footer>
     </div>
-  </div>
+  </aside>
 
-  <!-- Pad Inspector / Config Popover Modal -->
-  <div class="pad-popover modal-overlay" id="pad-popover" role="dialog" aria-modal="true"
+  <!-- Pad Inspector / Config Right Drawer -->
+  <aside class="side-drawer pad-popover pad-popover-drawer" id="pad-popover" role="region" aria-hidden="true"
     aria-labelledby="popover-title">
-    <div class="pad-popover-card glass-card">
-      <div class="popover-header">
-        <div class="popover-title-wrap">
-          <i class="fa-solid fa-sliders popover-icon"></i>
-          <h3 id="popover-title">Configure Pad</h3>
+    <div class="side-drawer-shell">
+      <header class="popover-header side-drawer-header">
+        <div class="modal-title-with-icon">
+          <div class="modal-header-icon popover-icon-tint">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <div>
+            <h3 id="popover-title">Configure Pad</h3>
+            <p class="drawer-subtitle" id="popover-subtitle">Customize sound, intensity, volume &amp; roll</p>
+          </div>
         </div>
-        <button class="popover-close-btn" id="popover-close" aria-label="Close pad configuration">
+        <button class="popover-close-btn modal-close-btn" id="popover-close" aria-label="Close pad configuration"
+          title="Close Drawer (Esc)">
           <i class="fa-solid fa-xmark"></i>
         </button>
-      </div>
+      </header>
 
-      <div class="popover-body">
+      <div class="popover-body side-drawer-body">
         <!-- Category & Sound Family -->
         <div class="popover-field">
-          <label class="popover-label"><i class="fa-solid fa-layer-group"></i> Sound Category</label>
+          <label class="popover-label" for="popover-sound-category"><i class="fa-solid fa-layer-group"></i> Sound Category</label>
           <select id="popover-sound-category" class="popover-select">
             <option value="kick">Kick Drums</option>
             <option value="snare">Snare Drums</option>
@@ -1158,7 +1173,7 @@
         </div>
 
         <div class="popover-field">
-          <label class="popover-label"><i class="fa-solid fa-compact-disc"></i> Sound Family</label>
+          <label class="popover-label" for="popover-sound-family"><i class="fa-solid fa-compact-disc"></i> Sound Family</label>
           <select id="popover-sound-family" class="popover-select">
             <!-- Populated dynamically based on category -->
           </select>
@@ -1179,7 +1194,7 @@
         <!-- Independent Volume -->
         <div class="popover-field">
           <div class="popover-label-row">
-            <label class="popover-label"><i class="fa-solid fa-volume-high"></i> Pad Volume</label>
+            <label class="popover-label" for="popover-volume"><i class="fa-solid fa-volume-high"></i> Pad Volume</label>
             <span class="popover-val" id="popover-volume-val">100%</span>
           </div>
           <input type="range" class="popover-slider" id="popover-volume" min="0" max="100" value="100" />
@@ -1197,7 +1212,7 @@
         </div>
       </div>
 
-      <div class="popover-footer">
+      <footer class="popover-footer side-drawer-footer">
         <button class="popover-btn preview-btn" id="popover-audition">
           <i class="fa-solid fa-play"></i> Audition
         </button>
@@ -1211,158 +1226,171 @@
         <button class="popover-btn apply-btn" id="popover-done">
           <i class="fa-solid fa-check"></i> Done
         </button>
-      </div>
+      </footer>
     </div>
-  </div>
+  </aside>
 
-  <!-- Save Sequence Modal -->
-  <div class="modal-overlay" id="save-sequence-modal" role="dialog" aria-modal="true"
+  <!-- Save Sequence Right Drawer -->
+  <aside class="side-drawer save-sequence-drawer" id="save-sequence-modal" role="region" aria-hidden="true"
     aria-labelledby="save-modal-title">
-    <div class="modal-content glass-card save-modal-card">
-      <div class="ux-modal-header">
+    <div class="side-drawer-shell">
+      <header class="ux-modal-header side-drawer-header">
         <div class="modal-title-with-icon">
           <div class="modal-header-icon save-icon-tint">
             <i class="fa-solid fa-floppy-disk"></i>
           </div>
-          <h2 id="save-modal-title">Save Sequence to Library</h2>
+          <div>
+            <h2 id="save-modal-title">Save Sequence to Library</h2>
+            <p class="drawer-subtitle">Persist pattern, active pads &amp; tempo settings</p>
+          </div>
         </div>
-        <button class="modal-close-btn" id="close-save-modal" aria-label="Close modal">
+        <button class="modal-close-btn" id="close-save-modal" aria-label="Close Save drawer"
+          title="Close Drawer (Esc)">
           <i class="fa-solid fa-xmark"></i>
         </button>
-      </div>
+      </header>
 
-      <p class="modal-desc">Save the complete sequence configuration, active pads, layers, sound variations, volume
-        faders, and BPM into your local library.</p>
+      <div class="side-drawer-body">
+        <p class="modal-desc">Save the complete sequence configuration, active pads, layers, sound variations, volume
+          faders, and BPM into your local library.</p>
 
-      <div class="save-input-group">
-        <label for="save-seq-name-input" class="save-label">Sequence Name</label>
-        <div class="save-input-wrap">
-          <i class="fa-solid fa-pen-nib"></i>
-          <input type="text" id="save-seq-name-input" placeholder="e.g. Neon Sunset Trap 808" maxlength="40" />
+        <div class="save-input-group">
+          <label for="save-seq-name-input" class="save-label">Sequence Name</label>
+          <div class="save-input-wrap">
+            <i class="fa-solid fa-pen-nib"></i>
+            <input type="text" id="save-seq-name-input" placeholder="e.g. Neon Sunset Trap 808" maxlength="40" />
+          </div>
+        </div>
+
+        <!-- Quick Stats Preview -->
+        <div class="seq-preview-stats">
+          <div class="stat-pill"><i class="fa-solid fa-gauge-high"></i> <span id="save-stat-bpm">150 BPM</span></div>
+          <div class="stat-pill"><i class="fa-solid fa-music"></i> <span id="save-stat-beats">2 Beats (8 Steps)</span>
+          </div>
+          <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> <span id="save-stat-layers">3 Tracks</span>
+          </div>
+          <div class="stat-pill"><i class="fa-solid fa-fire"></i> <span id="save-stat-pads">8 Active Pads</span></div>
         </div>
       </div>
 
-      <!-- Quick Stats Preview -->
-      <div class="seq-preview-stats">
-        <div class="stat-pill"><i class="fa-solid fa-gauge-high"></i> <span id="save-stat-bpm">150 BPM</span></div>
-        <div class="stat-pill"><i class="fa-solid fa-music"></i> <span id="save-stat-beats">2 Beats (8 Steps)</span>
-        </div>
-        <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> <span id="save-stat-layers">3 Tracks</span></div>
-        <div class="stat-pill"><i class="fa-solid fa-fire"></i> <span id="save-stat-pads">8 Active Pads</span></div>
-      </div>
-
-      <div class="ux-modal-footer">
+      <footer class="ux-modal-footer side-drawer-footer">
         <button class="modal-cancel" id="cancel-save-modal">
           <i class="fa-solid fa-xmark"></i> Cancel
         </button>
         <button class="modal-confirm" id="confirm-save-modal">
           <i class="fa-solid fa-bookmark"></i> Save Sequence
         </button>
-      </div>
+      </footer>
     </div>
-  </div>
+  </aside>
 
-  <!-- Audio Export & Download Modal -->
-  <div class="modal-overlay" id="export-audio-modal" role="dialog" aria-modal="true"
+  <!-- Audio Export & Download Right Drawer -->
+  <aside class="side-drawer export-audio-drawer" id="export-audio-modal" role="region" aria-hidden="true"
     aria-labelledby="export-modal-title">
-    <div class="modal-content glass-card export-modal-card">
-      <div class="ux-modal-header">
+    <div class="side-drawer-shell">
+      <header class="ux-modal-header side-drawer-header">
         <div class="modal-title-with-icon">
           <div class="modal-header-icon export-icon-tint">
             <i class="fa-solid fa-file-audio"></i>
           </div>
-          <h2 id="export-modal-title">Export Audio Sequence</h2>
+          <div>
+            <h2 id="export-modal-title">Export Audio Sequence</h2>
+            <p class="drawer-subtitle">Render complete mixdown with active settings</p>
+          </div>
         </div>
-        <button class="modal-close-btn" id="close-export-modal" aria-label="Close modal">
+        <button class="modal-close-btn" id="close-export-modal" aria-label="Close Export drawer"
+          title="Close Drawer (Esc)">
           <i class="fa-solid fa-xmark"></i>
         </button>
-      </div>
+      </header>
 
-      <p class="modal-desc">Render your complete sequence with all active layers, sound variations, volume levels, and
-        timing preserved.</p>
+      <div class="side-drawer-body">
+        <p class="modal-desc">Render your complete sequence with all active layers, sound variations, volume levels, and
+          timing preserved.</p>
 
-      <!-- File Name Field -->
-      <div class="save-input-group">
-        <label for="export-filename-input" class="save-label">Export File Name</label>
-        <div class="save-input-wrap">
-          <i class="fa-solid fa-music"></i>
-          <input type="text" id="export-filename-input" value="pulse808-groove" maxlength="40" />
+        <!-- File Name Field -->
+        <div class="save-input-group">
+          <label for="export-filename-input" class="save-label">Export File Name</label>
+          <div class="save-input-wrap">
+            <i class="fa-solid fa-music"></i>
+            <input type="text" id="export-filename-input" value="pulse808-groove" maxlength="40" />
+          </div>
         </div>
-      </div>
 
-      <!-- Format Selection -->
-      <div class="export-options-group">
-        <label class="save-label">Audio Format</label>
-        <div class="format-cards-row">
-          <label class="format-card active" data-format="wav">
-            <input type="radio" name="export-format" value="wav" checked />
-            <div class="format-card-content">
-              <div class="format-tag">LOSSLESS</div>
-              <span class="format-name">WAV Studio Master</span>
-              <span class="format-desc">44.1kHz • 16-Bit PCM Stereo</span>
-            </div>
+        <!-- Format Selection -->
+        <div class="export-options-group">
+          <label class="save-label">Audio Format</label>
+          <div class="format-cards-row">
+            <label class="format-card active" data-format="wav">
+              <input type="radio" name="export-format" value="wav" checked />
+              <div class="format-card-content">
+                <div class="format-tag">LOSSLESS</div>
+                <span class="format-name">WAV Studio Master</span>
+                <span class="format-desc">44.1kHz • 16-Bit PCM Stereo</span>
+              </div>
+            </label>
+            <label class="format-card" data-format="mp3">
+              <input type="radio" name="export-format" value="mp3" />
+              <div class="format-card-content">
+                <div class="format-tag">HIGH QUALITY</div>
+                <span class="format-name">MP3 Audio</span>
+                <span class="format-desc">320kbps Universal Format</span>
+              </div>
+            </label>
+            <label class="format-card" data-format="webm">
+              <input type="radio" name="export-format" value="webm" />
+              <div class="format-card-content">
+                <div class="format-tag">BROADCAST</div>
+                <span class="format-name">WebM Audio</span>
+                <span class="format-desc">Opus Stream Recording</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Loop Count Selection -->
+        <div class="export-options-group">
+          <label class="save-label">Loop Repetitions</label>
+          <div class="loop-reps-row">
+            <button type="button" class="loop-rep-pill active" data-loops="1">1x Loop (<span
+                id="export-rep-dur-1">3.2s</span>)</button>
+            <button type="button" class="loop-rep-pill" data-loops="2">2x Loops (<span
+                id="export-rep-dur-2">6.4s</span>)</button>
+            <button type="button" class="loop-rep-pill" data-loops="4">4x Loops (<span
+                id="export-rep-dur-4">12.8s</span>)</button>
+            <button type="button" class="loop-rep-pill" data-loops="8">8x Loops (<span
+                id="export-rep-dur-8">25.6s</span>)</button>
+          </div>
+        </div>
+
+        <!-- Peak Normalization Toggle -->
+        <div class="export-toggle-row">
+          <label class="toggle-switch-label" for="export-normalize-toggle">
+            <input type="checkbox" id="export-normalize-toggle" checked />
+            <span class="toggle-switch-slider"></span>
+            <span class="toggle-switch-text">Peak Normalization to -0.1 dB (Maximize punch &amp; prevent clipping)</span>
           </label>
-          <label class="format-card" data-format="mp3">
-            <input type="radio" name="export-format" value="mp3" />
-            <div class="format-card-content">
-              <div class="format-tag">HIGH QUALITY</div>
-              <span class="format-name">MP3 Audio</span>
-              <span class="format-desc">320kbps Universal Format</span>
-            </div>
-          </label>
-          <label class="format-card" data-format="webm">
-            <input type="radio" name="export-format" value="webm" />
-            <div class="format-card-content">
-              <div class="format-tag">BROADCAST</div>
-              <span class="format-name">WebM Audio</span>
-              <span class="format-desc">Opus Stream Recording</span>
-            </div>
-          </label>
+        </div>
+
+        <!-- Export Render Progress Indicator (hidden during idle) -->
+        <div class="export-progress-wrap" id="export-progress-wrap" style="display: none;">
+          <div class="export-progress-bar">
+            <div class="export-progress-fill" id="export-progress-fill"></div>
+          </div>
+          <div class="export-progress-status" id="export-progress-status">Synthesizing audio stems...</div>
         </div>
       </div>
 
-      <!-- Loop Count Selection -->
-      <div class="export-options-group">
-        <label class="save-label">Loop Repetitions</label>
-        <div class="loop-reps-row">
-          <button type="button" class="loop-rep-pill active" data-loops="1">1x Loop (<span
-              id="export-rep-dur-1">3.2s</span>)</button>
-          <button type="button" class="loop-rep-pill" data-loops="2">2x Loops (<span
-              id="export-rep-dur-2">6.4s</span>)</button>
-          <button type="button" class="loop-rep-pill" data-loops="4">4x Loops (<span
-              id="export-rep-dur-4">12.8s</span>)</button>
-          <button type="button" class="loop-rep-pill" data-loops="8">8x Loops (<span
-              id="export-rep-dur-8">25.6s</span>)</button>
-        </div>
-      </div>
-
-      <!-- Peak Normalization Toggle -->
-      <div class="export-toggle-row">
-        <label class="toggle-switch-label" for="export-normalize-toggle">
-          <input type="checkbox" id="export-normalize-toggle" checked />
-          <span class="toggle-switch-slider"></span>
-          <span class="toggle-switch-text">Peak Normalization to -0.1 dB (Maximize punch &amp; prevent clipping)</span>
-        </label>
-      </div>
-
-      <!-- Export Render Progress Indicator (hidden during idle) -->
-      <div class="export-progress-wrap" id="export-progress-wrap" style="display: none;">
-        <div class="export-progress-bar">
-          <div class="export-progress-fill" id="export-progress-fill"></div>
-        </div>
-        <div class="export-progress-status" id="export-progress-status">Synthesizing audio stems...</div>
-      </div>
-
-      <div class="ux-modal-footer">
+      <footer class="ux-modal-footer side-drawer-footer">
         <button class="modal-cancel" id="cancel-export-modal">
           <i class="fa-solid fa-xmark"></i> Cancel
         </button>
         <button class="modal-confirm export-confirm-btn" id="confirm-export-modal">
           <i class="fa-solid fa-download"></i> Export &amp; Download
         </button>
-      </div>
+      </footer>
     </div>
-  </div>
+  </aside>
 
   <!-- Full-Screen Sequence Library Experience -->
   <aside class="library-drawer" id="library-drawer" role="dialog" aria-modal="true" aria-label="Sequence Library">
