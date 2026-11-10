@@ -355,7 +355,17 @@
                   <div class="add-beat-icon-wrap">
                     <i class="fa-solid fa-plus"></i>
                   </div>
+
                   <span class="add-beat-text">ADD BEAT</span>
+                  <div class="add-beat-waveform">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -562,7 +572,8 @@
               <button class="add-layer-btn" data-track="kick" title="Add independent 4-pad layer beneath Kick">
                 <i class="fa-solid fa-plus"></i> Add Layer to Kick
               </button>
-              <label class="track-preview-toggle" data-track="kick" title="Play sound automatically when a new base sound is added to Kick">
+              <label class="track-preview-toggle" data-track="kick"
+                title="Play sound automatically when a new base sound is added to Kick">
                 <input type="checkbox" class="track-preview-checkbox" data-track="kick" checked />
                 <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
                 <span class="preview-check-label">Preview on Add</span>
@@ -773,7 +784,8 @@
               <button class="add-layer-btn" data-track="snare" title="Add independent 4-pad layer beneath Snare">
                 <i class="fa-solid fa-plus"></i> Add Layer to Snare
               </button>
-              <label class="track-preview-toggle" data-track="snare" title="Play sound automatically when a new base sound is added to Snare">
+              <label class="track-preview-toggle" data-track="snare"
+                title="Play sound automatically when a new base sound is added to Snare">
                 <input type="checkbox" class="track-preview-checkbox" data-track="snare" checked />
                 <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
                 <span class="preview-check-label">Preview on Add</span>
@@ -985,7 +997,8 @@
               <button class="add-layer-btn" data-track="hihat" title="Add independent 4-pad layer beneath Hi-Hat">
                 <i class="fa-solid fa-plus"></i> Add Layer to Hi-Hat
               </button>
-              <label class="track-preview-toggle" data-track="hihat" title="Play sound automatically when a new base sound is added to Hi-Hat">
+              <label class="track-preview-toggle" data-track="hihat"
+                title="Play sound automatically when a new base sound is added to Hi-Hat">
                 <input type="checkbox" class="track-preview-checkbox" data-track="hihat" checked />
                 <span class="preview-check-box"><i class="fa-solid fa-check"></i></span>
                 <span class="preview-check-label">Preview on Add</span>
@@ -1001,13 +1014,37 @@
 
       <!-- Matrix Bottom Actions (Add Instrument Layer & Add Beat Measure) -->
       <div class="matrix-bottom-actions">
+        <!-- Add Master Instrument Layer -->
         <button class="add-master-layer-btn" id="add-master-layer-btn" title="Add a new independent instrument layer">
-          <i class="fa-solid fa-plus"></i> Add New Instrument Layer
+          <span class="master-layer-icon">
+            <i class="fa-solid fa-wave-square"></i>
+          </span>
+
+          <span class="master-layer-text">Add Instrument Layer</span>
         </button>
-        <button class="add-beat-bottom-btn" id="add-beat-bottom-btn"
-          title="Add another 4-pad beat measure to the sequence">
-          <i class="fa-solid fa-plus"></i> Add Beat (+4 Pads)
-        </button>
+
+        <!-- Add Beat Column / Action -->
+        <div class="add-beat-col" id="add-beat-bottom-btn">
+          <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
+            <div class="add-beat-icon-wrap">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+
+            <span class="add-beat-text">ADD BEAT</span>
+
+            <span class="add-beat-badge">+4 Pads</span>
+
+            <div class="add-beat-waveform">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </button>
+        </div>
       </div>
 
     </section>
@@ -1018,7 +1055,7 @@
     <audio class="hihat-pad-audio" src="./sounds/hihat/base/hihat-808.wav" preload="auto"></audio>
 
     <!-- Footer Info Bar -->
-    <footer class="studio-footer">
+    <!-- <footer class="studio-footer">
       <div class="footer-stat">
         <i class="fa-solid fa-music"></i>
         <span>Mode: <strong>8-Step Polyphonic</strong></span>
@@ -1031,7 +1068,7 @@
         <i class="fa-solid fa-microchip"></i>
         <span>DSP Engine: <strong>Low-Pass Filtering &bull; Dynamic Scaling &bull; Saturation</strong></span>
       </div>
-    </footer>
+    </footer> -->
   </main>
 
   <!-- Confirmation Modal (Clear Grid) -->
@@ -1406,7 +1443,8 @@
           </label>
           <div class="track-input-wrap">
             <i class="fa-solid fa-music"></i>
-            <input type="text" id="custom-track-name-input" placeholder="e.g. Clap, 808 Bass, Shaker, Vocals..." maxlength="30" autocomplete="off" />
+            <input type="text" id="custom-track-name-input" placeholder="e.g. Clap, 808 Bass, Shaker, Vocals..."
+              maxlength="30" autocomplete="off" />
           </div>
         </div>
 
@@ -1435,7 +1473,8 @@
 
         <div class="track-info-notice">
           <i class="fa-solid fa-circle-info"></i>
-          <span>Once created, this track will appear in your sequencer. You can import your own base audio files into it, and the audio engine will automatically synthesize 5 studio intensity variations for it.</span>
+          <span>Once created, this track will appear in your sequencer. You can import your own base audio files into
+            it, and the audio engine will automatically synthesize 5 studio intensity variations for it.</span>
         </div>
       </div>
 
@@ -1451,14 +1490,16 @@
   </div>
 
   <!-- Import & Variation Generation Progress Modal -->
-  <div class="modal-overlay" id="import-progress-modal" role="dialog" aria-modal="true" aria-labelledby="import-progress-title">
+  <div class="modal-overlay" id="import-progress-modal" role="dialog" aria-modal="true"
+    aria-labelledby="import-progress-title">
     <div class="import-progress-card glass-card">
       <div class="modal-card-header">
         <div class="modal-title-wrap">
           <i class="fa-solid fa-wand-magic-sparkles modal-icon text-accent"></i>
           <div>
             <h3 id="import-progress-title">Importing Base Sound</h3>
-            <p class="modal-subtitle" id="import-progress-subtitle">Synthesizing audio variations &amp; caching to IndexedDB</p>
+            <p class="modal-subtitle" id="import-progress-subtitle">Synthesizing audio variations &amp; caching to
+              IndexedDB</p>
           </div>
         </div>
       </div>
@@ -1493,7 +1534,8 @@
   </div>
 
   <!-- Generic Confirmation Modal for Deletions & Renames -->
-  <div class="modal-overlay" id="confirm-action-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-action-title">
+  <div class="modal-overlay" id="confirm-action-modal" role="dialog" aria-modal="true"
+    aria-labelledby="confirm-action-title">
     <div class="confirm-action-card glass-card">
       <div class="modal-card-header">
         <div class="modal-title-wrap">
@@ -1524,7 +1566,8 @@
   </div>
 
   <!-- Rename Track Modal -->
-  <div class="modal-overlay" id="rename-track-modal" role="dialog" aria-modal="true" aria-labelledby="rename-track-title">
+  <div class="modal-overlay" id="rename-track-modal" role="dialog" aria-modal="true"
+    aria-labelledby="rename-track-title">
     <div class="rename-track-card glass-card">
       <div class="modal-card-header">
         <div class="modal-title-wrap">
@@ -1546,7 +1589,8 @@
           </label>
           <div class="track-input-wrap">
             <i class="fa-solid fa-music"></i>
-            <input type="text" id="rename-track-input" placeholder="Enter new track name..." maxlength="30" autocomplete="off" />
+            <input type="text" id="rename-track-input" placeholder="Enter new track name..." maxlength="30"
+              autocomplete="off" />
           </div>
         </div>
       </div>

@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
       this.tapTimes = []
       this.audioCtx = null
       this.audioBuffers = new Map() // Cache for decoded audio buffers
+      this.activeTrackPreviews = new Map() // layerId -> { token, btn, handle }
+      this.previewTokenCounter = 0
 
       // Dynamic Multi-Layer Data Architecture
       // Each layer contains its own identity, channel settings, and 8-step pads array
@@ -886,19 +888,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return null
     }
 
-    playPadSound(fileSrc, volume = 1.0) {
-      if (!fileSrc) return
+    playPadSound(fileSrc, volume = 1.0, options = {}) {
+      if (!fileSrc) return null
       this.ensureAudioContextRunning()
 
-      // Clamp volume
       const safeVol = Math.max(0, Math.min(1, volume))
+      const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null
 
       // Web Audio API Polyphony with Audio Buffer caching
       if (this.audioCtx) {
         if (this.audioBuffers.has(fileSrc)) {
           const buffer = this.audioBuffers.get(fileSrc)
-          this.triggerBufferSource(buffer, safeVol)
-          return
+          return this.triggerBufferSource(buffer, safeVol, onEnded)
         }
 
         // Fetch & decode buffer asynchronously while falling back to Audio element for instant response
@@ -915,14 +916,50 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const audio = new Audio(fileSrc)
         audio.volume = safeVol
+        let stopped = false
+        const cleanup = () => {
+          audio.onended = null
+          audio.onerror = null
+        }
+        if (onEnded) {
+          audio.onended = () => {
+            cleanup()
+            if (!stopped) onEnded()
+          }
+          audio.onerror = () => {
+            cleanup()
+            if (!stopped) onEnded()
+          }
+        }
         const playPromise = audio.play()
         if (playPromise !== undefined) {
-          playPromise.catch(() => {})
+          playPromise.catch(() => {
+            cleanup()
+            if (!stopped && onEnded) onEnded()
+          })
         }
-      } catch (e) {}
+        return {
+          stop: () => {
+            stopped = true
+            cleanup()
+            try {
+              audio.pause()
+              audio.currentTime = 0
+            } catch (e) {}
+          },
+          setVolume: (newVol) => {
+            try {
+              audio.volume = Math.max(0, Math.min(1, newVol))
+            } catch (e) {}
+          }
+        }
+      } catch (e) {
+        if (onEnded) onEnded()
+        return null
+      }
     }
 
-    triggerBufferSource(buffer, volume) {
+    triggerBufferSource(buffer, volume, onEnded = null) {
       try {
         const source = this.audioCtx.createBufferSource()
         const gainNode = this.audioCtx.createGain()
@@ -930,12 +967,167 @@ document.addEventListener('DOMContentLoaded', () => {
         gainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime)
         source.connect(gainNode)
         gainNode.connect(this.audioCtx.destination)
+
+        let stopped = false
+        source.onended = () => {
+          source.onended = null
+          try { gainNode.disconnect() } catch (e) {}
+          if (!stopped && onEnded) onEnded()
+        }
         source.start(0)
-      } catch (e) {}
+
+        return {
+          stop: () => {
+            stopped = true
+            source.onended = null
+            try { source.stop(0) } catch (e) {}
+            try { source.disconnect() } catch (e) {}
+            try { gainNode.disconnect() } catch (e) {}
+          },
+          setVolume: (newVol) => {
+            try {
+              const clamped = Math.max(0, Math.min(1, newVol))
+              gainNode.gain.setValueAtTime(clamped, this.audioCtx.currentTime)
+            } catch (e) {}
+          }
+        }
+      } catch (e) {
+        if (onEnded) onEnded()
+        return null
+      }
     }
 
     playDirectSound(fileSrc) {
-      this.playPadSound(fileSrc, 0.95)
+      return this.playPadSound(fileSrc, 0.95)
+    }
+
+    getLayerAuditionButton(layer) {
+      if (!layer) return null
+      return document.querySelector(`.audition-btn[data-layer-id="${layer.id}"]`) ||
+        (layer.isPrimary ? document.querySelector(`.audition-btn[data-audition="${layer.category}"]`) : null)
+    }
+
+    setAuditionButtonState(btn, isPlaying) {
+      if (!btn) return
+      btn.classList.toggle('is-previewing', !!isPlaying)
+      btn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false')
+      const baseTitle = btn.dataset.baseTitle || btn.getAttribute('title') || 'Preview Sound'
+      if (!btn.dataset.baseTitle) btn.dataset.baseTitle = baseTitle
+      btn.setAttribute('title', isPlaying ? 'Stop Preview' : baseTitle)
+      const icon = btn.querySelector('i')
+      if (icon) {
+        icon.className = isPlaying ? 'fa-solid fa-stop' : 'fa-solid fa-play'
+      }
+    }
+
+    stopTrackPreview(layerId) {
+      if (!layerId || !this.activeTrackPreviews) return false
+      const entry = this.activeTrackPreviews.get(layerId)
+      if (!entry) return false
+
+      this.activeTrackPreviews.delete(layerId)
+      if (entry.handle && typeof entry.handle.stop === 'function') {
+        entry.handle.stop()
+      }
+      const btn = entry.btn || this.getLayerAuditionButton(this.getLayer(layerId))
+      this.setAuditionButtonState(btn, false)
+      return true
+    }
+
+    startTrackPreview(layer, btn, fileSrc, volume = 1.0) {
+      if (!layer || !fileSrc) return null
+      this.stopTrackPreview(layer.id)
+
+      const targetBtn = btn || this.getLayerAuditionButton(layer)
+      const token = ++this.previewTokenCounter
+      const entry = { token, btn: targetBtn, handle: null }
+      this.activeTrackPreviews.set(layer.id, entry)
+      this.setAuditionButtonState(targetBtn, true)
+
+      const handle = this.playPadSound(fileSrc, volume, {
+        onEnded: () => {
+          const current = this.activeTrackPreviews.get(layer.id)
+          if (current && current.token === token) {
+            this.activeTrackPreviews.delete(layer.id)
+            this.setAuditionButtonState(current.btn || this.getLayerAuditionButton(layer), false)
+          }
+        }
+      })
+
+      if (!handle) {
+        const current = this.activeTrackPreviews.get(layer.id)
+        if (current && current.token === token) {
+          this.activeTrackPreviews.delete(layer.id)
+          this.setAuditionButtonState(targetBtn, false)
+        }
+        return null
+      }
+
+      // Guard against synchronous onEnded having already cleared this entry
+      if (this.activeTrackPreviews.get(layer.id) === entry) {
+        entry.handle = handle
+      }
+      return handle
+    }
+
+    toggleTrackAudition(layer, btn) {
+      if (!layer) return
+      if (this.activeTrackPreviews.has(layer.id)) {
+        this.stopTrackPreview(layer.id)
+        return
+      }
+      if (!layer.soundFamily) {
+        this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
+        this.triggerBaseSoundImport(layer.category, layer.id)
+        return
+      }
+      const fileSrc = this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity)
+      if (fileSrc) {
+        this.startTrackPreview(layer, btn, fileSrc, layer.volume)
+      }
+    }
+
+    getLayerSampleSelect(layer) {
+      if (!layer) return null
+      if (layer.isPrimary) {
+        return document.getElementById(`${layer.category}-beat-audio`) ||
+          document.querySelector(`.custom-track-sample-select[data-layer-id="${layer.id}"]`)
+      }
+      return document.querySelector(`.layer-family-select[data-layer-id="${layer.id}"]`)
+    }
+
+    syncLayerSoundRemoveButton(layer) {
+      const selectEl = this.getLayerSampleSelect(layer)
+      const wrap = selectEl ? selectEl.closest('.sample-picker-wrap') : null
+      if (!wrap) return
+
+      const soundData = layer.soundFamily
+        ? this.manifest?.categories?.[layer.category]?.sounds?.[layer.soundFamily]
+        : null
+      const isUserSound = !!(soundData && soundData.isCustom)
+
+      let removeBtn = wrap.querySelector('.remove-user-sound-btn')
+      if (!isUserSound) {
+        if (removeBtn) removeBtn.style.display = 'none'
+        return
+      }
+
+      if (!removeBtn) {
+        removeBtn = document.createElement('button')
+        removeBtn.type = 'button'
+        removeBtn.className = 'remove-user-sound-btn'
+        removeBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>'
+        wrap.appendChild(removeBtn)
+      }
+
+      removeBtn.style.display = 'inline-flex'
+      removeBtn.title = `Remove "${soundData.name}" from ${layer.name}`
+      removeBtn.setAttribute('aria-label', `Remove ${soundData.name}`)
+      removeBtn.onclick = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        this.confirmDeleteSound(layer.category, layer.soundFamily, soundData.name)
+      }
     }
 
     // ------------------------------------------------------------------------
@@ -1375,12 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const auditionBtn = layerEl.querySelector('.sublayer-audition-btn')
       if (auditionBtn) {
         auditionBtn.addEventListener('click', () => {
-          if (!layer.soundFamily) {
-            this.showToast(`Please import a base sound for "${layer.name}" first`, 'info')
-            this.triggerBaseSoundImport(layer.category, layer.id)
-            return
-          }
-          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          this.toggleTrackAudition(layer, auditionBtn)
         })
       }
 
@@ -1421,6 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 5. Sound Family Selector
       const familySelect = layerEl.querySelector('.layer-family-select')
       if (familySelect) {
+        this.syncLayerSoundRemoveButton(layer)
         familySelect.addEventListener('change', (e) => {
           const val = e.target.value
           if (val === '__import__') {
@@ -1432,8 +1620,9 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = layer.soundFamily })
           })
+          this.syncLayerSoundRemoveButton(layer)
           if (layer.soundFamily) {
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.startTrackPreview(layer, auditionBtn, this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
           }
           this.saveActiveSession()
         })
@@ -1445,6 +1634,10 @@ document.addEventListener('DOMContentLoaded', () => {
         volumeSlider.addEventListener('input', (e) => {
           const val = parseInt(e.target.value, 10)
           layer.volume = val / 100
+          const activePreview = this.activeTrackPreviews.get(layer.id)
+          if (activePreview?.handle?.setVolume) {
+            activePreview.handle.setVolume(layer.volume)
+          }
           const display = volumeSlider.nextElementSibling
           if (display) display.textContent = `${val}%`
           this.saveActiveSession()
@@ -1463,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stepPads.forEach(pad => { pad.intensity = intensity })
           })
           if (layer.soundFamily) {
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.startTrackPreview(layer, auditionBtn, this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
           }
           this.saveActiveSession()
         })
@@ -1494,6 +1687,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Don't remove primary tracks
       if (this.layers[idx].isPrimary) return
 
+      this.stopTrackPreview(layerId)
       this.layers.splice(idx, 1)
 
       const layerEl = document.querySelector(`.track-channel.sublayer[data-layer-id="${layerId}"]`)
@@ -1926,7 +2120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const auditionBtn = document.querySelector(`.audition-btn[data-audition="${track}"]`)
         if (auditionBtn) {
           auditionBtn.addEventListener('click', () => {
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.toggleTrackAudition(layer, auditionBtn)
           })
         }
 
@@ -1936,6 +2130,10 @@ document.addEventListener('DOMContentLoaded', () => {
           volumeSlider.addEventListener('input', (e) => {
             const val = parseInt(e.target.value, 10)
             layer.volume = val / 100
+            const activePreview = this.activeTrackPreviews.get(layer.id)
+            if (activePreview?.handle?.setVolume) {
+              activePreview.handle.setVolume(layer.volume)
+            }
             const display = volumeSlider.nextElementSibling
             if (display && display.classList.contains('volume-value')) {
               display.textContent = `${val}%`
@@ -1951,6 +2149,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (sampleSelect.querySelector(`option[value="${layer.soundFamily}"]`)) {
             sampleSelect.value = layer.soundFamily
           }
+          this.syncLayerSoundRemoveButton(layer)
 
           sampleSelect.addEventListener('change', (e) => {
             const val = e.target.value
@@ -1964,7 +2163,8 @@ document.addEventListener('DOMContentLoaded', () => {
             layer.steps.forEach(stepPads => {
               stepPads.forEach(pad => { pad.soundFamily = soundId })
             })
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.syncLayerSoundRemoveButton(layer)
+            this.startTrackPreview(layer, auditionBtn, this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
             this.saveActiveSession()
           })
         }
@@ -1990,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', () => {
               stepPads.forEach(pad => { pad.intensity = intensity })
             })
 
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.startTrackPreview(layer, this.getLayerAuditionButton(layer), this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
             this.saveActiveSession()
           })
         })
@@ -2492,6 +2692,7 @@ document.addEventListener('DOMContentLoaded', () => {
       layer.steps.forEach(stepPads => {
         stepPads.forEach(pad => { pad.soundFamily = soundId })
       })
+      this.syncLayerSoundRemoveButton(layer)
       this.saveActiveSession()
     }
 
@@ -2778,12 +2979,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const auditionBtn = groupEl.querySelector('.audition-btn')
       if (auditionBtn) {
         auditionBtn.addEventListener('click', () => {
-          if (!layer.soundFamily) {
-            this.showToast(`Please import a base sound for "${track.name}" first`, 'info')
-            this.triggerBaseSoundImport(track.id, layer.id)
-            return
-          }
-          this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+          this.toggleTrackAudition(layer, auditionBtn)
         })
       }
 
@@ -2825,6 +3021,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 5. Sound Family Selector
       const sampleSelect = groupEl.querySelector('.custom-track-sample-select')
       if (sampleSelect) {
+        this.syncLayerSoundRemoveButton(layer)
         sampleSelect.addEventListener('change', (e) => {
           const val = e.target.value
           if (val === '__import__') {
@@ -2836,8 +3033,9 @@ document.addEventListener('DOMContentLoaded', () => {
           layer.steps.forEach(stepPads => {
             stepPads.forEach(pad => { pad.soundFamily = val })
           })
+          this.syncLayerSoundRemoveButton(layer)
           if (layer.soundFamily) {
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.startTrackPreview(layer, auditionBtn, this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
           }
           this.saveActiveSession()
         })
@@ -2849,6 +3047,10 @@ document.addEventListener('DOMContentLoaded', () => {
         volumeSlider.addEventListener('input', (e) => {
           const val = parseInt(e.target.value, 10)
           layer.volume = val / 100
+          const activePreview = this.activeTrackPreviews.get(layer.id)
+          if (activePreview?.handle?.setVolume) {
+            activePreview.handle.setVolume(layer.volume)
+          }
           const display = volumeSlider.nextElementSibling
           if (display && display.classList.contains('volume-value')) {
             display.textContent = `${val}%`
@@ -2869,7 +3071,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stepPads.forEach(pad => { pad.intensity = intensity })
           })
           if (layer.soundFamily) {
-            this.playPadSound(this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
+            this.startTrackPreview(layer, auditionBtn, this.resolveSoundFile(layer.category, layer.soundFamily, layer.intensity), layer.volume)
           }
           this.saveActiveSession()
         })
@@ -3086,7 +3288,10 @@ document.addEventListener('DOMContentLoaded', () => {
               this.saveTrackPreviewPrefs()
             }
 
-            // Remove all layers for this track from this.layers
+            // Stop any active previews and remove all layers for this track from this.layers
+            this.layers
+              .filter(l => l.category === trackId || l.parentTrack === trackId)
+              .forEach(l => this.stopTrackPreview(l.id))
             this.layers = this.layers.filter(l => l.category !== trackId && l.parentTrack !== trackId)
 
             // Remove DOM group
@@ -3116,21 +3321,45 @@ document.addEventListener('DOMContentLoaded', () => {
             await window.AudioLibrary.deleteBaseSound(trackId, soundId)
             await window.AudioLibrary.syncManifestWithDB(this.manifest)
 
-            // If any layer was using this sound, switch it to default
+            // Switch any layer or pad using this deleted sound to the track fallback (or empty)
             const cat = this.manifest.categories[trackId]
-            const fallbackSound = cat ? (cat.baseTrackSound || Object.keys(cat.sounds || {})[0] || '') : ''
+            const remainingKeys = cat ? Object.keys(cat.sounds || {}) : []
+            const fallbackSound = cat && remainingKeys.length > 0
+              ? (cat.baseTrackSound && cat.sounds[cat.baseTrackSound] ? cat.baseTrackSound : remainingKeys[0])
+              : ''
+
             this.layers.forEach(layer => {
               if (layer.category === trackId && layer.soundFamily === soundId) {
+                this.stopTrackPreview(layer.id)
                 layer.soundFamily = fallbackSound
-                layer.steps.forEach(pads => {
-                  pads.forEach(p => { p.soundFamily = fallbackSound })
-                })
               }
+              layer.steps.forEach((pads, stepIdx) => {
+                let stepChanged = false
+                pads.forEach(p => {
+                  if (p.category === trackId && p.soundFamily === soundId) {
+                    p.soundFamily = fallbackSound
+                    stepChanged = true
+                  }
+                })
+                if (stepChanged) {
+                  this.reRenderStepCell(layer, stepIdx)
+                }
+              })
             })
+
+            if (this.activePopoverPad) {
+              const { layerId, step, padId } = this.activePopoverPad
+              const popLayer = this.getLayer(layerId)
+              const popPad = popLayer ? popLayer.steps[step].find(p => p.id === padId) : null
+              if (popPad && popPad.category === trackId) {
+                this.populatePopoverSoundFamilies(trackId, popPad.soundFamily)
+              }
+            }
 
             this.refreshTrackSoundSelectors(trackId)
             this.renderSoundAssetsModal()
-            this.showToast(`Sound "${soundName}" deleted.`, 'success')
+            if (this.renderTrackpadLanes) this.renderTrackpadLanes()
+            this.showToast(`Sound "${soundName}" removed.`, 'success')
             this.saveActiveSession()
           } catch (err) {
             this.showToast(`Error deleting sound: ${err.message}`, 'error')
@@ -3209,7 +3438,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const primaryLayer = this.layers.find(l => l.category === trackId && l.isPrimary)
       if (primarySelect && primaryLayer) {
         primarySelect.innerHTML = this.getSoundFamilyOptionsHTML(trackId, primaryLayer.soundFamily)
-        if (primaryLayer.soundFamily) primarySelect.value = primaryLayer.soundFamily
+        primarySelect.value = primaryLayer.soundFamily || ''
+        this.syncLayerSoundRemoveButton(primaryLayer)
       }
 
       // 2. Sublayer selects
@@ -3218,7 +3448,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const layer = this.layers.find(l => l.id === layerId)
         if (layer) {
           sel.innerHTML = this.getSoundFamilyOptionsHTML(trackId, layer.soundFamily)
-          if (layer.soundFamily) sel.value = layer.soundFamily
+          sel.value = layer.soundFamily || ''
+          this.syncLayerSoundRemoveButton(layer)
         }
       })
 
@@ -3311,6 +3542,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 const sel = document.querySelector(`.sample-select[data-layer-id="${targetLayerId}"]`)
                 if (sel) sel.value = importedSound.id
+                this.syncLayerSoundRemoveButton(layer)
               }
             } else {
               const primaryLayer = this.layers.find(l => l.category === trackId && l.isPrimary)
@@ -3322,6 +3554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sel = document.getElementById(`${trackId}-beat-audio`) ||
                   document.querySelector(`.custom-track-sample-select[data-track="${trackId}"]`)
                 if (sel) sel.value = importedSound.id
+                this.syncLayerSoundRemoveButton(primaryLayer)
               }
             }
 
@@ -3346,14 +3579,26 @@ document.addEventListener('DOMContentLoaded', () => {
               this.closeImportProgressModal()
               this.showToast(`Imported "${importedSound.name}" with 5 studio variations!`, 'success')
               if (this.isTrackPreviewEnabled(trackId)) {
-                this.playPadSound(this.resolveSoundFile(trackId, importedSound.id, 'med'), 0.85)
+                const fileSrc = this.resolveSoundFile(trackId, importedSound.id, 'med')
+                const targetLayer = targetLayerId
+                  ? this.getLayer(targetLayerId)
+                  : this.layers.find(l => l.category === trackId && l.isPrimary)
+                if (targetLayer && fileSrc) {
+                  this.startTrackPreview(targetLayer, this.getLayerAuditionButton(targetLayer), fileSrc, targetLayer.volume)
+                } else if (fileSrc) {
+                  this.playPadSound(fileSrc, 0.85)
+                }
               }
             }, 500)
 
           } catch (err) {
             console.error('Import error:', err)
             this.closeImportProgressModal()
-            this.showToast(`Import failed: ${err.message}`, 'error')
+            if (err && err.code === 'DUPLICATE_SOUND') {
+              this.showToast(err.message, 'warning', 5200)
+            } else {
+              this.showToast(`Import failed: ${err.message}`, 'error', 4500)
+            }
           } finally {
             this.pendingImport = null
             if (this.audioFileImporter) this.audioFileImporter.value = ''
@@ -4680,13 +4925,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           let hitClass = 'dot-off'
           let customStyle = ''
-          if (hasKick && hasSnare) hitClass = 'hit-both'
+          if (hasSnare) hitClass = 'hit-snare'
           else if (hasKick) hitClass = 'hit-kick'
-          else if (hasSnare) hitClass = 'hit-snare'
           else if (hasHihat) hitClass = 'hit-hihat'
           else if (activeCustomLayer) {
             const theme = this.getTrackColorTheme(activeCustomLayer.category, activeCustomLayer.color)
-            customStyle = `style="background: ${theme.color}; box-shadow: 0 0 4px ${theme.glow};"`
+            customStyle = `style="background: ${theme.color};"`
           }
 
           previewDotsHTML += `<span class="seq-mini-pip ${hitClass} ${isHit ? 'active-dot' : ''} ${isBeatBoundary ? 'beat-divider' : ''}" ${customStyle}></span>`
@@ -4696,6 +4940,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div')
         card.className = `lib-seq-card ${isCurrentActive ? 'is-active-seq' : ''}`
         card.dataset.seqId = seq.id
+
+        const padsSparkleSVG = `
+          <svg viewBox="0 0 16 16" width="9" height="9" fill="currentColor" aria-hidden="true">
+            <path d="M6.5 1.5L7.7 4.8L11 6L7.7 7.2L6.5 10.5L5.3 7.2L2 6L5.3 4.8L6.5 1.5Z"/>
+            <path d="M12.2 9.2L12.8 10.9L14.5 11.5L12.8 12.1L12.2 13.8L11.6 12.1L9.9 11.5L11.6 10.9L12.2 9.2Z"/>
+          </svg>
+        `
 
         card.innerHTML = `
           <div class="seq-card-header">
@@ -4711,19 +4962,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i class="fa-solid fa-play"></i>
                 <span>LOAD</span>
               </button>
-              <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence" aria-label="Rename sequence ${seq.name}">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-              <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence" aria-label="Delete sequence ${seq.name}">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+              <div class="seq-secondary-actions">
+                <button class="card-action-btn seq-action-btn rename-action-btn" title="Rename sequence" aria-label="Rename sequence ${seq.name}">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="card-action-btn seq-action-btn delete-seq delete-action-btn" title="Delete sequence" aria-label="Delete sequence ${seq.name}">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="seq-card-badges seq-card-tags">
-            <span class="seq-badge seq-tag tag-bpm" title="Tempo"><i class="fa-solid fa-gauge-high"></i> ${seq.bpm} BPM</span>
+            <span class="seq-badge seq-tag tag-bpm" title="Tempo"><span class="tag-icon-circle tag-icon-bpm"><i class="fa-solid fa-fire"></i></span> ${seq.bpm} BPM</span>
             <span class="seq-badge seq-tag tag-length" title="Sequence Length"><i class="fa-solid fa-music"></i> ${seq.numBeats || 2}B (${seq.totalSteps || 8}S)</span>
             <span class="seq-badge seq-tag tag-tracks" title="Active Instrument Tracks"><i class="fa-solid fa-layer-group"></i> ${seq.layers.length} Tracks</span>
-            <span class="seq-badge seq-tag tag-pads" title="Active Trigger Pads"><i class="fa-solid fa-fire"></i> ${activePadCount} Pads</span>
+            <span class="seq-badge seq-tag tag-pads" title="Active Trigger Pads"><span class="tag-icon-circle tag-icon-pads">${padsSparkleSVG}</span> ${activePadCount} Pads</span>
           </div>
           <div class="seq-rhythm-preview seq-mini-rhythm" title="Rhythm Pattern Footprint (${previewSteps} Steps)">
             ${previewDotsHTML}
@@ -4840,9 +5093,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (iconWrap) {
         let iconHtml = '<i class="fa-solid fa-check"></i>'
-        if (type === 'warning') iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>'
+        if (type === 'warning' || type === 'error') iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>'
         if (type === 'info') iconHtml = '<i class="fa-solid fa-info"></i>'
         iconWrap.innerHTML = iconHtml
+        iconWrap.className = `toast-icon-wrap ${type}`
       }
 
       toast.className = `studio-toast active toast-${type}`

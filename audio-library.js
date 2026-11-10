@@ -98,6 +98,29 @@
     };
   }
 
+  /** Compute a deterministic content hash for duplicate audio detection across tracks. */
+  async function computeBufferHash(arrayBuffer) {
+    if (!arrayBuffer) return null;
+    if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+      try {
+        const digest = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        return Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      } catch (e) {}
+    }
+    const bytes = new Uint8Array(arrayBuffer);
+    let h1 = 0x811c9dc5;
+    let h2 = 0x9e3779b9;
+    for (let i = 0; i < bytes.length; i++) {
+      h1 ^= bytes[i];
+      h1 = Math.imul(h1, 0x01000193);
+      h2 ^= bytes[i] + i;
+      h2 = Math.imul(h2, 0x85ebca6b);
+    }
+    return `fnv-${bytes.length}-${(h1 >>> 0).toString(16)}-${(h2 >>> 0).toString(16)}`;
+  }
+
   // --- 1. Audio DSP Helper Functions ---
   function createLPF(cutoff, sampleRate = 44100, Q = 0.707) {
     const w0 = 2 * Math.PI * Math.min(cutoff, sampleRate * 0.45) / sampleRate;
@@ -489,8 +512,10 @@
     }
 
     // --- Audio Decoding & DSP Processing ---
-    async decodeAudioFile(fileOrBlob) {
-      const arrayBuffer = await fileOrBlob.arrayBuffer();
+    async decodeAudioFile(fileOrBuffer) {
+      const arrayBuffer = fileOrBuffer instanceof ArrayBuffer
+        ? fileOrBuffer.slice(0)
+        : await fileOrBuffer.arrayBuffer();
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioCtx();
       try {
@@ -591,6 +616,43 @@
       return variations;
     }
 
+    async findDuplicateBaseSound({ fileHash, audioHash, fileName, fileSize }) {
+      const existingBases = await this.db.table('audioAssets').where('type').equals('base').toArray();
+      for (const existing of existingBases) {
+        const meta = existing.metadata || {};
+        if (fileHash && meta.fileHash && meta.fileHash === fileHash) {
+          return existing;
+        }
+        if (fileName && fileSize && meta.originalFileName === fileName && meta.originalSize === fileSize) {
+          return existing;
+        }
+        if (audioHash) {
+          let existingAudioHash = meta.audioHash;
+          if (!existingAudioHash && existing.blob && typeof existing.blob.arrayBuffer === 'function') {
+            existingAudioHash = await computeBufferHash(await existing.blob.arrayBuffer());
+          }
+          if (existingAudioHash && existingAudioHash === audioHash) {
+            return existing;
+          }
+        }
+      }
+      return null;
+    }
+
+    async buildDuplicateSoundError(duplicateAsset, targetTrack) {
+      const ownerTrack = await this.getTrack(duplicateAsset.trackId);
+      const ownerName = ownerTrack ? ownerTrack.name : duplicateAsset.trackId;
+      const err = new Error(
+        duplicateAsset.trackId === targetTrack.id
+          ? `"${duplicateAsset.name}" is already added to "${ownerName}".`
+          : `Cannot add "${duplicateAsset.name}" to "${targetTrack.name}" — it is already added to "${ownerName}". Remove it from "${ownerName}" first.`
+      );
+      err.code = 'DUPLICATE_SOUND';
+      err.ownerTrackId = duplicateAsset.trackId;
+      err.ownerTrackName = ownerName;
+      return err;
+    }
+
     // --- Unified Import Pipeline ---
     async importBaseSound(trackId, file, onProgress = null) {
       await this.init();
@@ -598,26 +660,50 @@
       const track = await this.getTrack(trackId);
       if (!track) throw new Error(`Destination track "${trackId}" does not exist.`);
 
-      const importLockKey = `${trackId}:${file.name}:${file.size}`;
+      const importLockKey = `${file.name}:${file.size}`;
       if (this.activeImports.has(importLockKey)) {
         throw new Error('This sound file is currently being processed. Please wait.');
       }
       this.activeImports.add(importLockKey);
 
       try {
-        if (onProgress) onProgress({ step: 'validating', percent: 10, message: `Reading "${file.name}"...` });
+        if (onProgress) onProgress({ step: 'validating', percent: 10, message: `Checking "${file.name}"...` });
+
+        const rawArrayBuffer = await file.arrayBuffer();
+        const fileHash = await computeBufferHash(rawArrayBuffer);
+
+        const preDecodeDuplicate = await this.findDuplicateBaseSound({
+          fileHash,
+          audioHash: null,
+          fileName: file.name,
+          fileSize: file.size
+        });
+        if (preDecodeDuplicate) {
+          throw await this.buildDuplicateSoundError(preDecodeDuplicate, track);
+        }
 
         // 1. Decode original audio file
-        const { samples, sampleRate, duration } = await this.decodeAudioFile(file);
+        const { samples, sampleRate, duration } = await this.decodeAudioFile(rawArrayBuffer);
+
+        // Convert base to standard 16-bit WAV Blob for consistency
+        const baseWavBlob = encodeWavBlob(samples, sampleRate);
+        const audioHash = await computeBufferHash(await baseWavBlob.arrayBuffer());
+
+        const postDecodeDuplicate = await this.findDuplicateBaseSound({
+          fileHash,
+          audioHash,
+          fileName: file.name,
+          fileSize: file.size
+        });
+        if (postDecodeDuplicate) {
+          throw await this.buildDuplicateSoundError(postDecodeDuplicate, track);
+        }
 
         if (onProgress) onProgress({ step: 'base-save', percent: 25, message: 'Persisting base sound...' });
 
         // Generate clean friendly name from file
         const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim() || 'Custom Sound';
         const baseAssetId = `asset-base-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-        // Convert base to standard 16-bit WAV Blob for consistency
-        const baseWavBlob = encodeWavBlob(samples, sampleRate);
 
         const baseAsset = {
           id: baseAssetId,
@@ -632,7 +718,10 @@
           blob: baseWavBlob,
           metadata: {
             originalFileName: file.name,
+            originalSize: file.size,
             originalType: file.type,
+            fileHash: fileHash,
+            audioHash: audioHash,
             sampleRate: sampleRate,
             type: `${track.name} Base Sound`,
             freq: 'Full Acoustic Spectrum',
@@ -784,6 +873,7 @@
           // Update track metadata if it was renamed or assigned a color/preview pref
           manifest.categories[track.id].name = track.name;
           manifest.categories[track.id].type = track.type;
+          manifest.categories[track.id].baseTrackSound = track.baseTrackSound || null;
           if (track.color) {
             manifest.categories[track.id].color = track.color;
           }
@@ -791,6 +881,16 @@
             manifest.categories[track.id].previewOnImport = previewFlag;
           }
         }
+      });
+
+      // Prune stale custom sounds that were deleted from IndexedDB
+      Object.values(manifest.categories).forEach(cat => {
+        if (!cat || !cat.sounds) return;
+        Object.keys(cat.sounds).forEach(soundId => {
+          if (cat.sounds[soundId]?.isCustom) {
+            delete cat.sounds[soundId];
+          }
+        });
       });
 
       // 2. Index variations by parentAssetId
