@@ -220,6 +220,15 @@
         high: { label: 'High', cutoff: 20000, attackMs: 0, decayFactor: 1.0, gain: 1.08, saturate: 1.35, normPeak: 0.98 }
       };
     }
+    if (key.includes('tom')) {
+      return {
+        low: { label: 'Low', cutoff: 1500, attackMs: 4, decayFactor: 0.72, gain: 0.50 },
+        'med-low': { label: 'Medium-Low', cutoff: 3200, attackMs: 2, decayFactor: 0.88, gain: 0.70 },
+        med: { label: 'Medium', cutoff: 9000, attackMs: 0, decayFactor: 1.0, gain: 0.88 },
+        'med-high': { label: 'Medium-High', cutoff: 16500, attackMs: 0, decayFactor: 1.0, gain: 0.96 },
+        high: { label: 'High', cutoff: 20000, attackMs: 0, decayFactor: 1.0, gain: 1.06, saturate: 1.3, normPeak: 0.98 }
+      };
+    }
     if (key.includes('snare') || key.includes('clap') || key.includes('rim') || key.includes('snap')) {
       return {
         low: { label: 'Low', cutoff: 2400, attackMs: 4, decayFactor: 0.70, gain: 0.46 },
@@ -386,7 +395,11 @@
       const defaultTracks = [
         { id: 'kick', name: 'Kick Drums', type: 'builtin', trackNumber: 1, baseTrackSound: 'kick-classic' },
         { id: 'snare', name: 'Snare Drums', type: 'builtin', trackNumber: 2, baseTrackSound: 'snare-acoustic' },
-        { id: 'hihat', name: 'Hi-Hats', type: 'builtin', trackNumber: 3, baseTrackSound: 'hihat-808' }
+        { id: 'hihat', name: 'Hi-Hats', type: 'builtin', trackNumber: 3, baseTrackSound: 'hihat-808' },
+        { id: 'clap', name: 'Claps & Snaps', type: 'builtin', trackNumber: 4, color: '#8b5cf6', baseTrackSound: 'clap-808' },
+        { id: 'perc', name: 'Percussion & Rim', type: 'builtin', trackNumber: 5, color: '#10b981', baseTrackSound: 'perc-rimshot' },
+        { id: 'tom', name: 'Toms & Fills', type: 'builtin', trackNumber: 6, color: '#f59e0b', baseTrackSound: 'tom-low' },
+        { id: 'cymbal', name: 'Cymbals & Crash', type: 'builtin', trackNumber: 7, color: '#0ea5e9', baseTrackSound: 'cymbal-crash' }
       ];
 
       for (const dt of defaultTracks) {
@@ -395,6 +408,15 @@
           await this.db.table('tracks').put({
             ...dt,
             createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+        } else if (found.type !== dt.type || found.trackNumber !== dt.trackNumber || (!found.color && dt.color)) {
+          await this.db.table('tracks').put({
+            ...found,
+            type: dt.type,
+            trackNumber: dt.trackNumber,
+            color: found.color || dt.color,
+            baseTrackSound: found.baseTrackSound || dt.baseTrackSound,
             updatedAt: new Date().toISOString()
           });
         }
@@ -443,9 +465,10 @@
       if (!trimmed) throw new Error('Track name cannot be empty');
 
       const existingTracks = await this.getAllTracks();
+      const builtinCount = existingTracks.filter(t => t.type === 'builtin').length;
       const customTracks = existingTracks.filter(t => t.type === 'custom');
-      const usedColors = customTracks.map(t => t.color).filter(Boolean);
-      const trackNumber = 4 + customTracks.length;
+      const usedColors = existingTracks.map(t => t.color).filter(Boolean);
+      const trackNumber = Math.max(7, builtinCount) + 1 + customTracks.length;
       const trackId = `custom-track-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       const newTrack = {
@@ -873,7 +896,12 @@
           // Update track metadata if it was renamed or assigned a color/preview pref
           manifest.categories[track.id].name = track.name;
           manifest.categories[track.id].type = track.type;
-          manifest.categories[track.id].baseTrackSound = track.baseTrackSound || null;
+          if (track.trackNumber) {
+            manifest.categories[track.id].trackNumber = track.trackNumber;
+          }
+          if (track.baseTrackSound || !manifest.categories[track.id].baseTrackSound) {
+            manifest.categories[track.id].baseTrackSound = track.baseTrackSound || null;
+          }
           if (track.color) {
             manifest.categories[track.id].color = track.color;
           }

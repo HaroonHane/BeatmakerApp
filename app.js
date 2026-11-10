@@ -33,48 +33,208 @@ document.addEventListener('DOMContentLoaded', () => {
       this.trackPreviewPrefs = this.loadTrackPreviewPrefs()
       this.activePopoverPad = null // { layerId, step, padId }
 
-      // Preset Beat Patterns (8 steps) with Dedicated Sound Families & Intensity Variations
+      // Preset Beat Patterns (8-step & 16-step multi-track studio grooves)
       this.presets = {
         trap: {
           bpm: 140,
+          numBeats: 2,
           kick: [0, 4, 6],
           snare: [2, 6],
           hihat: [0, 1, 2, 3, 4, 5, 6, 7],
-          soundFamilies: { kick: 'kick-808', snare: 'snare-808', hihat: 'hihat-808' },
-          intensities: { kick: 'high', snare: 'med-high', hihat: 'med' },
-          repeats: { hihat: { 3: 2, 7: 4 } } // 2x flam on step 3, 4x roll on step 7
+          clap: [2, 6],
+          perc: [1, 5],
+          cymbal: [0],
+          soundFamilies: {
+            kick: 'kick-808',
+            snare: 'snare-808',
+            hihat: 'hihat-808',
+            clap: 'clap-trap',
+            perc: 'perc-cowbell',
+            cymbal: 'cymbal-crash'
+          },
+          intensities: { kick: 'high', snare: 'med-high', hihat: 'med', clap: 'high', perc: 'med-low', cymbal: 'med' },
+          repeats: { hihat: { 3: 2, 7: 4 } }
         },
         boombap: {
           bpm: 92,
+          numBeats: 2,
           kick: [0, 3, 5],
           snare: [2, 6],
           hihat: [0, 2, 4, 6],
-          soundFamilies: { kick: 'kick-classic', snare: 'snare-vinyl', hihat: 'hihat-808' },
-          intensities: { kick: 'med-high', snare: 'high', hihat: 'med-low' }
+          perc: [3, 7],
+          cymbal: [0],
+          soundFamilies: {
+            kick: 'kick-classic',
+            snare: 'snare-tape',
+            hihat: 'hihat-tight',
+            perc: 'perc-rimshot',
+            cymbal: 'cymbal-bright-crash'
+          },
+          intensities: { kick: 'med-high', snare: 'high', hihat: 'med-low', perc: 'low', cymbal: 'med-low' }
         },
         house: {
-          bpm: 126,
-          kick: [0, 2, 4, 6],
-          snare: [2, 6],
-          hihat: [1, 3, 5, 7],
-          soundFamilies: { kick: 'kick-heavy', snare: 'snare-acoustic', hihat: 'hihat-808' },
-          intensities: { kick: 'high', snare: 'med', hihat: 'med-high' }
+          bpm: 124,
+          numBeats: 4,
+          kick: [0, 4, 8, 12],
+          snare: [4, 12],
+          hihat: [2, 6, 10, 14],
+          clap: [4, 12],
+          perc: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+          cymbal: [0],
+          soundFamilies: {
+            kick: 'kick-analog909',
+            snare: 'snare-tight',
+            hihat: 'hihat-open',
+            clap: 'clap-808',
+            perc: 'perc-maraca',
+            cymbal: 'cymbal-crash'
+          },
+          intensities: { kick: 'high', snare: 'med', hihat: 'med-high', clap: 'high', perc: 'low', cymbal: 'med' }
         },
         techno: {
           bpm: 132,
+          numBeats: 2,
           kick: [0, 2, 4, 6],
           snare: [4, 7],
           hihat: [0, 1, 2, 3, 4, 5, 6, 7],
-          soundFamilies: { kick: 'kick-heavy', snare: 'snare-808', hihat: 'hihat-808' },
-          intensities: { kick: 'high', snare: 'high', hihat: 'high' }
+          clap: [2, 6],
+          perc: [1, 3, 5, 7],
+          tom: [6, 7],
+          cymbal: [0, 2, 4, 6],
+          soundFamilies: {
+            kick: 'kick-punchy',
+            snare: 'snare-808',
+            hihat: 'hihat-electro',
+            clap: 'clap-synth',
+            perc: 'perc-rimshot',
+            tom: 'tom-low',
+            cymbal: 'cymbal-ride'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med-high', clap: 'med', perc: 'med-low', tom: 'med', cymbal: 'med-low' }
         },
         lofi: {
           bpm: 84,
+          numBeats: 2,
           kick: [0, 3],
           snare: [2, 6],
           hihat: [0, 2, 3, 4, 6, 7],
-          soundFamilies: { kick: 'kick-softy', snare: 'snare-vinyl', hihat: 'hihat-acoustic' },
-          intensities: { kick: 'med-low', snare: 'med-low', hihat: 'low' }
+          perc: [1, 5],
+          soundFamilies: {
+            kick: 'kick-softy',
+            snare: 'snare-vinyl',
+            hihat: 'hihat-acoustic',
+            perc: 'perc-bongo'
+          },
+          intensities: { kick: 'med-low', snare: 'med-low', hihat: 'low', perc: 'low' }
+        },
+        reggaeton: {
+          bpm: 96,
+          numBeats: 4,
+          kick: [0, 4, 8, 12],
+          snare: [3, 6, 11, 14],
+          hihat: [0, 2, 4, 6, 8, 10, 12, 14],
+          clap: [4, 12],
+          perc: [3, 6, 11, 14],
+          soundFamilies: {
+            kick: 'kick-punchy',
+            snare: 'snare-tight',
+            hihat: 'hihat-tight',
+            clap: 'clap-trap',
+            perc: 'perc-rimshot'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med-low', clap: 'med', perc: 'high' }
+        },
+        afrobeats: {
+          bpm: 108,
+          numBeats: 4,
+          kick: [0, 3, 7, 9, 13],
+          snare: [4, 12],
+          hihat: [2, 6, 10, 14],
+          clap: [4, 12],
+          perc: [0, 2, 5, 8, 10, 14],
+          tom: [14, 15],
+          soundFamilies: {
+            kick: 'kick-classic',
+            snare: 'snare-wood',
+            hihat: 'hihat-open',
+            clap: 'clap-acoustic',
+            perc: 'perc-bongo',
+            tom: 'tom-mid'
+          },
+          intensities: { kick: 'high', snare: 'med', hihat: 'med', clap: 'med-high', perc: 'high', tom: 'med' }
+        },
+        drill: {
+          bpm: 142,
+          numBeats: 4,
+          kick: [0, 10],
+          snare: [6, 14],
+          hihat: [0, 3, 5, 8, 11, 13],
+          clap: [6, 14],
+          perc: [2, 9, 15],
+          soundFamilies: {
+            kick: 'kick-sub',
+            snare: 'snare-808',
+            hihat: 'hihat-808',
+            clap: 'clap-trap',
+            perc: 'perc-rimshot'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med-high', clap: 'high', perc: 'med' },
+          repeats: { hihat: { 5: 3, 13: 4 } }
+        },
+        dnb: {
+          bpm: 172,
+          numBeats: 4,
+          kick: [0, 10],
+          snare: [4, 12],
+          hihat: [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15],
+          perc: [7, 15],
+          cymbal: [0],
+          soundFamilies: {
+            kick: 'kick-punchy',
+            snare: 'snare-tight',
+            hihat: 'hihat-tight',
+            perc: 'perc-rimshot',
+            cymbal: 'cymbal-crash'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med-high', perc: 'med-low', cymbal: 'med-high' }
+        },
+        breakbeat: {
+          bpm: 134,
+          numBeats: 4,
+          kick: [0, 6, 9],
+          snare: [4, 7, 12, 14],
+          hihat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+          perc: [3, 11],
+          tom: [14, 15],
+          cymbal: [0, 8],
+          soundFamilies: {
+            kick: 'kick-heavy',
+            snare: 'snare-wood',
+            hihat: 'hihat-acoustic',
+            perc: 'perc-cowbell',
+            tom: 'tom-high',
+            cymbal: 'cymbal-ride'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med', perc: 'med', tom: 'med-high', cymbal: 'med' }
+        },
+        synthwave: {
+          bpm: 112,
+          numBeats: 4,
+          kick: [0, 4, 8, 12],
+          snare: [4, 12],
+          hihat: [0, 2, 4, 6, 8, 10, 12, 14],
+          clap: [4, 12],
+          tom: [13, 14, 15],
+          cymbal: [0],
+          soundFamilies: {
+            kick: 'kick-analog909',
+            snare: 'snare-tape',
+            hihat: 'hihat-electro',
+            clap: 'clap-synth',
+            tom: 'tom-low',
+            cymbal: 'cymbal-bright-crash'
+          },
+          intensities: { kick: 'high', snare: 'high', hihat: 'med', clap: 'high', tom: 'high', cymbal: 'med-high' }
         }
       }
 
@@ -226,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Restore session or load default preset
       const sessionRestored = this.restoreActiveSession()
+      this.renderExtraBuiltinTracks()
       if (!sessionRestored) {
         await this.renderStoredCustomTracks()
         this.loadPreset('trap')
@@ -233,9 +394,15 @@ document.addEventListener('DOMContentLoaded', () => {
         await this.renderStoredCustomTracks()
       }
 
-      this.refreshTrackSoundSelectors('kick')
-      this.refreshTrackSoundSelectors('snare')
-      this.refreshTrackSoundSelectors('hihat')
+      if (this.manifest && this.manifest.categories) {
+        Object.keys(this.manifest.categories).forEach(catKey => {
+          this.refreshTrackSoundSelectors(catKey)
+        })
+      } else {
+        this.refreshTrackSoundSelectors('kick')
+        this.refreshTrackSoundSelectors('snare')
+        this.refreshTrackSoundSelectors('hihat')
+      }
       this.renderSoundAssetsModal()
       this.syncAllTrackPreviewCheckboxes()
       this.populatePopoverCategories()
@@ -575,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
               trackNumber: parseInt(restoredLayer.badge, 10) || 4,
               color: restoredLayer.color,
               baseTrackSound: restoredLayer.soundFamily,
-              type: 'custom'
+              type: this.manifest?.categories?.[restoredLayer.category]?.type || 'custom'
             }
             this.createCustomTrackDOM(trackObj)
           }
@@ -2936,13 +3103,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const preset = this.presets[presetKey]
       if (!preset) return
 
+      this.ensureExtraBuiltinTracks()
+
+      const targetBeats = preset.numBeats || 2
+      while (this.numBeats < targetBeats) {
+        this.addBeat(false)
+      }
+      while (this.numBeats > targetBeats) {
+        this.removeBeat(this.numBeats)
+      }
+
       this.clearAllPads()
 
       if (preset.bpm) {
         this.setTempo(preset.bpm)
       }
 
-      // Apply sound families & intensities
+      // Apply sound families & intensities across all matching tracks
       if (preset.soundFamilies) {
         Object.entries(preset.soundFamilies).forEach(([track, soundId]) => {
           this.setTrackSoundFamily(track, soundId)
@@ -2954,17 +3131,20 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
 
-      // Activate primary pads
-      ;['kick', 'snare', 'hihat'].forEach(track => {
+      // Activate primary pads for every track defined in the preset
+      const presetTrackKeys = Object.keys(this.manifest?.categories || {
+        kick: true, snare: true, hihat: true, clap: true, perc: true, tom: true, cymbal: true
+      })
+      presetTrackKeys.forEach(track => {
         const layer = this.layers.find(l => l.category === track && l.isPrimary)
         if (!layer) return
 
         const activeSteps = preset[track] || []
         activeSteps.forEach(step => {
+          if (step >= this.totalSteps || !layer.steps[step]) return
           const pad = layer.steps[step][0]
           if (pad) {
             pad.active = true
-            // Check repeats
             if (preset.repeats && preset.repeats[track] && preset.repeats[track][step]) {
               pad.repeat = preset.repeats[track][step]
             }
@@ -2974,7 +3154,8 @@ document.addEventListener('DOMContentLoaded', () => {
       })
 
       // Audio feedback
-      this.playPadSound(this.resolveSoundFile('kick', 'kick-808', 'high'), 0.9)
+      const previewKick = (preset.soundFamilies && preset.soundFamilies.kick) || 'kick-808'
+      this.playPadSound(this.resolveSoundFile('kick', previewKick, 'high'), 0.9)
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
       this.saveActiveSession()
@@ -2995,47 +3176,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     generateRandomPattern() {
+      this.ensureExtraBuiltinTracks()
       this.clearAllPads()
-      const bpmOptions = [90, 110, 128, 140, 150]
+      const bpmOptions = [90, 96, 108, 124, 132, 140, 150, 172]
       const randomBpm = bpmOptions[Math.floor(Math.random() * bpmOptions.length)]
       this.setTempo(randomBpm)
 
-      const kickFamilies = ['kick-classic', 'kick-808', 'kick-heavy', 'kick-softy']
-      const snareFamilies = ['snare-acoustic', 'snare-808', 'snare-vinyl']
-      const hihatFamilies = ['hihat-808', 'hihat-acoustic']
+      const getSoundKeys = (cat, fallback) => {
+        const keys = Object.keys(this.manifest?.categories?.[cat]?.sounds || {})
+        return keys.length > 0 ? keys : fallback
+      }
+      const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)]
+
+      const kickFamilies = getSoundKeys('kick', ['kick-classic', 'kick-808', 'kick-heavy', 'kick-softy'])
+      const snareFamilies = getSoundKeys('snare', ['snare-acoustic', 'snare-808', 'snare-vinyl'])
+      const hihatFamilies = getSoundKeys('hihat', ['hihat-808', 'hihat-acoustic'])
+      const clapFamilies = getSoundKeys('clap', ['clap-808', 'clap-trap'])
+      const percFamilies = getSoundKeys('perc', ['perc-rimshot', 'perc-cowbell'])
+      const tomFamilies = getSoundKeys('tom', ['tom-low', 'tom-mid', 'tom-high'])
+      const cymbalFamilies = getSoundKeys('cymbal', ['cymbal-crash', 'cymbal-ride'])
       const intensityOptions = ['low', 'med-low', 'med', 'med-high', 'high']
 
-      this.setTrackSoundFamily('kick', kickFamilies[Math.floor(Math.random() * kickFamilies.length)])
-      this.setTrackSoundFamily('snare', snareFamilies[Math.floor(Math.random() * snareFamilies.length)])
-      this.setTrackSoundFamily('hihat', hihatFamilies[Math.floor(Math.random() * hihatFamilies.length)])
+      const pickedKick = pickRandom(kickFamilies)
+      this.setTrackSoundFamily('kick', pickedKick)
+      this.setTrackSoundFamily('snare', pickRandom(snareFamilies))
+      this.setTrackSoundFamily('hihat', pickRandom(hihatFamilies))
+      this.setTrackSoundFamily('clap', pickRandom(clapFamilies))
+      this.setTrackSoundFamily('perc', pickRandom(percFamilies))
+      this.setTrackSoundFamily('tom', pickRandom(tomFamilies))
+      this.setTrackSoundFamily('cymbal', pickRandom(cymbalFamilies))
 
-      this.setTrackIntensity('kick', intensityOptions[Math.floor(Math.random() * intensityOptions.length)])
-      this.setTrackIntensity('snare', intensityOptions[Math.floor(Math.random() * intensityOptions.length)])
-      this.setTrackIntensity('hihat', intensityOptions[Math.floor(Math.random() * intensityOptions.length)])
+      ;['kick', 'snare', 'hihat', 'clap', 'perc', 'tom', 'cymbal'].forEach(cat => {
+        this.setTrackIntensity(cat, pickRandom(intensityOptions))
+      })
 
-      const kickSteps = [0, 4]
-      if (Math.random() > 0.5) kickSteps.push(2)
-      if (Math.random() > 0.6) kickSteps.push(6)
+      const kickSteps = [0]
+      if (Math.random() > 0.4) kickSteps.push(Math.floor(this.totalSteps / 2))
+      if (Math.random() > 0.45) kickSteps.push(Math.min(this.totalSteps - 1, 2 + Math.floor(Math.random() * 2)))
+      if (this.totalSteps > 8 && Math.random() > 0.5) kickSteps.push(10)
 
-      const snareSteps = [2, 6]
-      if (Math.random() > 0.7) snareSteps.push(7)
+      const snareSteps = this.totalSteps >= 16 ? [4, 12] : [2, 6]
+      if (Math.random() > 0.7) snareSteps.push(this.totalSteps - 1)
 
       const hihatSteps = []
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < this.totalSteps; i++) {
         if (i % 2 === 0 || Math.random() > 0.35) {
           hihatSteps.push(i)
         }
       }
 
+      const clapSteps = Math.random() > 0.3 ? [...snareSteps] : []
+      const percSteps = []
+      for (let i = 0; i < this.totalSteps; i++) {
+        if (i % 4 !== 0 && Math.random() > 0.72) percSteps.push(i)
+      }
+      const tomSteps = Math.random() > 0.45 ? [this.totalSteps - 2, this.totalSteps - 1] : []
+      const cymbalSteps = Math.random() > 0.4 ? [0] : []
+
       const applySteps = (track, steps) => {
         const layer = this.layers.find(l => l.category === track && l.isPrimary)
         if (!layer) return
         steps.forEach(s => {
+          if (s < 0 || s >= this.totalSteps || !layer.steps[s]) return
           const pad = layer.steps[s][0]
           if (pad) {
             pad.active = true
-            if (track === 'hihat' && Math.random() > 0.65) {
-              pad.repeat = Math.random() > 0.5 ? 2 : 4 // Trap roll variation
+            if (track === 'hihat' && Math.random() > 0.7) {
+              pad.repeat = Math.random() > 0.5 ? 2 : 4
             }
           }
           this.reRenderStepCell(layer, s)
@@ -3045,8 +3252,12 @@ document.addEventListener('DOMContentLoaded', () => {
       applySteps('kick', kickSteps)
       applySteps('snare', snareSteps)
       applySteps('hihat', hihatSteps)
+      applySteps('clap', clapSteps)
+      applySteps('perc', percSteps)
+      applySteps('tom', tomSteps)
+      applySteps('cymbal', cymbalSteps)
 
-      this.playPadSound(this.resolveSoundFile('kick', 'kick-classic', 'high'), 0.9)
+      this.playPadSound(this.resolveSoundFile('kick', pickedKick, 'high'), 0.9)
       if (this.renderTrackpadLanes) this.renderTrackpadLanes()
       if (this.updateTimelineMetrics) this.updateTimelineMetrics()
       this.saveActiveSession()
@@ -3057,7 +3268,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!layer) return
       layer.intensity = intensity
 
-      const station = document.querySelector(`.intensity-station[data-track="${track}"]`)
+      const station = document.querySelector(`.primary-layer[data-track="${track}"] .intensity-station`) ||
+        document.querySelector(`.intensity-station[data-track="${track}"]`)
       if (station) {
         const pills = station.querySelectorAll('.intensity-pill')
         pills.forEach(p => p.classList.toggle('active', p.dataset.intensity === intensity))
@@ -3074,7 +3286,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!layer) return
       layer.soundFamily = soundId
 
-      const select = document.getElementById(`${track}-beat-audio`)
+      const select = document.getElementById(`${track}-beat-audio`) ||
+        document.querySelector(`.custom-track-sample-select[data-track="${track}"]`)
       if (select) {
         for (let i = 0; i < select.options.length; i++) {
           if (select.options[i].dataset.soundId === soundId || select.options[i].value.includes(soundId)) {
@@ -3345,7 +3558,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    getManifestExtraBuiltinTracks() {
+      if (!this.manifest || !this.manifest.categories) return []
+      return Object.entries(this.manifest.categories)
+        .filter(([catKey, cat]) => !this.isBuiltinTrack(catKey) && cat && cat.type === 'builtin')
+        .map(([catKey, cat]) => ({
+          id: catKey,
+          name: cat.name,
+          type: 'builtin',
+          trackNumber: cat.trackNumber || 4,
+          color: cat.color || null,
+          baseTrackSound: cat.baseTrackSound || ''
+        }))
+        .sort((a, b) => (a.trackNumber || 99) - (b.trackNumber || 99))
+    }
+
+    renderExtraBuiltinTracks() {
+      const container = document.getElementById('custom-layers-container')
+      const extraTracks = this.getManifestExtraBuiltinTracks()
+      for (const track of extraTracks) {
+        const alreadyInDOM = container && container.querySelector(`.track-channel-group[data-track="${track.id}"]`)
+        if (!alreadyInDOM) {
+          this.createCustomTrackDOM(track)
+        }
+      }
+    }
+
+    ensureExtraBuiltinTracks() {
+      this.renderExtraBuiltinTracks()
+    }
+
     async renderStoredCustomTracks() {
+      this.renderExtraBuiltinTracks()
       if (!window.AudioLibrary) return
       try {
         const allTracks = await window.AudioLibrary.getAllTracks()
@@ -3365,6 +3609,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createCustomTrackDOM(track) {
       if (!track || !track.id) return
 
+      const isTrackBuiltin = track.type === 'builtin' || this.manifest?.categories?.[track.id]?.type === 'builtin'
       let layer = this.layers.find(l => l.id === `${track.id}-primary`)
       const customSounds = this.manifest?.categories?.[track.id]?.sounds || {}
       const soundFamily = track.baseTrackSound || (Object.keys(customSounds).length > 0 ? Object.keys(customSounds)[0] : '') || ''
@@ -3437,9 +3682,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="track-btn solo-btn ${layer.solo ? 'active' : ''}" data-layer-id="${layer.id}" title="Solo Track (S)">
                       <span>S</span>
                     </button>
-                    <button class="track-btn delete-custom-track-btn" data-track-id="${track.id}" title="Delete Custom Track">
-                      <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    ${!isTrackBuiltin ? `
+                      <button class="track-btn delete-custom-track-btn" data-track-id="${track.id}" title="Delete Custom Track">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    ` : ''}
                   </div>
                 </div>
               </div>
@@ -5381,19 +5628,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadStoredLibrary() {
+      const factory = this.getFactorySequences()
       try {
         const raw = localStorage.getItem('pulse808_library')
         if (raw) {
           const parsed = JSON.parse(raw)
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed
+            const byId = new Map(factory.map(f => [f.id, f]))
+            const merged = parsed.map(item => (item && item.id && byId.has(item.id) && item.createdAt === 'Studio Factory Preset') ? byId.get(item.id) : item)
+            const existingIds = new Set(merged.map(s => s && s.id))
+            let added = false
+            factory.forEach(f => {
+              if (!existingIds.has(f.id)) {
+                merged.push(f)
+                added = true
+              }
+            })
+            if (added) {
+              try {
+                localStorage.setItem('pulse808_library', JSON.stringify(merged))
+              } catch (e) {}
+            }
+            return merged
           }
         }
       } catch (e) {
         console.warn('Could not parse stored library:', e)
       }
 
-      const factory = this.getFactorySequences()
       try {
         localStorage.setItem('pulse808_library', JSON.stringify(factory))
       } catch (e) {}
@@ -5412,14 +5674,23 @@ document.addEventListener('DOMContentLoaded', () => {
     getSequenceThemeMeta(seq, index = 0) {
       const id = seq.id || ''
       const lower = (seq.name || '').toLowerCase()
-      if (id === 'seq-factory-trap' || lower.includes('trap')) {
-        return { themeClass: 'theme-purple', genreLabel: 'TRAP • DARK' }
+      if (id === 'seq-factory-trap' || lower.includes('trap') || lower.includes('drill')) {
+        return { themeClass: 'theme-purple', genreLabel: lower.includes('drill') ? 'DRILL • 808 SLIDE' : 'TRAP • DARK' }
       }
       if (id === 'seq-factory-boombap' || lower.includes('boom') || lower.includes('hip')) {
         return { themeClass: 'theme-amber', genreLabel: 'HIP-HOP • BOOM BAP' }
       }
       if (id === 'seq-factory-techno' || lower.includes('techno') || lower.includes('house')) {
-        return { themeClass: 'theme-teal', genreLabel: 'TECHNO • UNDERGROUND' }
+        return { themeClass: 'theme-teal', genreLabel: lower.includes('house') ? 'HOUSE • CLUB' : 'TECHNO • UNDERGROUND' }
+      }
+      if (lower.includes('dembow') || lower.includes('reggaeton')) {
+        return { themeClass: 'theme-pink', genreLabel: 'LATIN • DEMBOW' }
+      }
+      if (lower.includes('afro')) {
+        return { themeClass: 'theme-amber', genreLabel: 'AFROBEATS • GROOVE' }
+      }
+      if (lower.includes('dnb') || lower.includes('break')) {
+        return { themeClass: 'theme-blue', genreLabel: 'DRUM & BASS • FAST' }
       }
       const themes = ['theme-purple', 'theme-amber', 'theme-teal', 'theme-pink', 'theme-blue']
       return {
@@ -5869,22 +6140,21 @@ document.addEventListener('DOMContentLoaded', () => {
       // 2. Adjust Beats count to match sequence
       const targetBeats = seq.numBeats || 2
       while (this.numBeats < targetBeats) {
-        this.addBeat()
+        this.addBeat(false)
       }
       while (this.numBeats > targetBeats) {
         this.removeBeat(this.numBeats)
       }
 
       // 3. Clear existing dynamic sublayers in DOM
-      ;['kick-sublayers', 'snare-sublayers', 'hihat-sublayers', 'custom-layers-container'].forEach(id => {
-        const c = document.getElementById(id)
-        if (c) c.innerHTML = ''
-      })
+      document.querySelectorAll('.track-sublayers').forEach(c => { c.innerHTML = '' })
+      const customContainer = document.getElementById('custom-layers-container')
+      if (customContainer) customContainer.innerHTML = ''
 
       // 4. Clean up old layer audio nodes and restore from snapshot
       this.layers.forEach(l => this.cleanupLayerAudioNode(l.id))
       this.layers = []
-      this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, custom: 0 }
+      this.sublayerCounters = { kick: 1, snare: 1, hihat: 1, clap: 1, perc: 1, tom: 1, cymbal: 1, custom: 0 }
 
       seq.layers.forEach(layerData => {
         const layerColor = this.isBuiltinTrack(layerData.category)
@@ -5920,9 +6190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         this.layers.push(restoredLayer)
 
         if (!restoredLayer.isPrimary) {
-          if (this.sublayerCounters[restoredLayer.parentTrack] !== undefined) {
-            this.sublayerCounters[restoredLayer.parentTrack]++
-          }
+          this.sublayerCounters[restoredLayer.parentTrack] = (this.sublayerCounters[restoredLayer.parentTrack] || 1) + 1
           this.renderLayerDOM(restoredLayer)
         } else if (!this.isBuiltinTrack(restoredLayer.category)) {
           const trackObj = {
@@ -5931,7 +6199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             trackNumber: parseInt(restoredLayer.badge, 10) || 4,
             color: restoredLayer.color,
             baseTrackSound: restoredLayer.soundFamily,
-            type: 'custom'
+            type: this.manifest?.categories?.[restoredLayer.category]?.type || 'custom'
           }
           this.createCustomTrackDOM(trackObj)
         } else {
@@ -5945,6 +6213,9 @@ document.addEventListener('DOMContentLoaded', () => {
           this.syncLayerMuteSoloUI(restoredLayer)
         }
       })
+
+      // Ensure all built-in extra tracks (Clap, Perc, Tom, Cymbal) remain available
+      this.ensureExtraBuiltinTracks()
 
       // 5. Update Solo/Mute routing, timeline and metrics
       this.updateAllSoloStates()
@@ -6134,9 +6405,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     getFactorySequences() {
-      const makeLayer = (id, badge, name, category, soundFamily, intensity, activeSteps, repeatConfig = {}) => {
+      const makeLayer = (id, badge, name, category, soundFamily, intensity, activeSteps, repeatConfig = {}, totalSteps = 8, color = null) => {
         const steps = []
-        for (let s = 0; s < 8; s++) {
+        for (let s = 0; s < totalSteps; s++) {
           const isActive = activeSteps.includes(s)
           steps.push([{
             id: `pad-${id}-${s}`,
@@ -6153,6 +6424,7 @@ document.addEventListener('DOMContentLoaded', () => {
           badge,
           name,
           category,
+          color,
           soundFamily,
           intensity,
           volume: 1.0,
@@ -6175,7 +6447,11 @@ document.addEventListener('DOMContentLoaded', () => {
           layers: [
             makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-808', 'high', [0, 4, 6]),
             makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-808', 'med-high', [2, 6]),
-            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med', [0, 1, 2, 3, 4, 5, 6, 7], { 3: 2, 7: 4 })
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med', [0, 1, 2, 3, 4, 5, 6, 7], { 3: 2, 7: 4 }),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-trap', 'high', [2, 6], {}, 8, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-cowbell', 'med-low', [1, 5], {}, 8, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-low', 'med', [], {}, 8, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-crash', 'med', [0], {}, 8, '#0ea5e9')
           ]
         },
         {
@@ -6187,8 +6463,12 @@ document.addEventListener('DOMContentLoaded', () => {
           totalSteps: 8,
           layers: [
             makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-classic', 'med-high', [0, 3, 5]),
-            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-vinyl', 'high', [2, 6]),
-            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med-low', [0, 2, 4, 6])
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-tape', 'high', [2, 6]),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-tight', 'med-low', [0, 2, 4, 6]),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-acoustic', 'med', [], {}, 8, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-rimshot', 'low', [3, 7], {}, 8, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-mid', 'med', [], {}, 8, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-bright-crash', 'med-low', [0], {}, 8, '#0ea5e9')
           ]
         },
         {
@@ -6199,9 +6479,103 @@ document.addEventListener('DOMContentLoaded', () => {
           numBeats: 2,
           totalSteps: 8,
           layers: [
-            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-heavy', 'high', [0, 2, 4, 6]),
-            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-808', 'high', [4, 7]),
-            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'high', [0, 1, 2, 3, 4, 5, 6, 7])
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-punchy', 'high', [0, 2, 4, 6]),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-tight', 'high', [4, 7]),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-electro', 'high', [0, 1, 2, 3, 4, 5, 6, 7]),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-synth', 'med', [2, 6], {}, 8, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-rimshot', 'med-low', [1, 3, 5, 7], {}, 8, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-low', 'med', [6, 7], {}, 8, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-ride', 'med-low', [0, 2, 4, 6], {}, 8, '#0ea5e9')
+          ]
+        },
+        {
+          id: 'seq-factory-reggaeton',
+          name: 'San Juan Dembow',
+          createdAt: 'Studio Factory Preset',
+          genre: 'LATIN • DEMBOW',
+          bpm: 96,
+          numBeats: 4,
+          totalSteps: 16,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-punchy', 'high', [0, 4, 8, 12], {}, 16),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-tight', 'high', [3, 6, 11, 14], {}, 16),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-tight', 'med-low', [0, 2, 4, 6, 8, 10, 12, 14], {}, 16),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-trap', 'med', [4, 12], {}, 16, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-rimshot', 'high', [3, 6, 11, 14], {}, 16, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-low', 'med', [], {}, 16, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-crash', 'med', [], {}, 16, '#0ea5e9')
+          ]
+        },
+        {
+          id: 'seq-factory-afrobeats',
+          name: 'Lagos Afrobeats Bounce',
+          createdAt: 'Studio Factory Preset',
+          genre: 'AFROBEATS • GROOVE',
+          bpm: 108,
+          numBeats: 4,
+          totalSteps: 16,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-classic', 'high', [0, 3, 7, 9, 13], {}, 16),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-wood', 'med', [4, 12], {}, 16),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-open', 'med', [2, 6, 10, 14], {}, 16),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-acoustic', 'med-high', [4, 12], {}, 16, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-bongo', 'high', [0, 2, 5, 8, 10, 14], {}, 16, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-mid', 'med', [14, 15], {}, 16, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-crash', 'med-low', [0], {}, 16, '#0ea5e9')
+          ]
+        },
+        {
+          id: 'seq-factory-drill',
+          name: 'London Drill Slide',
+          createdAt: 'Studio Factory Preset',
+          genre: 'DRILL • 808 SLIDE',
+          bpm: 142,
+          numBeats: 4,
+          totalSteps: 16,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-sub', 'high', [0, 10], {}, 16),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-808', 'high', [6, 14], {}, 16),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-808', 'med-high', [0, 3, 5, 8, 11, 13], { 5: 3, 13: 4 }, 16),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-trap', 'high', [6, 14], {}, 16, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-rimshot', 'med', [2, 9, 15], {}, 16, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-low', 'med', [], {}, 16, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-bright-crash', 'med', [0], {}, 16, '#0ea5e9')
+          ]
+        },
+        {
+          id: 'seq-factory-house',
+          name: 'Warehouse Classic House',
+          createdAt: 'Studio Factory Preset',
+          genre: 'HOUSE • CLUB',
+          bpm: 124,
+          numBeats: 4,
+          totalSteps: 16,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-analog909', 'high', [0, 4, 8, 12], {}, 16),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-tight', 'med', [4, 12], {}, 16),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-open', 'med-high', [2, 6, 10, 14], {}, 16),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-808', 'high', [4, 12], {}, 16, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-maraca', 'low', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], {}, 16, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-mid', 'med', [], {}, 16, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-crash', 'med', [0], {}, 16, '#0ea5e9')
+          ]
+        },
+        {
+          id: 'seq-factory-dnb',
+          name: 'Bristol Liquid DnB',
+          createdAt: 'Studio Factory Preset',
+          genre: 'DRUM & BASS • FAST',
+          bpm: 172,
+          numBeats: 4,
+          totalSteps: 16,
+          layers: [
+            makeLayer('kick-primary', '01', 'Kick', 'kick', 'kick-punchy', 'high', [0, 10], {}, 16),
+            makeLayer('snare-primary', '02', 'Snare', 'snare', 'snare-tight', 'high', [4, 12], {}, 16),
+            makeLayer('hihat-primary', '03', 'Hi-Hat', 'hihat', 'hihat-tight', 'med-high', [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15], {}, 16),
+            makeLayer('clap-primary', '04', 'Claps & Snaps', 'clap', 'clap-synth', 'med-low', [], {}, 16, '#8b5cf6'),
+            makeLayer('perc-primary', '05', 'Percussion & Rim', 'perc', 'perc-rimshot', 'med-low', [7, 15], {}, 16, '#10b981'),
+            makeLayer('tom-primary', '06', 'Toms & Fills', 'tom', 'tom-high', 'med', [], {}, 16, '#f59e0b'),
+            makeLayer('cymbal-primary', '07', 'Cymbals & Crash', 'cymbal', 'cymbal-crash', 'med-high', [0], {}, 16, '#0ea5e9')
           ]
         }
       ]

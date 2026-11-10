@@ -1,5 +1,5 @@
 window.SOUND_MANIFEST = {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Categorized Sound Assets and 5-tier Intensity Variations for Beatmaker Studio",
   "intensityLevels": [
     {
@@ -30,8 +30,10 @@ window.SOUND_MANIFEST = {
   ],
   "categories": {
     "kick": {
+      "id": "kick",
       "name": "Kick Drums",
       "trackNumber": 1,
+      "type": "builtin",
       "baseTrackSound": "kick-classic",
       "defaultVariation": "med",
       "sounds": {
@@ -238,12 +240,167 @@ window.SOUND_MANIFEST = {
               "gainScale": 1.08
             }
           }
+        },
+        "kick-punchy": {
+          "id": "kick-punchy",
+          "name": "Kick Electronic Punch",
+          "category": "kick",
+          "type": "Modern Club Electronic Kick",
+          "frequencyRange": "38Hz - 5kHz",
+          "description": "Tight modern studio kick with crisp click attack and controlled low end (CC0 Stargate Pack).",
+          "baseFile": "./sounds/kick/base/kick-punchy.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-punchy-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.314",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-punchy-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.441",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-punchy-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.556",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-punchy-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.607",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-punchy-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        },
+        "kick-sub": {
+          "id": "kick-sub",
+          "name": "Kick Sub Bass",
+          "category": "kick",
+          "type": "Deep Resonant Sub Kick",
+          "frequencyRange": "28Hz - 600Hz",
+          "description": "Heavy sustained sub-bass tail ideal for Trap, Drill, and half-time drops (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/kick/base/kick-sub.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-sub-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.444",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-sub-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.623",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-sub-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.784",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-sub-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.855",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-sub-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
+        },
+        "kick-analog909": {
+          "id": "kick-analog909",
+          "name": "Kick Analog 909",
+          "category": "kick",
+          "type": "Hardware Analog Club Kick",
+          "frequencyRange": "42Hz - 4.2kHz",
+          "description": "Punchy 909-inspired analog kick built for House, Techno, and Four-on-the-Floor grooves (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/kick/base/kick-analog909.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/kick/variations/kick-analog909-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.430",
+              "filterCutoffHz": 1200,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/kick/variations/kick-analog909-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.614",
+              "filterCutoffHz": 2600,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/kick/variations/kick-analog909-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.784",
+              "filterCutoffHz": 8000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/kick/variations/kick-analog909-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.855",
+              "filterCutoffHz": 16000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/kick/variations/kick-analog909-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.08
+            }
+          }
         }
       }
     },
     "snare": {
+      "id": "snare",
       "name": "Snare Drums",
       "trackNumber": 2,
+      "type": "builtin",
       "baseTrackSound": "snare-acoustic",
       "defaultVariation": "med",
       "sounds": {
@@ -399,12 +556,167 @@ window.SOUND_MANIFEST = {
               "gainScale": 1.06
             }
           }
+        },
+        "snare-tight": {
+          "id": "snare-tight",
+          "name": "Snare Analog 909",
+          "category": "snare",
+          "type": "Processed Electronic Snare",
+          "frequencyRange": "210Hz - 11kHz",
+          "description": "Focused, punchy analog hardware snare for Techno, DnB, and Breakbeats (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/snare/base/snare-tight.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-tight-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.162",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-tight-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.352",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-tight-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.608",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-tight-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.770",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-tight-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "snare-tape": {
+          "id": "snare-tape",
+          "name": "Snare Analog Tape",
+          "category": "snare",
+          "type": "Warm Tape-Saturated Snare",
+          "frequencyRange": "190Hz - 7.5kHz",
+          "description": "Crisp tape-saturated hip-hop snare ideal for Boom Bap and Lo-Fi (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/snare/base/snare-tape.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-tape-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.260",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-tape-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.460",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-tape-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.797",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-tape-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.865",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-tape-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "snare-wood": {
+          "id": "snare-wood",
+          "name": "Snare Studio Wood",
+          "category": "snare",
+          "type": "Crisp Acoustic Wood Shell Snare",
+          "frequencyRange": "170Hz - 9kHz",
+          "description": "Live-recorded acoustic wood snare with articulate crack and natural ring (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/snare/base/snare-wood.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/snare/variations/snare-wood-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.406",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/snare/variations/snare-wood-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.705",
+              "filterCutoffHz": 5000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/snare/variations/snare-wood-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.909",
+              "filterCutoffHz": 12000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/snare/variations/snare-wood-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.978",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/snare/variations/snare-wood-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
         }
       }
     },
     "hihat": {
+      "id": "hihat",
       "name": "Hi-Hats",
       "trackNumber": 3,
+      "type": "builtin",
       "baseTrackSound": "hihat-808",
       "defaultVariation": "med",
       "sounds": {
@@ -502,6 +814,968 @@ window.SOUND_MANIFEST = {
             },
             "high": {
               "file": "./sounds/hihat/variations/hihat-acoustic-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "hihat-open": {
+          "id": "hihat-open",
+          "name": "Hi-Hat Open 909",
+          "category": "hihat",
+          "type": "Analog Open Hi-Hat",
+          "frequencyRange": "4kHz - 18kHz",
+          "description": "Classic sizzling 909-style open hat for House off-beats and Trap accents (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/hihat/base/hihat-open.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/hihat/variations/hihat-open-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.269",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/hihat/variations/hihat-open-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.532",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/hihat/variations/hihat-open-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.762",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/hihat/variations/hihat-open-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.846",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/hihat/variations/hihat-open-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "hihat-tight": {
+          "id": "hihat-tight",
+          "name": "Hi-Hat Studio Tight",
+          "category": "hihat",
+          "type": "Minimal Crisp Closed Hat",
+          "frequencyRange": "6kHz - 18kHz",
+          "description": "Short, laser-tight studio closed hat for fast rolls and DnB shuffles (CC0 Stargate).",
+          "baseFile": "./sounds/hihat/base/hihat-tight.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/hihat/variations/hihat-tight-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.312",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/hihat/variations/hihat-tight-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.526",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/hihat/variations/hihat-tight-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.701",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/hihat/variations/hihat-tight-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.776",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/hihat/variations/hihat-tight-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "hihat-electro": {
+          "id": "hihat-electro",
+          "name": "Hi-Hat Synth",
+          "category": "hihat",
+          "type": "Clean Electronic Closed Hat",
+          "frequencyRange": "4.5kHz - 17kHz",
+          "description": "Modern electronic synth hi-hat with airy metallic sheen (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/hihat/base/hihat-electro.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/hihat/variations/hihat-electro-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.100",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/hihat/variations/hihat-electro-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.266",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/hihat/variations/hihat-electro-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.415",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/hihat/variations/hihat-electro-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.418",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/hihat/variations/hihat-electro-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        }
+      }
+    },
+    "clap": {
+      "id": "clap",
+      "name": "Claps & Snaps",
+      "trackNumber": 4,
+      "type": "builtin",
+      "color": "#8b5cf6",
+      "baseTrackSound": "clap-808",
+      "defaultVariation": "med",
+      "sounds": {
+        "clap-808": {
+          "id": "clap-808",
+          "name": "Clap Analog 808",
+          "category": "clap",
+          "type": "Wide Hardware Handclap",
+          "frequencyRange": "400Hz - 12kHz",
+          "description": "Classic multi-burst 808/909 electronic clap for House, Trap, and Synthwave (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/clap/base/clap-808.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/clap/variations/clap-808-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.227",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/clap/variations/clap-808-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.476",
+              "filterCutoffHz": 5200,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/clap/variations/clap-808-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.793",
+              "filterCutoffHz": 12500,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/clap/variations/clap-808-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.962",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/clap/variations/clap-808-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "clap-trap": {
+          "id": "clap-trap",
+          "name": "Clap Hip-Hop",
+          "category": "clap",
+          "type": "Dry Snappy Trap Clap",
+          "frequencyRange": "550Hz - 14kHz",
+          "description": "Tight, punchy hip-hop/trap backbeat clap built to slice through heavy 808s (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/clap/base/clap-trap.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/clap/variations/clap-trap-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.192",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/clap/variations/clap-trap-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.354",
+              "filterCutoffHz": 5200,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/clap/variations/clap-trap-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.700",
+              "filterCutoffHz": 12500,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/clap/variations/clap-trap-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.860",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/clap/variations/clap-trap-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "clap-acoustic": {
+          "id": "clap-acoustic",
+          "name": "Clap Studio Hand",
+          "category": "clap",
+          "type": "Natural Acoustic Handclap",
+          "frequencyRange": "350Hz - 11kHz",
+          "description": "Organic recorded handclap with warm room snap for Afrobeats and Pop grooves (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/clap/base/clap-acoustic.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/clap/variations/clap-acoustic-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.139",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/clap/variations/clap-acoustic-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.211",
+              "filterCutoffHz": 5200,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/clap/variations/clap-acoustic-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.276",
+              "filterCutoffHz": 12500,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/clap/variations/clap-acoustic-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.305",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/clap/variations/clap-acoustic-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "clap-synth": {
+          "id": "clap-synth",
+          "name": "Clap Synth Gate",
+          "category": "clap",
+          "type": "Bright Electronic Synth Clap",
+          "frequencyRange": "500Hz - 15kHz",
+          "description": "Bright synthwave-ready gated handclap with crisp stereo spread (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/clap/base/clap-synth.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/clap/variations/clap-synth-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.158",
+              "filterCutoffHz": 2400,
+              "gainScale": 0.46
+            },
+            "med-low": {
+              "file": "./sounds/clap/variations/clap-synth-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.387",
+              "filterCutoffHz": 5200,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/clap/variations/clap-synth-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.627",
+              "filterCutoffHz": 12500,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/clap/variations/clap-synth-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.684",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/clap/variations/clap-synth-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        }
+      }
+    },
+    "perc": {
+      "id": "perc",
+      "name": "Percussion & Rim",
+      "trackNumber": 5,
+      "type": "builtin",
+      "color": "#10b981",
+      "baseTrackSound": "perc-rimshot",
+      "defaultVariation": "med",
+      "sounds": {
+        "perc-rimshot": {
+          "id": "perc-rimshot",
+          "name": "808 Rimshot",
+          "category": "perc",
+          "type": "Analog Wood/Rim Click",
+          "frequencyRange": "600Hz - 9kHz",
+          "description": "Sharp 808 rimshot click essential for Reggaeton Dembow, Drill, and Afrobeats (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/perc/base/perc-rimshot.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/perc/variations/perc-rimshot-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.252",
+              "filterCutoffHz": 2800,
+              "gainScale": 0.48
+            },
+            "med-low": {
+              "file": "./sounds/perc/variations/perc-rimshot-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.567",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/perc/variations/perc-rimshot-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.887",
+              "filterCutoffHz": 14000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/perc/variations/perc-rimshot-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.960",
+              "filterCutoffHz": 19000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/perc/variations/perc-rimshot-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "perc-cowbell": {
+          "id": "perc-cowbell",
+          "name": "808 Cowbell",
+          "category": "perc",
+          "type": "Vintage Analog Metallic Bell",
+          "frequencyRange": "540Hz - 6kHz",
+          "description": "Classic metallic drum-machine cowbell for Memphis Trap, Phonk, and Funk grooves (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/perc/base/perc-cowbell.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/perc/variations/perc-cowbell-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.318",
+              "filterCutoffHz": 2800,
+              "gainScale": 0.48
+            },
+            "med-low": {
+              "file": "./sounds/perc/variations/perc-cowbell-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.481",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/perc/variations/perc-cowbell-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.614",
+              "filterCutoffHz": 14000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/perc/variations/perc-cowbell-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.689",
+              "filterCutoffHz": 19000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/perc/variations/perc-cowbell-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "perc-bongo": {
+          "id": "perc-bongo",
+          "name": "Acoustic Bongo",
+          "category": "perc",
+          "type": "Melodic Hand Drum Strike",
+          "frequencyRange": "250Hz - 5kHz",
+          "description": "Warm acoustic hand-struck bongo tone for Afrobeats and Tropical syncopation (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/perc/base/perc-bongo.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/perc/variations/perc-bongo-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.453",
+              "filterCutoffHz": 2800,
+              "gainScale": 0.48
+            },
+            "med-low": {
+              "file": "./sounds/perc/variations/perc-bongo-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.645",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/perc/variations/perc-bongo-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.808",
+              "filterCutoffHz": 14000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/perc/variations/perc-bongo-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.874",
+              "filterCutoffHz": 19000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/perc/variations/perc-bongo-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "perc-maraca": {
+          "id": "perc-maraca",
+          "name": "Analog Maracas",
+          "category": "perc",
+          "type": "High-Frequency Shaker Pulse",
+          "frequencyRange": "4kHz - 17kHz",
+          "description": "Crisp short shaker/maraca tick for rolling 16th-note House and Latin momentum (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/perc/base/perc-maraca.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/perc/variations/perc-maraca-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.032",
+              "filterCutoffHz": 2800,
+              "gainScale": 0.48
+            },
+            "med-low": {
+              "file": "./sounds/perc/variations/perc-maraca-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.147",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/perc/variations/perc-maraca-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.490",
+              "filterCutoffHz": 14000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/perc/variations/perc-maraca-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.730",
+              "filterCutoffHz": 19000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/perc/variations/perc-maraca-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "perc-claves": {
+          "id": "perc-claves",
+          "name": "Analog Claves",
+          "category": "perc",
+          "type": "Pitched Wood Clave Strike",
+          "frequencyRange": "1.2kHz - 7kHz",
+          "description": "Resonant clave wood-block hit for Latin, House, and cross-rhythm accents (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/perc/base/perc-claves.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/perc/variations/perc-claves-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.319",
+              "filterCutoffHz": 2800,
+              "gainScale": 0.48
+            },
+            "med-low": {
+              "file": "./sounds/perc/variations/perc-claves-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.565",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/perc/variations/perc-claves-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.712",
+              "filterCutoffHz": 14000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/perc/variations/perc-claves-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.782",
+              "filterCutoffHz": 19000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/perc/variations/perc-claves-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        }
+      }
+    },
+    "tom": {
+      "id": "tom",
+      "name": "Toms & Fills",
+      "trackNumber": 6,
+      "type": "builtin",
+      "color": "#f59e0b",
+      "baseTrackSound": "tom-low",
+      "defaultVariation": "med",
+      "sounds": {
+        "tom-low": {
+          "id": "tom-low",
+          "name": "Analog Low Tom",
+          "category": "tom",
+          "type": "Deep Floor Tom",
+          "frequencyRange": "75Hz - 1.8kHz",
+          "description": "Warm, resonant analog floor tom for 80s synthwave builds and club fills (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/tom/base/tom-low.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/tom/variations/tom-low-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.347",
+              "filterCutoffHz": 1500,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/tom/variations/tom-low-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.625",
+              "filterCutoffHz": 3200,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/tom/variations/tom-low-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.792",
+              "filterCutoffHz": 9000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/tom/variations/tom-low-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.879",
+              "filterCutoffHz": 16500,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/tom/variations/tom-low-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "tom-mid": {
+          "id": "tom-mid",
+          "name": "Analog Mid Tom",
+          "category": "tom",
+          "type": "Punchy Rack Tom",
+          "frequencyRange": "110Hz - 2.4kHz",
+          "description": "Balanced mid-pitched drum machine tom for melodic tom rolls (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/tom/base/tom-mid.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/tom/variations/tom-mid-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.367",
+              "filterCutoffHz": 1500,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/tom/variations/tom-mid-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.551",
+              "filterCutoffHz": 3200,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/tom/variations/tom-mid-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.766",
+              "filterCutoffHz": 9000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/tom/variations/tom-mid-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.857",
+              "filterCutoffHz": 16500,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/tom/variations/tom-mid-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        },
+        "tom-high": {
+          "id": "tom-high",
+          "name": "Analog High Tom",
+          "category": "tom",
+          "type": "Tight High Fill Tom",
+          "frequencyRange": "160Hz - 3.2kHz",
+          "description": "Crisp high rack tom ideal for rapid transitional drum fills (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/tom/base/tom-high.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/tom/variations/tom-high-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.356",
+              "filterCutoffHz": 1500,
+              "gainScale": 0.5
+            },
+            "med-low": {
+              "file": "./sounds/tom/variations/tom-high-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.519",
+              "filterCutoffHz": 3200,
+              "gainScale": 0.7
+            },
+            "med": {
+              "file": "./sounds/tom/variations/tom-high-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.738",
+              "filterCutoffHz": 9000,
+              "gainScale": 0.88
+            },
+            "med-high": {
+              "file": "./sounds/tom/variations/tom-high-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.842",
+              "filterCutoffHz": 16500,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/tom/variations/tom-high-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.06
+            }
+          }
+        }
+      }
+    },
+    "cymbal": {
+      "id": "cymbal",
+      "name": "Cymbals & Crash",
+      "trackNumber": 7,
+      "type": "builtin",
+      "color": "#0ea5e9",
+      "baseTrackSound": "cymbal-crash",
+      "defaultVariation": "med",
+      "sounds": {
+        "cymbal-crash": {
+          "id": "cymbal-crash",
+          "name": "Analog Crash",
+          "category": "cymbal",
+          "type": "Hardware Crash Cymbal",
+          "frequencyRange": "2.5kHz - 18kHz",
+          "description": "Bold downbeat crash cymbal to punctuate loop turnarounds and drops (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/cymbal/base/cymbal-crash.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/cymbal/variations/cymbal-crash-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.362",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/cymbal/variations/cymbal-crash-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.613",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/cymbal/variations/cymbal-crash-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.769",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/cymbal/variations/cymbal-crash-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.851",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/cymbal/variations/cymbal-crash-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "cymbal-ride": {
+          "id": "cymbal-ride",
+          "name": "Analog Ride",
+          "category": "cymbal",
+          "type": "Shimmering Ride Cymbal",
+          "frequencyRange": "3kHz - 18kHz",
+          "description": "Defined analog ride cymbal for Techno driving tops and Jazz breakbeats (CC0 Fugue State Audio).",
+          "baseFile": "./sounds/cymbal/base/cymbal-ride.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/cymbal/variations/cymbal-ride-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.273",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/cymbal/variations/cymbal-ride-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.586",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/cymbal/variations/cymbal-ride-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.844",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/cymbal/variations/cymbal-ride-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.851",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/cymbal/variations/cymbal-ride-high.wav",
+              "intensity": "high",
+              "label": "High",
+              "peak": "0.980",
+              "filterCutoffHz": 20000,
+              "gainScale": 1.05
+            }
+          }
+        },
+        "cymbal-bright-crash": {
+          "id": "cymbal-bright-crash",
+          "name": "Studio Acoustic Crash",
+          "category": "cymbal",
+          "type": "Wide Stereo Brass Crash",
+          "frequencyRange": "2kHz - 18kHz",
+          "description": "Expansive studio brass crash cymbal with long lush decay tail (CC0 Stargate Freesound).",
+          "baseFile": "./sounds/cymbal/base/cymbal-bright-crash.wav",
+          "variations": {
+            "low": {
+              "file": "./sounds/cymbal/variations/cymbal-bright-crash-low.wav",
+              "intensity": "low",
+              "label": "Low",
+              "peak": "0.114",
+              "filterCutoffHz": 6500,
+              "gainScale": 0.42
+            },
+            "med-low": {
+              "file": "./sounds/cymbal/variations/cymbal-bright-crash-med-low.wav",
+              "intensity": "med-low",
+              "label": "Medium-Low",
+              "peak": "0.201",
+              "filterCutoffHz": 10000,
+              "gainScale": 0.68
+            },
+            "med": {
+              "file": "./sounds/cymbal/variations/cymbal-bright-crash-med.wav",
+              "intensity": "med",
+              "label": "Medium",
+              "peak": "0.263",
+              "filterCutoffHz": 18000,
+              "gainScale": 0.86
+            },
+            "med-high": {
+              "file": "./sounds/cymbal/variations/cymbal-bright-crash-med-high.wav",
+              "intensity": "med-high",
+              "label": "Medium-High",
+              "peak": "0.289",
+              "filterCutoffHz": 20000,
+              "gainScale": 0.96
+            },
+            "high": {
+              "file": "./sounds/cymbal/variations/cymbal-bright-crash-high.wav",
               "intensity": "high",
               "label": "High",
               "peak": "0.980",
