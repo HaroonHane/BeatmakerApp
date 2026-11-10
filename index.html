@@ -306,6 +306,22 @@
                     id="step-count-val">8</span> STEPS)
                 </span>
               </div>
+              <button type="button" class="add-beat-btn header-add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
+                <div class="add-beat-icon-wrap">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="add-beat-text">ADD BEAT</span>
+                <span class="add-beat-badge">+4 Pads</span>
+                <div class="add-beat-waveform" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </button>
             </div>
             <div class="step-ruler-viewport" id="step-ruler-viewport">
               <div class="step-ruler" id="step-ruler">
@@ -348,26 +364,6 @@
                       <div class="step-dot" data-step="7"></div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Add Beat Column / Action -->
-                <div class="add-beat-col" id="add-beat-col">
-                  <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
-                    <div class="add-beat-icon-wrap">
-                      <i class="fa-solid fa-plus"></i>
-                    </div>
-
-                    <span class="add-beat-text">ADD BEAT</span>
-                    <div class="add-beat-waveform">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                  </button>
                 </div>
               </div>
             </div>
@@ -447,126 +443,126 @@
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
               <div class="track-pads-viewport" data-track-scroll="kick-primary">
                 <div class="kick-pads pads-grid">
-                <div class="beat-chunk beat-chunk-1">
-                  <div class="beat-step-cell" data-step="0">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="0" data-track="kick"><button class="pad kick-pad b0"
-                          data-step="0" data-track="kick" aria-label="Kick step 1"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="0" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-1">
+                    <div class="beat-step-cell" data-step="0">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="0" data-track="kick"><button class="pad kick-pad b0"
+                            data-step="0" data-track="kick" aria-label="Kick step 1"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="0" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="0" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="1">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="1" data-track="kick"><button class="pad kick-pad b1"
-                          data-step="1" data-track="kick" aria-label="Kick step 2"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="1" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="0" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="1">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="1" data-track="kick"><button class="pad kick-pad b1"
+                            data-step="1" data-track="kick" aria-label="Kick step 2"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="1" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="1" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="2">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="2" data-track="kick"><button class="pad kick-pad b2"
-                          data-step="2" data-track="kick" aria-label="Kick step 3"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="2" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="1" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="2">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="2" data-track="kick"><button class="pad kick-pad b2"
+                            data-step="2" data-track="kick" aria-label="Kick step 3"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="2" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="2" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="3">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="3" data-track="kick"><button class="pad kick-pad b3"
-                          data-step="3" data-track="kick" aria-label="Kick step 4"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="3" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="2" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="3">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="3" data-track="kick"><button class="pad kick-pad b3"
+                            data-step="3" data-track="kick" aria-label="Kick step 4"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="3" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="3" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="3" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="kick" data-layer-id="kick-primary" data-beat="1"
+                      title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="kick" data-layer-id="kick-primary" data-beat="1"
-                    title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
-                <div class="beat-chunk beat-chunk-2">
-                  <div class="beat-step-cell" data-step="4">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="4" data-track="kick"><button class="pad kick-pad b4"
-                          data-step="4" data-track="kick" aria-label="Kick step 5"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="4" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-2">
+                    <div class="beat-step-cell" data-step="4">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="4" data-track="kick"><button class="pad kick-pad b4"
+                            data-step="4" data-track="kick" aria-label="Kick step 5"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="4" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="4" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="5">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="5" data-track="kick"><button class="pad kick-pad b5"
-                          data-step="5" data-track="kick" aria-label="Kick step 6"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="5" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="4" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="5">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="5" data-track="kick"><button class="pad kick-pad b5"
+                            data-step="5" data-track="kick" aria-label="Kick step 6"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="5" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="5" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="6">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="6" data-track="kick"><button class="pad kick-pad b6"
-                          data-step="6" data-track="kick" aria-label="Kick step 7"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="6" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="5" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="6">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="6" data-track="kick"><button class="pad kick-pad b6"
+                            data-step="6" data-track="kick" aria-label="Kick step 7"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="6" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="6" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="7">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="7" data-track="kick"><button class="pad kick-pad b7"
-                          data-step="7" data-track="kick" aria-label="Kick step 8"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
-                            data-track="kick" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="7" data-track="kick" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="6" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="7">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="7" data-track="kick"><button class="pad kick-pad b7"
+                            data-step="7" data-track="kick" aria-label="Kick step 8"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
+                              data-track="kick" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="7" data-track="kick" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="7" data-track="kick" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="7" data-track="kick" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="kick" data-layer-id="kick-primary" data-beat="2"
+                      title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="kick" data-layer-id="kick-primary" data-beat="2"
-                    title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
                 </div>
               </div>
             </div>
@@ -661,126 +657,126 @@
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
               <div class="track-pads-viewport" data-track-scroll="snare-primary">
                 <div class="snare-pads pads-grid">
-                <div class="beat-chunk beat-chunk-1">
-                  <div class="beat-step-cell" data-step="0">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="0" data-track="snare"><button class="pad snare-pad b0"
-                          data-step="0" data-track="snare" aria-label="Snare step 1"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="0" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-1">
+                    <div class="beat-step-cell" data-step="0">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="0" data-track="snare"><button class="pad snare-pad b0"
+                            data-step="0" data-track="snare" aria-label="Snare step 1"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="0" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="0" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="1">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="1" data-track="snare"><button class="pad snare-pad b1"
-                          data-step="1" data-track="snare" aria-label="Snare step 2"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="1" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="0" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="1">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="1" data-track="snare"><button class="pad snare-pad b1"
+                            data-step="1" data-track="snare" aria-label="Snare step 2"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="1" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="1" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="2">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="2" data-track="snare"><button class="pad snare-pad b2"
-                          data-step="2" data-track="snare" aria-label="Snare step 3"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="2" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="1" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="2">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="2" data-track="snare"><button class="pad snare-pad b2"
+                            data-step="2" data-track="snare" aria-label="Snare step 3"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="2" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="2" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="3">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="3" data-track="snare"><button class="pad snare-pad b3"
-                          data-step="3" data-track="snare" aria-label="Snare step 4"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="3" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="2" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="3">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="3" data-track="snare"><button class="pad snare-pad b3"
+                            data-step="3" data-track="snare" aria-label="Snare step 4"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="3" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="3" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="3" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="snare" data-layer-id="snare-primary" data-beat="1"
+                      title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="snare" data-layer-id="snare-primary" data-beat="1"
-                    title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
-                <div class="beat-chunk beat-chunk-2">
-                  <div class="beat-step-cell" data-step="4">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="4" data-track="snare"><button class="pad snare-pad b4"
-                          data-step="4" data-track="snare" aria-label="Snare step 5"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="4" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-2">
+                    <div class="beat-step-cell" data-step="4">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="4" data-track="snare"><button class="pad snare-pad b4"
+                            data-step="4" data-track="snare" aria-label="Snare step 5"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="4" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="4" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="5">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="5" data-track="snare"><button class="pad snare-pad b5"
-                          data-step="5" data-track="snare" aria-label="Snare step 6"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="5" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="4" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="5">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="5" data-track="snare"><button class="pad snare-pad b5"
+                            data-step="5" data-track="snare" aria-label="Snare step 6"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="5" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="5" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="6">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="6" data-track="snare"><button class="pad snare-pad b6"
-                          data-step="6" data-track="snare" aria-label="Snare step 7"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="6" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="5" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="6">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="6" data-track="snare"><button class="pad snare-pad b6"
+                            data-step="6" data-track="snare" aria-label="Snare step 7"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="6" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="6" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="7">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="7" data-track="snare"><button class="pad snare-pad b7"
-                          data-step="7" data-track="snare" aria-label="Snare step 8"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
-                            data-track="snare" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="7" data-track="snare" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="6" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="7">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="7" data-track="snare"><button class="pad snare-pad b7"
+                            data-step="7" data-track="snare" aria-label="Snare step 8"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
+                              data-track="snare" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="7" data-track="snare" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="7" data-track="snare" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="7" data-track="snare" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="snare" data-layer-id="snare-primary" data-beat="2"
+                      title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="snare" data-layer-id="snare-primary" data-beat="2"
-                    title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
                 </div>
               </div>
             </div>
@@ -876,126 +872,126 @@
               <!-- Step Sequencer Pad Grid (Chunked 4 + 4) -->
               <div class="track-pads-viewport" data-track-scroll="hihat-primary">
                 <div class="hihat-pads pads-grid">
-                <div class="beat-chunk beat-chunk-1">
-                  <div class="beat-step-cell" data-step="0">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="0" data-track="hihat"><button class="pad hihat-pad b0"
-                          data-step="0" data-track="hihat" aria-label="Hihat step 1"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="0" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-1">
+                    <div class="beat-step-cell" data-step="0">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="0" data-track="hihat"><button class="pad hihat-pad b0"
+                            data-step="0" data-track="hihat" aria-label="Hihat step 1"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="0"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="0" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="0" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="1">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="1" data-track="hihat"><button class="pad hihat-pad b1"
-                          data-step="1" data-track="hihat" aria-label="Hihat step 2"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="1" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="0" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="1">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="1" data-track="hihat"><button class="pad hihat-pad b1"
+                            data-step="1" data-track="hihat" aria-label="Hihat step 2"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="1"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="1" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="1" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="2">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="2" data-track="hihat"><button class="pad hihat-pad b2"
-                          data-step="2" data-track="hihat" aria-label="Hihat step 3"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="2" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="1" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="2">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="2" data-track="hihat"><button class="pad hihat-pad b2"
+                            data-step="2" data-track="hihat" aria-label="Hihat step 3"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="2"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="2" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="2" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="3">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="3" data-track="hihat"><button class="pad hihat-pad b3"
-                          data-step="3" data-track="hihat" aria-label="Hihat step 4"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="3" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="2" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="3">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="3" data-track="hihat"><button class="pad hihat-pad b3"
+                            data-step="3" data-track="hihat" aria-label="Hihat step 4"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="3"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="3" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="3" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="3" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="hihat" data-layer-id="hihat-primary" data-beat="1"
+                      title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="hihat" data-layer-id="hihat-primary" data-beat="1"
-                    title="Add 4-Pad Layer to Beat 01"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
-                <div class="beat-chunk beat-chunk-2">
-                  <div class="beat-step-cell" data-step="4">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="4" data-track="hihat"><button class="pad hihat-pad b4"
-                          data-step="4" data-track="hihat" aria-label="Hihat step 5"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="4" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                  <div class="beat-chunk beat-chunk-2">
+                    <div class="beat-step-cell" data-step="4">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="4" data-track="hihat"><button class="pad hihat-pad b4"
+                            data-step="4" data-track="hihat" aria-label="Hihat step 5"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="4"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="4" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="4" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="5">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="5" data-track="hihat"><button class="pad hihat-pad b5"
-                          data-step="5" data-track="hihat" aria-label="Hihat step 6"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="5" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="4" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="5">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="5" data-track="hihat"><button class="pad hihat-pad b5"
+                            data-step="5" data-track="hihat" aria-label="Hihat step 6"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="5"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="5" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="5" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="6">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="6" data-track="hihat"><button class="pad hihat-pad b6"
-                          data-step="6" data-track="hihat" aria-label="Hihat step 7"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="6" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="5" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="6">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="6" data-track="hihat"><button class="pad hihat-pad b6"
+                            data-step="6" data-track="hihat" aria-label="Hihat step 7"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="6"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="6" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="6" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <div class="beat-step-cell" data-step="7">
-                    <div class="pads-stack-container">
-                      <div class="pad-wrapper" data-step="7" data-track="hihat"><button class="pad hihat-pad b7"
-                          data-step="7" data-track="hihat" aria-label="Hihat step 8"></button>
-                        <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
-                            data-track="hihat" title="Configure Pad Settings"><i
-                              class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
-                            data-step="7" data-track="hihat" title="Remove Pad"><i
-                              class="fa-solid fa-xmark"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="6" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="beat-step-cell" data-step="7">
+                      <div class="pads-stack-container">
+                        <div class="pad-wrapper" data-step="7" data-track="hihat"><button class="pad hihat-pad b7"
+                            data-step="7" data-track="hihat" aria-label="Hihat step 8"></button>
+                          <div class="pad-controls"><button class="pad-ctrl-btn pad-settings-btn" data-step="7"
+                              data-track="hihat" title="Configure Pad Settings"><i
+                                class="fa-solid fa-gear"></i></button><button class="pad-ctrl-btn pad-remove-btn"
+                              data-step="7" data-track="hihat" title="Remove Pad"><i
+                                class="fa-solid fa-xmark"></i></button>
+                          </div>
                         </div>
-                      </div>
-                    </div><button class="cell-add-pad-btn" data-step="7" data-track="hihat" title="Add Pad"><i
-                        class="fa-solid fa-plus"></i></button>
+                      </div><button class="cell-add-pad-btn" data-step="7" data-track="hihat" title="Add Pad"><i
+                          class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="chunk-add-layer-btn" data-track="hihat" data-layer-id="hihat-primary" data-beat="2"
+                      title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
                   </div>
-                  <button class="chunk-add-layer-btn" data-track="hihat" data-layer-id="hihat-primary" data-beat="2"
-                    title="Add 4-Pad Layer to Beat 02"><i class="fa-solid fa-plus"></i> Add Layer</button>
-                </div>
                 </div>
               </div>
             </div>
@@ -1033,7 +1029,7 @@
 
         <!-- Add Beat Column / Action -->
         <div class="add-beat-col" id="add-beat-bottom-btn">
-          <button class="add-beat-btn" id="add-beat-btn" title="Add 4-Pad Beat (+)">
+          <button type="button" class="add-beat-btn" title="Add 4-Pad Beat (+)">
             <div class="add-beat-icon-wrap">
               <i class="fa-solid fa-plus"></i>
             </div>
@@ -1386,8 +1382,7 @@
         <div class="lib-header-controls">
           <div class="lib-search-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="lib-search-input" placeholder="Search presets..."
-              aria-label="Search sequences" />
+            <input type="text" id="lib-search-input" placeholder="Search presets..." aria-label="Search sequences" />
             <button type="button" class="lib-search-clear-btn" id="lib-search-clear-btn" style="display: none;"
               title="Clear search" aria-label="Clear search">
               <i class="fa-solid fa-circle-xmark"></i>

@@ -1404,9 +1404,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
 
-      // 2. Add Beat Header in Step Ruler before the Add Beat button column
+      // 2. Add Beat Header in Step Ruler
       if (this.stepRuler) {
-        const addBeatCol = document.getElementById('add-beat-col')
         const headerEl = document.createElement('div')
         headerEl.className = `beat-group-header beat-${newBeatNum}-header`
         headerEl.dataset.beat = newBeatNum
@@ -1426,11 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
           </div>
         `
-        if (addBeatCol) {
-          this.stepRuler.insertBefore(headerEl, addBeatCol)
-        } else {
-          this.stepRuler.appendChild(headerEl)
-        }
+        this.stepRuler.appendChild(headerEl)
 
         const removeBtn = headerEl.querySelector('.remove-beat-btn')
         if (removeBtn) {
